@@ -177,14 +177,30 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
           console.log('💾 UniversalChat - Stored form data in sessionStorage:', formData);
         }
         
-        // Show navigation message
-        setTimeout(() => {
-          addMessage('assistant', `🚀 Taking you to ${aiResponse.parameters.path}...`);
-        }, 500);
-        
+        // Navigate after a delay (no additional message needed since it's in the main response)
         setTimeout(() => {
           window.location.href = aiResponse.parameters.path;
-        }, 1500);
+        }, 2000); // Increased delay to let user read the full response
+      } else if (aiResponse.action === 'project_created' && aiResponse.parameters?.project) {
+        // Handle successful project creation
+        const project = aiResponse.parameters.project;
+        const saved = aiResponse.parameters.saved;
+        
+        // Show success toast
+        toast({
+          title: saved ? 'Project Created & Saved!' : 'Project Created!',
+          description: `${project.title} - ${project.difficulty} level ${project.estimatedTime}`,
+          variant: 'default'
+        });
+        
+        // Add follow-up message with options
+        setTimeout(() => {
+          if (saved) {
+            addMessage('assistant', `🎊 Your project "${project.title}" is now in your Library! Would you like me to:\n\n• 📋 Show you all your projects\n• 🚀 Create another awesome project\n• 🎯 Take you to your Library to start working on it\n\nJust let me know what you'd like to do next! I'm so excited about what you're going to build! ✨`);
+          } else {
+            addMessage('assistant', `🎯 Want me to try saving "${project.title}" to your Library again? Or would you like me to:\n\n• 🚀 Create a different project\n• 📋 Show you the project details again\n• 🎨 Modify this project idea\n\nJust say what you'd prefer! 🌟`);
+          }
+        }, 2000);
       } else if (aiResponse.action === 'suggest_navigation' && aiResponse.parameters?.path) {
         // Add follow-up message with navigation option
         setTimeout(() => {

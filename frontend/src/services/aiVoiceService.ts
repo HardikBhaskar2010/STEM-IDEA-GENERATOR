@@ -353,7 +353,8 @@ class AIVoiceService {
     // Extract intent and parameters for project generation
     if (lowerTranscript.includes('generate') || lowerTranscript.includes('create project') || lowerTranscript.includes('make a project') || lowerTranscript.includes('build a project') || 
         lowerTranscript.includes('create a') || lowerTranscript.includes('make a') || lowerTranscript.includes('build a') ||
-        lowerTranscript.includes('expert') || lowerTranscript.includes('advanced') || lowerTranscript.includes('beginner') || lowerTranscript.includes('intermediate')) {
+        lowerTranscript.includes('expert') || lowerTranscript.includes('advanced') || lowerTranscript.includes('beginner') || lowerTranscript.includes('intermediate') ||
+        lowerTranscript.includes('help me create') || lowerTranscript.includes('help me make') || lowerTranscript.includes('help me build')) {
       
       // Extract project parameters using the same logic as UniversalChat
       let projectType = 'robotics'; // default
@@ -383,20 +384,30 @@ class AIVoiceService {
       
       console.log('🔍 AI Service Basic Processing - Extracted parameters:', { projectType, skillLevel });
       
-      return {
-        text: "OMG YES! 🎉 Building projects is like, the BEST thing ever! I'm so excited to help you create something absolutely amazing! ✨\n\nLet's zoom over to our super cool Project Lab where we can design the most incredible STEM project together! This is gonna be SO much fun! 🚀",
-        action: 'navigate',
-        parameters: { 
-          path: '/generator',
-          formData: {
-            projectType: projectType,
-            skillLevel: skillLevel,
-            interests: transcript,
-            budget: '',
-            duration: ''
+      // Check if user wants direct project creation or just navigation
+      const directCreationKeywords = ['help me create', 'help me make', 'help me build', 'create a project', 'make a project', 'build a project'];
+      const wantsDirectCreation = directCreationKeywords.some(keyword => lowerTranscript.includes(keyword));
+      
+      if (wantsDirectCreation) {
+        // Attempt to create project directly
+        return await this.createProjectDirectly(projectType, skillLevel, transcript);
+      } else {
+        // Navigate to generator for manual creation with comprehensive response
+        return {
+          text: `OMG YES! 🎉 Building projects is like, the BEST thing ever! I'm so excited to help you create something absolutely amazing! ✨\n\n**📋 Here's what I understood from your request:**\n• **You asked for**: "${transcript}"\n• **Project Type**: ${projectType.charAt(0).toUpperCase() + projectType.slice(1)}\n• **Skill Level**: ${skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1)}\n• **Your Vision**: ${transcript}\n\n🚀 **Taking you to our super cool Project Lab** where I'll pre-fill everything for you! The form will be ready with all your preferences, and you can generate your amazing STEM project with just one click!\n\nThis is gonna be SO much fun! Let's build something incredible together! 🌟`,
+          action: 'navigate',
+          parameters: { 
+            path: '/generator',
+            formData: {
+              projectType: projectType,
+              skillLevel: skillLevel,
+              interests: transcript,
+              budget: '',
+              duration: ''
+            }
           }
-        }
-      };
+        };
+      }
     }
     
     if (lowerTranscript.includes('open') || lowerTranscript.includes('go to') || lowerTranscript.includes('show me')) {
@@ -534,6 +545,157 @@ class AIVoiceService {
 
       this.synthesis.speak(utterance);
     });
+  }
+
+  /**
+   * Create a project directly using the backend API
+   */
+  private async createProjectDirectly(projectType: string, skillLevel: string, interests: string): Promise<AIVoiceResponse> {
+    try {
+      console.log('🚀 Creating project directly:', { projectType, skillLevel, interests });
+      
+      const projectParams = {
+        projectType: projectType,
+        skillLevel: skillLevel,
+        interests: interests,
+        budget: '',
+        duration: ''
+      };
+      
+      const response = await fetch(`${API_BASE_URL}/generate-project`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectParams),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Project generation failed: ${response.status}`);
+      }
+      
+      const generatedProject = await response.json();
+      console.log('✅ Project generated successfully:', generatedProject);
+      
+      // Try to save the project to the user's library
+      try {
+        const { projectService } = await import('./projectServiceSupabase');
+        const savedProject = await projectService.saveProject({
+          title: generatedProject.title,
+          description: generatedProject.description,
+          difficulty: generatedProject.difficulty,
+          estimatedTime: generatedProject.estimatedTime,
+          estimatedCost: generatedProject.estimatedCost,
+          components: generatedProject.components,
+          skills: generatedProject.skills,
+          steps: generatedProject.steps,
+          status: 'planning',
+          progress: 0,
+          tags: [projectType, skillLevel],
+          generated_from_params: projectParams
+        });
+        
+        console.log('✅ Project saved to library:', savedProject);
+        
+        // Format the response with the generated project details
+        let responseText = `🎉 **AMAZING! I just created your perfect project!** ✨\n\n`;
+        responseText += `**📋 What you asked for:**\n• **Your request**: "${interests}"\n• **Project type**: ${projectType.charAt(0).toUpperCase() + projectType.slice(1)}\n• **Skill level**: ${skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1)}\n\n`;
+        responseText += `**🚀 Here's what I created for you:**\n\n`;
+        responseText += `## **${generatedProject.title}**\n\n`;
+        responseText += `${generatedProject.description}\n\n`;
+        responseText += `**📊 Project Details:**\n`;
+        responseText += `• 🎯 **Difficulty**: ${generatedProject.difficulty}\n`;
+        responseText += `• ⏰ **Time**: ${generatedProject.estimatedTime}\n`;
+        responseText += `• 💰 **Cost**: ${generatedProject.estimatedCost}\n\n`;
+        
+        responseText += `**🔧 Components You'll Need:**\n`;
+        generatedProject.components.slice(0, 5).forEach((component: string, index: number) => {
+          responseText += `• ${component}\n`;
+        });
+        if (generatedProject.components.length > 5) {
+          responseText += `• ...and ${generatedProject.components.length - 5} more components!\n`;
+        }
+        
+        responseText += `\n**🎓 Skills You'll Learn:**\n`;
+        generatedProject.skills.slice(0, 4).forEach((skill: string) => {
+          responseText += `• ${skill}\n`;
+        });
+        
+        responseText += `\n**✅ First Few Steps:**\n`;
+        generatedProject.steps.slice(0, 3).forEach((step: string, index: number) => {
+          responseText += `${index + 1}. ${step}\n`;
+        });
+        
+        responseText += `\n🎊 **Your project has been saved to your Library!** You can find it there to continue working on it, track your progress, and mark steps as complete!\n\n`;
+        responseText += `Want to see all the details? Check your [Library](/library) or ask me to show your projects! This is going to be SO much fun to build! 🌟`;
+        
+        return {
+          text: responseText,
+          action: 'project_created',
+          parameters: {
+            project: generatedProject,
+            saved: true,
+            projectId: savedProject.id
+          }
+        };
+        
+      } catch (saveError) {
+        console.warn('Failed to save project to library:', saveError);
+        
+        // Still show the generated project even if saving failed
+        let responseText = `🎉 **I created an AMAZING project for you!** ✨\n\n`;
+        responseText += `**📋 What you asked for:**\n• **Your request**: "${interests}"\n• **Project type**: ${projectType.charAt(0).toUpperCase() + projectType.slice(1)}\n• **Skill level**: ${skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1)}\n\n`;
+        responseText += `**🚀 Here's your custom project:**\n\n`;
+        responseText += `## **${generatedProject.title}**\n\n`;
+        responseText += `${generatedProject.description}\n\n`;
+        responseText += `**📊 Project Details:**\n`;
+        responseText += `• 🎯 **Difficulty**: ${generatedProject.difficulty}\n`;
+        responseText += `• ⏰ **Time**: ${generatedProject.estimatedTime}\n`;
+        responseText += `• 💰 **Cost**: ${generatedProject.estimatedCost}\n\n`;
+        
+        responseText += `**🔧 Key Components:**\n`;
+        generatedProject.components.slice(0, 5).forEach((component: string) => {
+          responseText += `• ${component}\n`;
+        });
+        
+        responseText += `\n**🎓 Skills You'll Learn:**\n`;
+        generatedProject.skills.slice(0, 4).forEach((skill: string) => {
+          responseText += `• ${skill}\n`;
+        });
+        
+        responseText += `\n⚠️ *I couldn't save this to your library right now, but you can copy these details or ask me to create another project!*\n\n`;
+        responseText += `Want me to try saving it again or create a different project? Just let me know! 🌟`;
+        
+        return {
+          text: responseText,
+          action: 'project_created',
+          parameters: {
+            project: generatedProject,
+            saved: false,
+            saveError: saveError.message
+          }
+        };
+      }
+      
+    } catch (error: any) {
+      console.error('Failed to create project directly:', error);
+      
+      // Fallback to navigation if direct creation fails
+      return {
+        text: `Oops! I had trouble creating your project directly, but don't worry! 😅\n\nLet me take you to our super cool Project Lab where we can create your ${skillLevel} level ${projectType} project together! Sometimes the hands-on approach is even more fun! 🚀\n\n*Error: ${error.message}*`,
+        action: 'navigate',
+        parameters: { 
+          path: '/generator',
+          formData: {
+            projectType: projectType,
+            skillLevel: skillLevel,
+            interests: interests,
+            budget: '',
+            duration: ''
+          }
+        }
+      };
+    }
   }
 
   /**
