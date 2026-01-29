@@ -71,7 +71,7 @@ class ElevenLabsTTSService {
         },
         body: JSON.stringify({
           text: this.preprocessText(text),
-          model_id: 'eleven_monolingual_v1',
+          model_id: 'eleven_turbo_v2_5', // Updated to free tier compatible model
           voice_settings: {
             stability,
             similarity_boost: similarityBoost,
