@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Skill Level Extraction Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .result { margin: 5px 0; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Skill Level Extraction Test</h1>
+    
+    <div id="tests"></div>
+    
+    <button onclick="runTests()">Run Tests</button>
+    <button onclick="testSessionStorage()">Test SessionStorage</button>
+    
+    <script>
+        function extractSkillLevel(content) {
+            const contentLower = content.toLowerCase();
+            
+            if (contentLower.includes('expert')) {
+                return 'expert';
+            } else if (contentLower.includes('advanced')) {
+                return 'advanced';
+            } else if (contentLower.includes('beginner') || contentLower.includes('start')) {
+                return 'beginner';
+            } else if (contentLower.includes('intermediate') || contentLower.includes('medium')) {
+                return 'intermediate';
+            }
+            return 'intermediate'; // default
+        }
+        
+        function extractProjectType(content) {
+            const contentLower = content.toLowerCase();
+            
+            if (contentLower.includes('robot')) {
+                return 'robotics';
+            } else if (contentLower.includes('iot') || contentLower.includes('smart home')) {
+                return 'iot';
+            } else if (contentLower.includes('electronic') || contentLower.includes('circuit')) {
+                return 'electronics';
+            } else if (contentLower.includes('automation') || contentLower.includes('automat')) {
+                return 'automation';
+            } else if (contentLower.includes('sensor') || contentLower.includes('monitor')) {
+                return 'sensors';
+            }
+            return 'robotics'; // default
+        }
+        
+        function runTests() {
+            const testCases = [
+                { input: 'Create an expert level robotics project', expectedSkill: 'expert', expectedType: 'robotics' },
+                { input: 'Make a beginner IoT project', expectedSkill: 'beginner', expectedType: 'iot' },
+                { input: 'Build an advanced electronics circuit', expectedSkill: 'advanced', expectedType: 'electronics' },
+                { input: 'Generate an intermediate automation system', expectedSkill: 'intermediate', expectedType: 'automation' },
+                { input: 'I want to start with a simple robot', expectedSkill: 'beginner', expectedType: 'robotics' },
+                { input: 'Create a sensor monitoring project', expectedSkill: 'intermediate', expectedType: 'sensors' }
+            ];
+            
+            const testsDiv = document.getElementById('tests');
+            testsDiv.innerHTML = '';
+            
+            testCases.forEach((testCase, index) => {
+                const actualSkill = extractSkillLevel(testCase.input);
+                const actualType = extractProjectType(testCase.input);
+                
+                const skillMatch = actualSkill === testCase.expectedSkill;
+                const typeMatch = actualType === testCase.expectedType;
+                
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-case';
+                testDiv.innerHTML = `
+                    <strong>Test ${index + 1}:</strong> "${testCase.input}"<br>
+                    <div class="result ${skillMatch ? 'success' : 'error'}">
+                        Skill Level: Expected "${testCase.expectedSkill}", Got "${actualSkill}" ${skillMatch ? '✅' : '❌'}
+                    </div>
+                    <div class="result ${typeMatch ? 'success' : 'error'}">
+                        Project Type: Expected "${testCase.expectedType}", Got "${actualType}" ${typeMatch ? '✅' : '❌'}
+                    </div>
+                `;
+                testsDiv.appendChild(testDiv);
+            });
+        }
+        
+        function testSessionStorage() {
+            const testData = {
+                projectType: 'robotics',
+                skillLevel: 'expert',
+                interests: 'Create an expert level robotics project',
+                budget: '',
+                duration: ''
+            };
+            
+            // Set data
+            sessionStorage.setItem('generatorFormData', JSON.stringify(testData));
+            console.log('Set sessionStorage data:', testData);
+            
+            // Get data
+            const retrieved = sessionStorage.getItem('generatorFormData');
+            const parsed = JSON.parse(retrieved);
+            console.log('Retrieved sessionStorage data:', parsed);
+            
+            alert('SessionStorage test completed. Check console for details.');
+        }
+        
+        // Run tests on load
+        window.onload = runTests;
+    </script>
+</body>
+</html>

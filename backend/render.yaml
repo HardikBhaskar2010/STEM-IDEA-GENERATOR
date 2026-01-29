@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: stem-idea-generator-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ENABLE_OPENROUTER
+        value: true
+      - key: OPENROUTER_API_KEY
+        value: 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
+      - key: SUPABASE_URL
+        value: https://satbswbgkcgaddbesgns.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdGJzd2Jna2NnYWRkYmVzZ25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5Mjc4NTUsImV4cCI6MjA4MjUwMzg1NX0.vJ7FWirMkmOsO13TzzRfbiUZC6g3hD6i1wmLM23epcg

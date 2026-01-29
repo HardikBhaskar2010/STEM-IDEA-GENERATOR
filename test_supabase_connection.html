@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .config { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    
+    <div class="config">
+        <h3>Current Configuration:</h3>
+        <p><strong>Supabase URL:</strong> <span id="supabase-url">Loading...</span></p>
+        <p><strong>Anon Key:</strong> <span id="anon-key">Loading...</span></p>
+    </div>
+    
+    <button onclick="testConnection()">Test Supabase Connection</button>
+    <button onclick="testUserCreation()">Test User Creation</button>
+    <button onclick="testProjectSave()">Test Project Save</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        // Load environment variables (simulated)
+        const SUPABASE_URL = 'https://satbswbgkcgaddbesgns.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdGJzd2Jna2NnYWRkYmVzZ25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5Mjc4NTUsImV4cCI6MjA4MjUwMzg1NX0.vJ7FWirMkmOsO13TzzRfbiUZC6g3hD6i1wmLM23epcg';
+        
+        // Display config
+        document.getElementById('supabase-url').textContent = SUPABASE_URL;
+        document.getElementById('anon-key').textContent = SUPABASE_ANON_KEY.substring(0, 20) + '...';
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testConnection() {
+            addResult('🔍 Testing Supabase connection...', 'info');
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    addResult(`✅ Supabase connection successful! Status: ${response.status}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    addResult(`⚠️ Supabase responded with status ${response.status}<br><pre>${errorText}</pre>`, 'warning');
+                }
+            } catch (error) {
+                addResult(`❌ Failed to connect to Supabase: ${error.message}<br><br>Possible causes:<br>• Network connectivity issues<br>• Supabase service is down<br>• CORS configuration issues<br>• Firewall blocking the connection`, 'error');
+            }
+        }
+        
+        async function testUserCreation() {
+            addResult('🔍 Testing user table access...', 'info');
+            
+            try {
+                const guestId = 'test_guest_' + Date.now();
+                
+                // Try to query users table
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=id&guest_id=eq.${guestId}`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ Users table accessible! Response: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    addResult(`❌ Users table access failed: ${response.status}<br><pre>${errorText}</pre>`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ User table test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testProjectSave() {
+            addResult('🔍 Testing project table access...', 'info');
+            
+            try {
+                // Try to query projects table
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/projects?select=id&limit=1`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ Projects table accessible! Response: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    addResult(`❌ Projects table access failed: ${response.status}<br><pre>${errorText}</pre>`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Projects table test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-test on load
+        window.onload = function() {
+            addResult('🚀 Supabase Connection Tester Ready', 'info');
+            addResult('This will help diagnose the Supabase connection issues you\'re experiencing.', 'info');
+        };
+    </script>
+</body>
+</html>

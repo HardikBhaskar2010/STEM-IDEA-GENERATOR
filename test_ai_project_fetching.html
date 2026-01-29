@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Project Fetching Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .test-case { margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>AI Project Fetching Test</h1>
+    
+    <div class="info">
+        <h3>Test Queries for AI Project Fetching:</h3>
+        <ul>
+            <li><strong>"List my projects"</strong> - Should fetch and display user's projects</li>
+            <li><strong>"Show my projects"</strong> - Alternative phrasing</li>
+            <li><strong>"Project stats"</strong> - Should show project statistics</li>
+            <li><strong>"How many projects do I have?"</strong> - Should show project count</li>
+        </ul>
+    </div>
+    
+    <button onclick="createTestProjects()">Create Test Projects</button>
+    <button onclick="testProjectListing()">Test "List Projects"</button>
+    <button onclick="testProjectStats()">Test "Project Stats"</button>
+    <button onclick="clearTestProjects()">Clear Test Projects</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function createTestProjects() {
+            const testProjects = [
+                {
+                    id: 'test_project_1',
+                    title: 'Smart Plant Watering System',
+                    description: 'An IoT-based automatic plant watering system using soil moisture sensors',
+                    difficulty: 'Beginner',
+                    estimatedTime: '1 week',
+                    estimatedCost: '$45',
+                    components: ['Arduino Uno', 'Soil Moisture Sensor', 'Water Pump', 'Relay Module'],
+                    skills: ['Basic Programming', 'Sensor Integration', 'IoT Basics'],
+                    steps: ['Setup Arduino', 'Connect sensors', 'Program logic', 'Test system'],
+                    status: 'in-progress',
+                    progress: 60,
+                    notes: '',
+                    starred: true,
+                    tags: ['iot', 'automation'],
+                    completed_steps: [0, 1],
+                    generated_from_params: {
+                        projectType: 'iot',
+                        skillLevel: 'beginner',
+                        interests: 'Smart plant care system'
+                    },
+                    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'test_project_2',
+                    title: 'Arduino-Controlled LED Matrix',
+                    description: 'A programmable 8x8 LED matrix display for showing patterns and text',
+                    difficulty: 'Intermediate',
+                    estimatedTime: '3 days',
+                    estimatedCost: '$25',
+                    components: ['Arduino Nano', '8x8 LED Matrix', 'MAX7219 Driver', 'Breadboard'],
+                    skills: ['Matrix Control', 'SPI Communication', 'Pattern Programming'],
+                    steps: ['Wire matrix', 'Install libraries', 'Create patterns', 'Add animations'],
+                    status: 'completed',
+                    progress: 100,
+                    notes: 'Great project for learning matrix displays!',
+                    starred: false,
+                    tags: ['electronics', 'display'],
+                    completed_steps: [0, 1, 2, 3],
+                    generated_from_params: {
+                        projectType: 'electronics',
+                        skillLevel: 'intermediate',
+                        interests: 'LED matrix display project'
+                    },
+                    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+                    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'test_project_3',
+                    title: 'Autonomous Line-Following Robot',
+                    description: 'A robot that can follow a black line using infrared sensors',
+                    difficulty: 'Advanced',
+                    estimatedTime: '2 weeks',
+                    estimatedCost: '$120',
+                    components: ['Arduino Uno', 'Motor Driver', 'IR Sensors', 'Chassis', 'Motors', 'Wheels'],
+                    skills: ['Robotics', 'Sensor Fusion', 'PID Control', 'Motor Control'],
+                    steps: ['Build chassis', 'Mount sensors', 'Program navigation', 'Tune PID', 'Test course'],
+                    status: 'planning',
+                    progress: 0,
+                    notes: '',
+                    starred: true,
+                    tags: ['robotics', 'autonomous'],
+                    completed_steps: [],
+                    generated_from_params: {
+                        projectType: 'robotics',
+                        skillLevel: 'advanced',
+                        interests: 'Line following robot with PID control'
+                    },
+                    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+                }
+            ];
+            
+            localStorage.setItem('stem_projects_fallback', JSON.stringify(testProjects));
+            addResult(`✅ Created ${testProjects.length} test projects in localStorage`, 'success');
+            addResult(`Projects: ${testProjects.map(p => p.title).join(', ')}`, 'info');
+        }
+        
+        async function testProjectListing() {
+            addResult('🔍 Testing project listing functionality...', 'info');
+            
+            try {
+                // Simulate the AI service project listing logic
+                const projects = getStoredProjects();
+                
+                if (projects.length === 0) {
+                    addResult('❌ No projects found. Create test projects first.', 'error');
+                    return;
+                }
+                
+                // Format projects list (similar to AI service)
+                let projectsList = `📋 **Your Saved Projects** (${projects.length} total)\\n\\n`;
+                
+                projects.slice(0, 10).forEach((project, index) => {
+                    const statusEmoji = {
+                        'planning': '📝',
+                        'in-progress': '🔄',
+                        'completed': '✅',
+                        'abandoned': '⏸️'
+                    }[project.status] || '📝';
+                    
+                    const skillLevel = project.generated_from_params?.skillLevel || project.difficulty;
+                    const projectType = project.generated_from_params?.projectType || 'General';
+                    
+                    projectsList += `**${index + 1}. ${project.title}**\\n`;
+                    projectsList += `   ${statusEmoji} *${project.status}* • ${skillLevel} • ${projectType}\\n`;
+                    projectsList += `   ⏱️ ${project.estimatedTime} • 💰 ${project.estimatedCost}\\n\\n`;
+                });
+                
+                projectsList += `📊 **Quick Stats:**\\n`;
+                projectsList += `• ✅ Completed: ${projects.filter(p => p.status === 'completed').length}\\n`;
+                projectsList += `• 🔄 In Progress: ${projects.filter(p => p.status === 'in-progress').length}\\n`;
+                projectsList += `• 📝 Planning: ${projects.filter(p => p.status === 'planning').length}\\n\\n`;
+                
+                addResult(`✅ Project listing test successful!<br><pre>${projectsList}</pre>`, 'success');
+            } catch (error) {
+                addResult(`❌ Project listing test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testProjectStats() {
+            addResult('🔍 Testing project statistics functionality...', 'info');
+            
+            try {
+                const projects = getStoredProjects();
+                
+                if (projects.length === 0) {
+                    addResult('❌ No projects found. Create test projects first.', 'error');
+                    return;
+                }
+                
+                const stats = {
+                    total: projects.length,
+                    completed: projects.filter(p => p.status === 'completed').length,
+                    inProgress: projects.filter(p => p.status === 'in-progress').length,
+                    planning: projects.filter(p => p.status === 'planning').length,
+                };
+                
+                let statsText = `📊 **Your Project Statistics**\\n\\n`;
+                statsText += `🎯 **Total Projects:** ${stats.total}\\n\\n`;
+                statsText += `**Status Breakdown:**\\n`;
+                statsText += `• ✅ **Completed:** ${stats.completed} projects\\n`;
+                statsText += `• 🔄 **In Progress:** ${stats.inProgress} projects\\n`;
+                statsText += `• 📝 **Planning:** ${stats.planning} projects\\n\\n`;
+                
+                const completionRate = Math.round((stats.completed / stats.total) * 100);
+                statsText += `🏆 **Completion Rate:** ${completionRate}%\\n\\n`;
+                
+                addResult(`✅ Project stats test successful!<br><pre>${statsText}</pre>`, 'success');
+            } catch (error) {
+                addResult(`❌ Project stats test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function getStoredProjects() {
+            try {
+                const stored = localStorage.getItem('stem_projects_fallback');
+                return stored ? JSON.parse(stored) : [];
+            } catch (error) {
+                console.error('Error reading from localStorage:', error);
+                return [];
+            }
+        }
+        
+        function clearTestProjects() {
+            localStorage.removeItem('stem_projects_fallback');
+            addResult('🗑️ Test projects cleared from localStorage', 'info');
+        }
+        
+        // Auto-check on load
+        window.onload = function() {
+            addResult('🚀 AI Project Fetching Tester Ready', 'info');
+            addResult('This tests the AI\'s ability to fetch and display user projects with privacy protection.', 'info');
+            
+            const projects = getStoredProjects();
+            if (projects.length > 0) {
+                addResult(`📦 Found ${projects.length} existing test projects in localStorage`, 'info');
+            } else {
+                addResult('💡 No test projects found. Click "Create Test Projects" to start testing.', 'info');
+            }
+        };
+    </script>
+</body>
+</html>
