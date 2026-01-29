@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageCircle, X, Send, Mic, MicOff, Maximize2, Minimize2, Trash2 } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, MicOff, Maximize2, Minimize2, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -31,6 +31,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionId = useRef(chatHistoryService.generateSessionId());
@@ -274,6 +275,34 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
     });
   }, []);
 
+  const handleReadAloud = useCallback(async (messageId: string, content: string) => {
+    if (readingMessageId === messageId) {
+      // Stop reading if already reading this message
+      aiVoiceService.stopSpeaking();
+      setReadingMessageId(null);
+      return;
+    }
+
+    try {
+      setReadingMessageId(messageId);
+      await aiVoiceService.speak(content, {
+        useElevenLabs: true, // Use ElevenLabs for better quality
+        rate: 1.2, // Enthusiastic pace
+        pitch: 1.3, // Childish, cheerful tone
+        volume: 0.8
+      });
+    } catch (error) {
+      console.warn('TTS failed:', error);
+      toast({
+        title: 'Voice Error',
+        description: 'Failed to read message aloud',
+        variant: 'destructive'
+      });
+    } finally {
+      setReadingMessageId(null);
+    }
+  }, [readingMessageId]);
+
   if (!isOpen) {
     return (
       <div className={cn("fixed bottom-6 right-6 z-50", className)}>
@@ -370,72 +399,103 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
                       {message.content}
                     </p>
                   ) : (
-                    <div className="chat-markdown">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                          strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
-                          em: ({ children }) => <em className="italic">{children}</em>,
-                          ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-                          li: ({ children }) => <li className="ml-2">{children}</li>,
-                          h1: ({ children }) => <h1 className="text-lg font-bold mb-2 text-foreground">{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-base font-bold mb-2 text-foreground">{children}</h2>,
-                          h3: ({ children }) => <h3 className="text-sm font-bold mb-1 text-foreground">{children}</h3>,
-                          code: ({ children, className }) => {
-                            const isInline = !className;
-                            return isInline ? (
-                              <code className="bg-muted-foreground/10 px-1 py-0.5 rounded text-xs font-mono">
+                    <div className="space-y-2">
+                      <div className="chat-markdown">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
+                            em: ({ children }) => <em className="italic">{children}</em>,
+                            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                            li: ({ children }) => <li className="ml-2">{children}</li>,
+                            h1: ({ children }) => <h1 className="text-lg font-bold mb-2 text-foreground">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-base font-bold mb-2 text-foreground">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-sm font-bold mb-1 text-foreground">{children}</h3>,
+                            code: ({ children, className }) => {
+                              const isInline = !className;
+                              return isInline ? (
+                                <code className="bg-muted-foreground/10 px-1 py-0.5 rounded text-xs font-mono">
+                                  {children}
+                                </code>
+                              ) : (
+                                <pre className="bg-muted-foreground/10 p-2 rounded text-xs font-mono overflow-x-auto">
+                                  <code>{children}</code>
+                                </pre>
+                              );
+                            },
+                            table: ({ children }) => (
+                              <div className="overflow-x-auto mb-2">
+                                <table className="min-w-full border-collapse border border-border">
+                                  {children}
+                                </table>
+                              </div>
+                            ),
+                            thead: ({ children }) => (
+                              <thead className="bg-muted/50">{children}</thead>
+                            ),
+                            tbody: ({ children }) => (
+                              <tbody>{children}</tbody>
+                            ),
+                            tr: ({ children }) => (
+                              <tr className="border-b border-border">{children}</tr>
+                            ),
+                            th: ({ children }) => (
+                              <th className="border border-border px-2 py-1 text-left font-semibold text-xs">
                                 {children}
-                              </code>
-                            ) : (
-                              <pre className="bg-muted-foreground/10 p-2 rounded text-xs font-mono overflow-x-auto">
-                                <code>{children}</code>
-                              </pre>
-                            );
-                          },
-                          table: ({ children }) => (
-                            <div className="overflow-x-auto mb-2">
-                              <table className="min-w-full border-collapse border border-border">
+                              </th>
+                            ),
+                            td: ({ children }) => (
+                              <td className="border border-border px-2 py-1 text-xs">
                                 {children}
-                              </table>
-                            </div>
-                          ),
-                          thead: ({ children }) => (
-                            <thead className="bg-muted/50">{children}</thead>
-                          ),
-                          tbody: ({ children }) => (
-                            <tbody>{children}</tbody>
-                          ),
-                          tr: ({ children }) => (
-                            <tr className="border-b border-border">{children}</tr>
-                          ),
-                          th: ({ children }) => (
-                            <th className="border border-border px-2 py-1 text-left font-semibold text-xs">
-                              {children}
-                            </th>
-                          ),
-                          td: ({ children }) => (
-                            <td className="border border-border px-2 py-1 text-xs">
-                              {children}
-                            </td>
-                          ),
-                          blockquote: ({ children }) => (
-                            <blockquote className="border-l-4 border-primary/30 pl-3 italic text-muted-foreground mb-2">
-                              {children}
-                            </blockquote>
-                          ),
-                          hr: () => <hr className="border-border my-2" />
-                        }}
-                      >
-                        {message.content}
-                      </ReactMarkdown>
+                              </td>
+                            ),
+                            blockquote: ({ children }) => (
+                              <blockquote className="border-l-4 border-primary/30 pl-3 italic text-muted-foreground mb-2">
+                                {children}
+                              </blockquote>
+                            ),
+                            hr: () => <hr className="border-border my-2" />
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                      
+                      {/* Read Aloud Button for AI messages */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs opacity-50">
+                          {message.timestamp.toLocaleTimeString()}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReadAloud(message.id, message.content)}
+                          className="h-6 px-2 text-xs opacity-60 hover:opacity-100 transition-opacity"
+                          title={readingMessageId === message.id ? "Stop reading" : "Read aloud"}
+                        >
+                          {readingMessageId === message.id ? (
+                            <>
+                              <VolumeX className="h-3 w-3 mr-1" />
+                              Stop
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="h-3 w-3 mr-1" />
+                              Read Aloud
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   )}
-                  <p className="text-xs opacity-50 mt-1">
-                    {message.timestamp.toLocaleTimeString()}
-                  </p>
+                  
+                  {message.role === 'user' && (
+                    <p className="text-xs opacity-50 mt-1">
+                      {message.timestamp.toLocaleTimeString()}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

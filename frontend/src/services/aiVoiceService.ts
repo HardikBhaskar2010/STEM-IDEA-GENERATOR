@@ -4,7 +4,7 @@
  */
 
 import { projectService } from './projectServiceSupabase';
-import { UserIdManager } from '@/utils/userIdManager';
+import { elevenLabsTTS } from './elevenLabsTTS';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api';
 
@@ -30,7 +30,6 @@ class AIVoiceService {
   private recognition: any = null;
   private synthesis: SpeechSynthesis | null = null;
   private isListening: boolean = false;
-  private onTranscriptCallback: ((text: string) => void) | null = null;
   private conversationContext: Record<string, any> = {};
 
   constructor() {
@@ -173,11 +172,11 @@ class AIVoiceService {
       }
       
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('🚨 AI voice processing error:', error);
       console.error('🚨 Error details:', {
-        message: error.message,
-        stack: error.stack,
+        message: error?.message,
+        stack: error?.stack,
         transcript,
         apiUrl: `${API_BASE_URL}/ai-guidance/process-voice`
       });
@@ -220,45 +219,45 @@ class AIVoiceService {
         
         if (projects.length === 0) {
           return {
-            text: "You don't have any saved projects yet! 🚀\n\nWould you like to create your first project? I can help you generate:\n• **Robotics projects** - robots, automation, mechatronics\n• **IoT projects** - smart devices, sensors, connectivity\n• **Electronics projects** - circuits, displays, controllers\n• **Automation projects** - smart systems, monitoring\n\nJust say something like 'Create a beginner robotics project' to get started!",
+            text: "Aww, looks like you haven't created any projects yet! But that's totally okay - everyone starts somewhere! 🌱\n\n✨ **Let's build something AMAZING together!** I can help you make:\n• 🤖 **Super cool robots** - they can move and think!\n• 🏠 **Smart home gadgets** - like magic for your house!\n• ⚡ **Electronic wizardry** - lights, sounds, and circuits!\n• 🤖 **Automation magic** - making things work by themselves!\n\nJust say something like 'Create a fun robotics project!' and we'll start our adventure! This is gonna be epic! 🎊",
             action: 'suggest_navigation',
             parameters: { path: '/generator' }
           };
         }
 
         // Format projects list
-        let projectsList = `📋 **Your Saved Projects** (${projects.length} total)\n\n`;
+        let projectsList = `🎉 **Your Amazing Project Collection!** (${projects.length} awesome creations!)\n\nWow, look at all these incredible projects you've been working on! I'm so proud! ✨\n\n`;
         
         projects.slice(0, 10).forEach((project, index) => {
           const statusEmoji = {
-            'planning': '📝',
-            'in-progress': '🔄',
-            'completed': '✅',
-            'abandoned': '⏸️'
-          }[project.status] || '📝';
+            'planning': '🎯',
+            'in-progress': '🚀',
+            'completed': '🏆',
+            'abandoned': '😴'
+          }[project.status] || '🎯';
           
           const skillLevel = project.generated_from_params?.skillLevel || project.difficulty;
           const projectType = project.generated_from_params?.projectType || 'General';
           
-          projectsList += `**${index + 1}. ${project.title}**\n`;
-          projectsList += `   ${statusEmoji} *${project.status}* • ${skillLevel} • ${projectType}\n`;
-          projectsList += `   ⏱️ ${project.estimatedTime} • 💰 ${project.estimatedCost}\n\n`;
+          projectsList += `**${index + 1}. ${project.title}** ✨\n`;
+          projectsList += `   ${statusEmoji} *${project.status}* • ${skillLevel} level • ${projectType}\n`;
+          projectsList += `   ⏰ ${project.estimatedTime} • 💰 ${project.estimatedCost}\n\n`;
         });
 
         if (projects.length > 10) {
-          projectsList += `*...and ${projects.length - 10} more projects*\n\n`;
+          projectsList += `*...and ${projects.length - 10} more fantastic projects!* 🌟\n\n`;
         }
 
-        projectsList += `📊 **Quick Stats:**\n`;
-        projectsList += `• ✅ Completed: ${projects.filter(p => p.status === 'completed').length}\n`;
-        projectsList += `• 🔄 In Progress: ${projects.filter(p => p.status === 'in-progress').length}\n`;
-        projectsList += `• 📝 Planning: ${projects.filter(p => p.status === 'planning').length}\n\n`;
+        projectsList += `📊 **Your Super Stats:**\n`;
+        projectsList += `• 🏆 Completed: ${projects.filter(p => p.status === 'completed').length} (You're amazing!)\n`;
+        projectsList += `• 🚀 In Progress: ${projects.filter(p => p.status === 'in-progress').length} (Keep going!)\n`;
+        projectsList += `• 🎯 Planning: ${projects.filter(p => p.status === 'planning').length} (Great ideas!)\n\n`;
 
-        projectsList += `Want to see more details? Visit your [Library](/library) or ask me about a specific project!`;
+        projectsList += `Want to see more details? Visit your awesome [Library](/library) or ask me about any specific project! I love talking about your creations! 💫`;
 
         // Add storage info
         if (connectionStatus.fallback) {
-          projectsList += `\n\n💾 *Note: Projects are currently stored locally (Supabase offline)*`;
+          projectsList += `\n\n💾 *Note: Your projects are safely stored locally right now! 🏠*`;
         }
 
         return {
@@ -338,7 +337,7 @@ class AIVoiceService {
     // Greeting responses
     if (lowerTranscript.includes('hello') || lowerTranscript.includes('hi') || lowerTranscript.includes('hey')) {
       return {
-        text: "Hello! 👋 I'm your STEM project assistant. I can help you:\n\n• Create new projects (try: 'create a robotics project')\n• Navigate the app (try: 'open dashboard')\n• Find components (try: 'show me Arduino boards')\n• **List your projects** (try: 'show my projects')\n• Answer questions about STEM topics\n\nWhat would you like to do?",
+        text: "Hi there! 🌟 I'm your super excited STEM buddy! I'm like, REALLY good at helping with cool projects! ✨\n\n🎯 **What we can do together:**\n• 🤖 Build awesome robots (they're SO cool!)\n• 💡 Create smart gadgets that'll blow your mind\n• 🔧 Find the perfect components for your ideas\n• 📋 Check out your amazing project collection\n• 🎓 Learn super fun STEM stuff!\n\nOoh, ooh! What exciting thing should we work on today? I'm practically bouncing with excitement! 🎉",
         action: 'greeting'
       };
     }
@@ -346,7 +345,7 @@ class AIVoiceService {
     // Help responses
     if (lowerTranscript.includes('help') || lowerTranscript.includes('what can you do')) {
       return {
-        text: "I can help you with:\n\n🔧 **Create Projects**: 'Generate a robotics project' or 'Create an IoT device'\n📱 **Navigate**: 'Open dashboard', 'Go to library', 'Show components'\n📋 **Manage Projects**: 'List my projects', 'Show project stats'\n🎓 **Learn**: 'Teach me about Arduino' or 'How do sensors work?'\n💬 **Chat**: Ask me anything about STEM, electronics, or programming!\n\nTry saying something like 'Show my projects' or 'Create a beginner robotics project' to get started!",
+        text: "Yay! You want to know what I can do? This is gonna be FUN! 🎊\n\n✨ **My Super Powers:**\n🚀 **Project Magic**: 'Make me a robot!' or 'Create something amazing!'\n🗺️ **Adventure Guide**: 'Take me to the lab!' or 'Show me my dashboard!'\n📋 **Project Detective**: 'What projects do I have?' or 'Show my creations!'\n🎓 **Knowledge Buddy**: 'Teach me about Arduino!' or 'How do sensors work?'\n💬 **Chat Friend**: Ask me ANYTHING about STEM - I love talking about it!\n\nI'm like a super smart friend who knows ALL about building cool stuff! What should we explore first? 🌈",
         action: 'help'
       };
     }
@@ -385,7 +384,7 @@ class AIVoiceService {
       console.log('🔍 AI Service Basic Processing - Extracted parameters:', { projectType, skillLevel });
       
       return {
-        text: "Great! I'll help you create a project. Taking you to the Project Lab where you can specify your requirements and generate a custom STEM project.",
+        text: "OMG YES! 🎉 Building projects is like, the BEST thing ever! I'm so excited to help you create something absolutely amazing! ✨\n\nLet's zoom over to our super cool Project Lab where we can design the most incredible STEM project together! This is gonna be SO much fun! 🚀",
         action: 'navigate',
         parameters: { 
           path: '/generator',
@@ -464,20 +463,38 @@ class AIVoiceService {
 
     // Default response for unrecognized input
     return {
-      text: "I'm here to help with your STEM projects! 🚀\n\nTry asking me:\n• 'List my projects' or 'Show my projects'\n• 'Create a robotics project'\n• 'Show me Arduino components'\n• 'Open my dashboard'\n• 'Help me learn about sensors'\n\nOr just tell me what you want to build and I'll guide you through it!",
+      text: "Ooh, that sounds interesting! I'm not quite sure what you mean, but I'm super excited to help anyway! 🌟\n\n✨ **Here's what I LOVE helping with:**\n• 🎯 'Show me my awesome projects!' \n• 🤖 'Let's build a cool robot!'\n• 🏠 'Take me on a tour!' (dashboard, library, etc.)\n• 🎓 'Teach me something amazing!'\n\nI'm like a really enthusiastic friend who knows tons about building cool stuff! What adventure should we go on together? 🚀💫",
       action: 'unknown'
     };
   }
 
   /**
-   * Speak text using text-to-speech
+   * Speak text using ElevenLabs TTS or fallback to browser TTS
    */
-  speak(text: string, options?: {
+  async speak(text: string, options?: {
     rate?: number;
     pitch?: number;
     volume?: number;
     voice?: SpeechSynthesisVoice;
+    useElevenLabs?: boolean;
   }): Promise<void> {
+    try {
+      // Use ElevenLabs TTS by default for better quality
+      if (options?.useElevenLabs !== false) {
+        console.log('🎵 Using ElevenLabs TTS for cheerful voice');
+        await elevenLabsTTS.textToSpeech(text, {
+          stability: 0.8, // More stable for professional sound
+          similarityBoost: 0.7,
+          style: 0.6, // Slightly more expressive for childish tone
+          useSpeakerBoost: true
+        });
+        return;
+      }
+    } catch (error) {
+      console.warn('ElevenLabs TTS failed, falling back to browser TTS:', error);
+    }
+
+    // Fallback to browser TTS
     return new Promise((resolve, reject) => {
       if (!this.synthesis) {
         reject(new Error('Speech synthesis not supported'));
@@ -488,12 +505,26 @@ class AIVoiceService {
       this.synthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = options?.rate || 1.1;
-      utterance.pitch = options?.pitch || 1.0;
+      
+      // Configure for cheerful, childish tone
+      utterance.rate = options?.rate || 1.2; // Faster for enthusiasm
+      utterance.pitch = options?.pitch || 1.3; // Higher for childish tone
       utterance.volume = options?.volume || 0.8;
       
       if (options?.voice) {
         utterance.voice = options.voice;
+      } else {
+        // Try to find a cheerful female voice
+        const voices = this.synthesis.getVoices();
+        const cheerfulVoice = voices.find(voice => 
+          voice.name.toLowerCase().includes('female') ||
+          voice.name.toLowerCase().includes('samantha') ||
+          voice.name.toLowerCase().includes('karen') ||
+          voice.lang.includes('en-US')
+        );
+        if (cheerfulVoice) {
+          utterance.voice = cheerfulVoice;
+        }
       }
 
       utterance.onend = () => resolve();
