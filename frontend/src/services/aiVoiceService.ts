@@ -182,13 +182,10 @@ class AIVoiceService {
         apiUrl: `${API_BASE_URL}/ai-guidance/process-voice`
       });
       
-      // Return a more helpful fallback response
+      // Return the fallback response directly without error message prefix
       const fallbackResponse = await this.basicProcessing(transcript);
-      return {
-        text: `I'm having trouble connecting to my AI brain right now. Let me try to help you anyway! You said: "${transcript}". ${fallbackResponse.text}`,
-        action: fallbackResponse.action,
-        parameters: fallbackResponse.parameters
-      };
+      console.log('🔄 Using fallback processing due to API connection issue');
+      return fallbackResponse;
     }
   }
 
