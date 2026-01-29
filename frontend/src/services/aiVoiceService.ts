@@ -483,9 +483,9 @@ class AIVoiceService {
       if (options?.useElevenLabs !== false) {
         console.log('🎵 Using ElevenLabs TTS for cheerful voice');
         await elevenLabsTTS.textToSpeech(text, {
-          stability: 0.8, // More stable for professional sound
-          similarityBoost: 0.7,
-          style: 0.6, // Slightly more expressive for childish tone
+          stability: 0.75, // More stable for professional sound
+          similarityBoost: 0.8, // Higher similarity for consistent voice
+          style: 0.7, // More expressive for natural emotion delivery
           useSpeakerBoost: true
         });
         return;
@@ -494,7 +494,7 @@ class AIVoiceService {
       console.warn('ElevenLabs TTS failed, falling back to browser TTS:', error);
     }
 
-    // Fallback to browser TTS
+    // Fallback to browser TTS with enhanced preprocessing
     return new Promise((resolve, reject) => {
       if (!this.synthesis) {
         reject(new Error('Speech synthesis not supported'));
@@ -504,7 +504,9 @@ class AIVoiceService {
       // Cancel any ongoing speech
       this.synthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      // Use the same preprocessing as ElevenLabs for consistency
+      const processedText = this.preprocessTextForTTS(text);
+      const utterance = new SpeechSynthesisUtterance(processedText);
       
       // Configure for cheerful, childish tone
       utterance.rate = options?.rate || 1.2; // Faster for enthusiasm
@@ -532,6 +534,65 @@ class AIVoiceService {
 
       this.synthesis.speak(utterance);
     });
+  }
+
+  /**
+   * Enhanced text preprocessing for TTS (matches ElevenLabs preprocessing)
+   */
+  private preprocessTextForTTS(text: string): string {
+    return text
+      // Remove markdown formatting first
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/`(.*?)`/g, '$1')
+      
+      // Handle emotion markers - remove them, let voice convey emotion naturally
+      .replace(/\*excited\*/gi, '')
+      .replace(/\*sparkle\*/gi, '')
+      .replace(/\*rocket\*/gi, '')
+      .replace(/\*star\*/gi, '')
+      .replace(/\*magic\*/gi, '')
+      .replace(/\*celebration\*/gi, '')
+      .replace(/\*happy\*/gi, '')
+      .replace(/\*cheerful\*/gi, '')
+      .replace(/\*enthusiastic\*/gi, '')
+      .replace(/\*amazed\*/gi, '')
+      .replace(/\*surprised\*/gi, '')
+      .replace(/\*delighted\*/gi, '')
+      
+      // Remove ALL emojis completely
+      .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emoticons
+      .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Misc Symbols and Pictographs
+      .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transport and Map
+      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Regional indicator symbols
+      .replace(/[\u{2600}-\u{26FF}]/gu, '') // Misc symbols
+      .replace(/[\u{2700}-\u{27BF}]/gu, '') // Dingbats
+      .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Supplemental Symbols and Pictographs
+      .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Symbols and Pictographs Extended-A
+      
+      // Handle emotion words in parentheses - remove them
+      .replace(/\(excited\)/gi, '')
+      .replace(/\(happy\)/gi, '')
+      .replace(/\(cheerful\)/gi, '')
+      .replace(/\(enthusiastic\)/gi, '')
+      .replace(/\(amazed\)/gi, '')
+      .replace(/\(surprised\)/gi, '')
+      .replace(/\(delighted\)/gi, '')
+      .replace(/\(joyful\)/gi, '')
+      .replace(/\(thrilled\)/gi, '')
+      .replace(/\(ecstatic\)/gi, '')
+      
+      // Clean up extra spaces and newlines
+      .replace(/\n+/g, '. ')
+      .replace(/\s+/g, ' ')
+      .replace(/\.\s*\./g, '.')
+      .replace(/^\s+|\s+$/g, '')
+      
+      // Add natural pauses for better speech flow
+      .replace(/([.!?])\s*([A-Z])/g, '$1 $2')
+      .replace(/:\s*/g, ': ')
+      
+      .trim();
   }
 
   /**

@@ -106,7 +106,7 @@
         
         <div class="test-section">
             <h3>📝 Custom Text Test</h3>
-            <textarea id="customText" placeholder="Enter text to convert to speech...">Hi there! I'm your super excited STEM buddy! I'm like, REALLY good at helping with cool projects! This is a test of my cheerful voice using ElevenLabs TTS! Isn't this amazing? 🎉</textarea>
+            <textarea id="customText" placeholder="Enter text to convert to speech...">Hi there! 🎉 I'm your super excited STEM buddy! I'm like, REALLY good at helping with cool projects! ✨ This is a test of my cheerful voice using ElevenLabs TTS! *excited* Isn't this amazing? 🚀 (enthusiastic) Let's build something incredible together! 🌟</textarea>
             <br>
             <button onclick="testCustomText()">🎤 Test Custom Text</button>
             <button onclick="stopAudio()">⏹️ Stop Audio</button>
@@ -143,6 +143,8 @@
             <button onclick="testGreeting()">👋 Test Greeting</button>
             <button onclick="testProjectResponse()">🤖 Test Project Response</button>
             <button onclick="testHelpResponse()">❓ Test Help Response</button>
+            <button onclick="testEmotionFiltering()">😊 Test Emotion Filtering</button>
+            <button onclick="testEmojiRemoval()">🎭 Test Emoji Removal</button>
             <button onclick="testFallback()">🔄 Test Browser TTS Fallback</button>
         </div>
 
@@ -153,7 +155,7 @@
 
     <script>
         // Mock environment variable for testing
-        const ELEVENLABS_API_KEY = 'sk_cce372986ee911f0dff6510fa0229953a897586b30279fc6';
+        const ELEVENLABS_API_KEY = 'sk_f023787232fb80f740e9b21a3387695fa3280daeafa8d898';
         const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1';
 
         // Voice IDs
@@ -174,22 +176,57 @@
 
         function preprocessText(text) {
             return text
+                // Remove markdown formatting first
                 .replace(/\*\*(.*?)\*\*/g, '$1')
                 .replace(/\*(.*?)\*/g, '$1')
                 .replace(/`(.*?)`/g, '$1')
-                .replace(/🎉/g, ' *excited* ')
-                .replace(/✨/g, ' *sparkle* ')
-                .replace(/🚀/g, ' *rocket* ')
-                .replace(/🤖/g, ' robot ')
-                .replace(/💡/g, ' idea ')
-                .replace(/🌟/g, ' *star* ')
-                .replace(/🎯/g, ' target ')
-                .replace(/🏆/g, ' trophy ')
-                .replace(/💫/g, ' *magic* ')
-                .replace(/🎊/g, ' *celebration* ')
-                .replace(/🌈/g, ' rainbow ')
-                .replace(/\n+/g, '. ')
-                .replace(/\s+/g, ' ')
+                
+                // Handle emotion markers - convert to natural speech patterns instead of saying the word
+                .replace(/\*excited\*/gi, '') // Remove *excited* markers - let voice convey excitement
+                .replace(/\*sparkle\*/gi, '') // Remove *sparkle* markers
+                .replace(/\*rocket\*/gi, '') // Remove *rocket* markers
+                .replace(/\*star\*/gi, '') // Remove *star* markers
+                .replace(/\*magic\*/gi, '') // Remove *magic* markers
+                .replace(/\*celebration\*/gi, '') // Remove *celebration* markers
+                .replace(/\*happy\*/gi, '') // Remove *happy* markers
+                .replace(/\*cheerful\*/gi, '') // Remove *cheerful* markers
+                .replace(/\*enthusiastic\*/gi, '') // Remove *enthusiastic* markers
+                .replace(/\*amazed\*/gi, '') // Remove *amazed* markers
+                .replace(/\*surprised\*/gi, '') // Remove *surprised* markers
+                .replace(/\*delighted\*/gi, '') // Remove *delighted* markers
+                
+                // Remove ALL emojis completely (Unicode ranges for emojis)
+                .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emoticons
+                .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Misc Symbols and Pictographs
+                .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transport and Map
+                .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Regional indicator symbols
+                .replace(/[\u{2600}-\u{26FF}]/gu, '') // Misc symbols
+                .replace(/[\u{2700}-\u{27BF}]/gu, '') // Dingbats
+                .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Supplemental Symbols and Pictographs
+                .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Symbols and Pictographs Extended-A
+                
+                // Handle specific emotion words in parentheses or brackets - remove them
+                .replace(/\(excited\)/gi, '')
+                .replace(/\(happy\)/gi, '')
+                .replace(/\(cheerful\)/gi, '')
+                .replace(/\(enthusiastic\)/gi, '')
+                .replace(/\(amazed\)/gi, '')
+                .replace(/\(surprised\)/gi, '')
+                .replace(/\(delighted\)/gi, '')
+                .replace(/\(joyful\)/gi, '')
+                .replace(/\(thrilled\)/gi, '')
+                .replace(/\(ecstatic\)/gi, '')
+                
+                // Clean up extra spaces and newlines
+                .replace(/\n+/g, '. ') // Convert newlines to periods for natural pauses
+                .replace(/\s+/g, ' ') // Multiple spaces to single space
+                .replace(/\.\s*\./g, '.') // Remove double periods
+                .replace(/^\s+|\s+$/g, '') // Trim whitespace
+                
+                // Add natural pauses for better speech flow
+                .replace(/([.!?])\s*([A-Z])/g, '$1 $2') // Ensure space after punctuation
+                .replace(/:\s*/g, ': ') // Ensure space after colons
+                
                 .trim();
         }
 
@@ -208,9 +245,9 @@
                         text: preprocessText(text),
                         model_id: 'eleven_monolingual_v1',
                         voice_settings: {
-                            stability: 0.8,
-                            similarity_boost: 0.7,
-                            style: 0.6,
+                            stability: 0.75,
+                            similarity_boost: 0.8,
+                            style: 0.7,
                             use_speaker_boost: true
                         }
                     })
@@ -329,6 +366,16 @@
 
         async function testHelpResponse() {
             const text = "Yay! You want to know what I can do? This is gonna be FUN! 🎊 I can help you create amazing robots, build smart gadgets, find perfect components, and learn super fun STEM stuff! I'm like a super smart friend who knows ALL about building cool stuff! What should we explore first? 🌈";
+            await textToSpeech(text);
+        }
+
+        async function testEmotionFiltering() {
+            const text = "I'm so *excited* to help you! (enthusiastic) This project will be *amazing* and I'm *thrilled* to work on it! *cheerful* Let's make something incredible together! (delighted)";
+            await textToSpeech(text);
+        }
+
+        async function testEmojiRemoval() {
+            const text = "Welcome! 🎉 Let's build robots 🤖 and create amazing projects! ✨ This will be super fun! 🚀 Are you ready? 🌟 Let's go! 💫";
             await textToSpeech(text);
         }
 

@@ -54,9 +54,9 @@ class ElevenLabsTTSService {
 
       const {
         voiceId = DEFAULT_VOICE_ID,
-        stability = 0.75,
-        similarityBoost = 0.75,
-        style = 0.5,
+        stability = 0.75, // Slightly more stable for clearer emotion
+        similarityBoost = 0.8, // Higher similarity for consistent voice
+        style = 0.7, // Higher style for more expressive emotion delivery
         useSpeakerBoost = true
       } = options;
 
@@ -99,28 +99,63 @@ class ElevenLabsTTSService {
 
   /**
    * Preprocess text for better TTS output
+   * - Removes emojis completely (no pronunciation)
+   * - Converts emotion markers to natural speech patterns
+   * - Cleans markdown formatting
    */
   private preprocessText(text: string): string {
     return text
-      // Remove markdown formatting
+      // Remove markdown formatting first
       .replace(/\*\*(.*?)\*\*/g, '$1')
       .replace(/\*(.*?)\*/g, '$1')
       .replace(/`(.*?)`/g, '$1')
-      // Replace emojis with descriptive text for better pronunciation
-      .replace(/🎉/g, ' *excited* ')
-      .replace(/✨/g, ' *sparkle* ')
-      .replace(/🚀/g, ' *rocket* ')
-      .replace(/🤖/g, ' robot ')
-      .replace(/💡/g, ' idea ')
-      .replace(/🌟/g, ' *star* ')
-      .replace(/🎯/g, ' target ')
-      .replace(/🏆/g, ' trophy ')
-      .replace(/💫/g, ' *magic* ')
-      .replace(/🎊/g, ' *celebration* ')
-      .replace(/🌈/g, ' rainbow ')
+      
+      // Handle emotion markers - convert to natural speech patterns instead of saying the word
+      .replace(/\*excited\*/gi, '') // Remove *excited* markers - let voice convey excitement
+      .replace(/\*sparkle\*/gi, '') // Remove *sparkle* markers
+      .replace(/\*rocket\*/gi, '') // Remove *rocket* markers
+      .replace(/\*star\*/gi, '') // Remove *star* markers
+      .replace(/\*magic\*/gi, '') // Remove *magic* markers
+      .replace(/\*celebration\*/gi, '') // Remove *celebration* markers
+      .replace(/\*happy\*/gi, '') // Remove *happy* markers
+      .replace(/\*cheerful\*/gi, '') // Remove *cheerful* markers
+      .replace(/\*enthusiastic\*/gi, '') // Remove *enthusiastic* markers
+      .replace(/\*amazed\*/gi, '') // Remove *amazed* markers
+      .replace(/\*surprised\*/gi, '') // Remove *surprised* markers
+      .replace(/\*delighted\*/gi, '') // Remove *delighted* markers
+      
+      // Remove ALL emojis completely (Unicode ranges for emojis)
+      .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emoticons
+      .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Misc Symbols and Pictographs
+      .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transport and Map
+      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Regional indicator symbols
+      .replace(/[\u{2600}-\u{26FF}]/gu, '') // Misc symbols
+      .replace(/[\u{2700}-\u{27BF}]/gu, '') // Dingbats
+      .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Supplemental Symbols and Pictographs
+      .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Symbols and Pictographs Extended-A
+      
+      // Handle specific emotion words in parentheses or brackets - remove them
+      .replace(/\(excited\)/gi, '')
+      .replace(/\(happy\)/gi, '')
+      .replace(/\(cheerful\)/gi, '')
+      .replace(/\(enthusiastic\)/gi, '')
+      .replace(/\(amazed\)/gi, '')
+      .replace(/\(surprised\)/gi, '')
+      .replace(/\(delighted\)/gi, '')
+      .replace(/\(joyful\)/gi, '')
+      .replace(/\(thrilled\)/gi, '')
+      .replace(/\(ecstatic\)/gi, '')
+      
       // Clean up extra spaces and newlines
-      .replace(/\n+/g, '. ')
-      .replace(/\s+/g, ' ')
+      .replace(/\n+/g, '. ') // Convert newlines to periods for natural pauses
+      .replace(/\s+/g, ' ') // Multiple spaces to single space
+      .replace(/\.\s*\./g, '.') // Remove double periods
+      .replace(/^\s+|\s+$/g, '') // Trim whitespace
+      
+      // Add natural pauses for better speech flow
+      .replace(/([.!?])\s*([A-Z])/g, '$1 $2') // Ensure space after punctuation
+      .replace(/:\s*/g, ': ') // Ensure space after colons
+      
       .trim();
   }
 
