@@ -334,23 +334,7 @@ class AIVoiceService {
       }
     }
     
-    // Greeting responses
-    if (lowerTranscript.includes('hello') || lowerTranscript.includes('hi') || lowerTranscript.includes('hey')) {
-      return {
-        text: "Hi there! 🌟 I'm your super excited STEM buddy! I'm like, REALLY good at helping with cool projects! ✨\n\n🎯 **What we can do together:**\n• 🤖 Build awesome robots (they're SO cool!)\n• 💡 Create smart gadgets that'll blow your mind\n• 🔧 Find the perfect components for your ideas\n• 📋 Check out your amazing project collection\n• 🎓 Learn super fun STEM stuff!\n\nOoh, ooh! What exciting thing should we work on today? I'm practically bouncing with excitement! 🎉",
-        action: 'greeting'
-      };
-    }
-    
-    // Help responses
-    if (lowerTranscript.includes('help') || lowerTranscript.includes('what can you do')) {
-      return {
-        text: "Yay! You want to know what I can do? This is gonna be FUN! 🎊\n\n✨ **My Super Powers:**\n🚀 **Project Magic**: 'Make me a robot!' or 'Create something amazing!'\n🗺️ **Adventure Guide**: 'Take me to the lab!' or 'Show me my dashboard!'\n📋 **Project Detective**: 'What projects do I have?' or 'Show my creations!'\n🎓 **Knowledge Buddy**: 'Teach me about Arduino!' or 'How do sensors work?'\n💬 **Chat Friend**: Ask me ANYTHING about STEM - I love talking about it!\n\nI'm like a super smart friend who knows ALL about building cool stuff! What should we explore first? 🌈",
-        action: 'help'
-      };
-    }
-    
-    // Extract intent and parameters for project generation
+    // Extract intent and parameters for project generation (CHECK THIS FIRST before general "help")
     if (lowerTranscript.includes('generate') || lowerTranscript.includes('create project') || lowerTranscript.includes('make a project') || lowerTranscript.includes('build a project') || 
         lowerTranscript.includes('create a') || lowerTranscript.includes('make a') || lowerTranscript.includes('build a') ||
         lowerTranscript.includes('expert') || lowerTranscript.includes('advanced') || lowerTranscript.includes('beginner') || lowerTranscript.includes('intermediate') ||
@@ -408,6 +392,22 @@ class AIVoiceService {
           }
         };
       }
+    }
+    
+    // Greeting responses
+    if (lowerTranscript.includes('hello') || lowerTranscript.includes('hi') || lowerTranscript.includes('hey')) {
+      return {
+        text: "Hi there! 🌟 I'm your super excited STEM buddy! I'm like, REALLY good at helping with cool projects! ✨\n\n🎯 **What we can do together:**\n• 🤖 Build awesome robots (they're SO cool!)\n• 💡 Create smart gadgets that'll blow your mind\n• 🔧 Find the perfect components for your ideas\n• 📋 Check out your amazing project collection\n• 🎓 Learn super fun STEM stuff!\n\nOoh, ooh! What exciting thing should we work on today? I'm practically bouncing with excitement! 🎉",
+        action: 'greeting'
+      };
+    }
+    
+    // Help responses (CHECK THIS AFTER project creation to avoid conflicts)
+    if (lowerTranscript.includes('help') || lowerTranscript.includes('what can you do')) {
+      return {
+        text: "Yay! You want to know what I can do? This is gonna be FUN! 🎊\n\n✨ **My Super Powers:**\n🚀 **Project Magic**: 'Make me a robot!' or 'Create something amazing!'\n🗺️ **Adventure Guide**: 'Take me to the lab!' or 'Show me my dashboard!'\n📋 **Project Detective**: 'What projects do I have?' or 'Show my creations!'\n🎓 **Knowledge Buddy**: 'Teach me about Arduino!' or 'How do sensors work?'\n💬 **Chat Friend**: Ask me ANYTHING about STEM - I love talking about it!\n\nI'm like a super smart friend who knows ALL about building cool stuff! What should we explore first? 🌈",
+        action: 'help'
+      };
     }
     
     if (lowerTranscript.includes('open') || lowerTranscript.includes('go to') || lowerTranscript.includes('show me')) {
