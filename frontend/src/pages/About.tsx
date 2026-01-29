@@ -73,24 +73,24 @@ const About: React.FC = () => {
 
   const projects = [
     {
-      name: 'ATAL Idea Generator',
-      url: 'https://github.com/HardikBhaskar2010/atal_idea_generator',
-      why: 'Arduino brainstorming and structured idea generation.',
+      name: 'Veronica AI - Multi-Modal AI Assistant',
+      url: 'https://github.com/HardikBhaskar2010/Brainyy',
+      why: 'Advanced AI assistant with multi-modal capabilities for enhanced user interaction.',
     },
     {
-      name: 'Calcu',
-      url: 'https://github.com/HardikBhaskar2010/Calcu',
-      why: 'A simple and intuitive calculator app.',
+      name: 'Potato Disease Detector',
+      url: 'https://github.com/HardikBhaskar2010/Final-Potato',
+      why: 'AI-powered plant disease detection system for agricultural applications.',
     },
     {
-      name: 'Streamit',
-      url: 'https://github.com/HardikBhaskar2010/Streamit',
-      why: 'A streaming platform prototype.',
+      name: 'Cosmic Explorer',
+      url: 'https://github.com/HardikBhaskar2010/cosmic-explorer-live',
+      why: 'Interactive space exploration platform with real-time cosmic data visualization.',
     },
     {
-      name: 'Notes',
-      url: 'https://github.com/HardikBhaskar2010/Notes',
-      why: 'A digital notebook for ideas and learnings.',
+      name: 'Emotion Study Planner',
+      url: 'https://github.com/HardikBhaskar2010/Emotion-Study-Planner',
+      why: 'Intelligent study planner that adapts to emotional states for optimal learning.',
     },
   ];
 
