@@ -26,10 +26,11 @@ export const TTSProvider: React.FC<TTSProviderProps> = ({ children }) => {
   const [currentMessageId, setCurrentMessageId] = useState<string | null>(null);
 
   const setTTSActive = useCallback((active: boolean, messageId?: string) => {
+    console.log('🔊 TTS Context - setTTSActive called:', { active, messageId, currentState: isTTSActive });
     setIsTTSActive(active);
     setCurrentMessageId(active ? (messageId || null) : null);
-    console.log('🔊 TTS Context - State changed:', { active, messageId });
-  }, []);
+    console.log('🔊 TTS Context - State updated:', { active, messageId });
+  }, [isTTSActive]);
 
   const stopTTS = useCallback(() => {
     setIsTTSActive(false);

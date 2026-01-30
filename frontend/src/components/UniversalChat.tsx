@@ -410,12 +410,18 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
     try {
       setReadingMessageId(messageId);
       setTTSActive(true, messageId);
+      
+      console.log('🔊 TTS - Starting to speak:', messageId);
+      
       await aiVoiceService.speak(content, {
         useElevenLabs: true, // Use ElevenLabs for better quality
         rate: 1.2, // Enthusiastic pace
         pitch: 1.3, // Childish, cheerful tone
         volume: 0.8
       });
+      
+      console.log('🔇 TTS - Finished speaking:', messageId);
+      
     } catch (error) {
       console.warn('TTS failed:', error);
       toast({
@@ -424,9 +430,11 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
         variant: 'destructive'
       });
     } finally {
+      // Always clean up TTS state when done
       setReadingMessageId(null);
       setTTSActive(false);
       stopTTS();
+      console.log('🔇 TTS - State cleaned up');
     }
   }, [readingMessageId, setTTSActive, stopTTS]);
 

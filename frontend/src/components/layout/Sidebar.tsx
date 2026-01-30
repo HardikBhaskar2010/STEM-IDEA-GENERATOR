@@ -28,6 +28,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
   const { colorTheme } = usePreferences();
   const { isTTSActive } = useTTS();
+  
+  // Debug TTS state changes
+  useEffect(() => {
+    console.log('🔊 Sidebar - TTS state changed:', isTTSActive);
+  }, [isTTSActive]);
 
   // Check if mobile on mount and window resize
   useEffect(() => {
@@ -166,22 +171,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Bottom Section - Theme Toggle, TTS Visualizer & Voice Commands */}
         <div className="p-4 border-t border-white/10 space-y-2">
-          <div className="flex gap-2 flex-row flex-wrap items-center">
+          <div className="flex gap-3 flex-row items-center justify-center">
             <ThemeToggle />
             
             {/* TTS Visualizer - Shows when AI is speaking */}
-            <div className="flex items-center gap-2 px-2 py-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
-              <TTSVisualizer
-                isActive={isTTSActive}
-                color="#3b82f6"
-                lineCount={4}
-                height={20}
-                className="transition-opacity duration-300"
-              />
-              <span className="text-xs text-muted-foreground">
-                {isTTSActive ? 'AI Speaking' : 'TTS Ready'}
-              </span>
-            </div>
+            <TTSVisualizer
+              isActive={isTTSActive}
+              color="#3b82f6"
+              lineCount={4}
+              height={24}
+              className="transition-opacity duration-300"
+            />
             
             <VoiceCommand />
           </div>
