@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { aiVoiceService } from '@/services/aiVoiceService';
 import { universalChatHistoryService, UniversalChatMessage } from '@/services/universalChatHistoryService';
 import AudioVisualizer from '@/components/AudioVisualizer';
+import LineVisualizer from '@/components/LineVisualizer';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -659,7 +660,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
           </div>
         </ScrollArea>
 
-        {/* Voice transcript display with visualizer */}
+        {/* Voice transcript display with line visualizer */}
         {isVoiceMode && (
           <div className="px-4 py-3 bg-gradient-to-r from-primary/10 to-secondary/10 border-t border-primary/20">
             <div className="flex items-center gap-3">
@@ -693,26 +694,43 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
               className="flex-1"
               disabled={isLoading}
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={toggleVoiceMode}
-              className={cn(
-                "transition-all duration-200 relative",
-                isVoiceMode ? "bg-red-500 text-white hover:bg-red-600 shadow-lg" : "hover:bg-primary/10"
+            
+            {/* Line Visualizer next to voice button */}
+            <div className="flex items-center gap-2">
+              {isVoiceMode && (
+                <div className="flex items-center justify-center px-2 py-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+                  <LineVisualizer
+                    isListening={isVoiceMode}
+                    audioStream={audioStream}
+                    color="#3b82f6"
+                    lineCount={5}
+                    height={28}
+                  />
+                </div>
               )}
-              title={isVoiceMode ? "Stop listening" : "Start voice input"}
-            >
-              {isVoiceMode ? (
-                <>
-                  <MicOff className="h-4 w-4" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
-                </>
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={toggleVoiceMode}
+                className={cn(
+                  "transition-all duration-200 relative",
+                  isVoiceMode ? "bg-red-500 text-white hover:bg-red-600 shadow-lg" : "hover:bg-primary/10"
+                )}
+                title={isVoiceMode ? "Stop listening" : "Start voice input"}
+              >
+                {isVoiceMode ? (
+                  <>
+                    <MicOff className="h-4 w-4" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
+                  </>
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            
             <Button 
               type="submit" 
               size="icon"
