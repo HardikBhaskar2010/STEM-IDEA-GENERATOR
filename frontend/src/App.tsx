@@ -11,6 +11,7 @@ import { PreferencesProvider } from "@/contexts/PreferencesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PerfProvider } from "@/contexts/PerfContext";
 import { ThreeDProvider } from "@/contexts/ThreeDContext";
+import { TTSProvider } from "@/contexts/TTSContext";
 import { PageLoading } from "@/components/ui/loading";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { preloadAnimations } from "@/lib/animation";
@@ -59,7 +60,8 @@ const App = () => {
             <PerfProvider>
               <ThreeDProvider>
                 <AnimationProvider>
-                  <TooltipProvider>
+                  <TTSProvider>
+                    <TooltipProvider>
                     {/* 🔥 Vercel magic */}
                     <SpeedInsights />
                     <Analytics />
@@ -90,11 +92,12 @@ const App = () => {
                       </Suspense>
                     </BrowserRouter>
                   </TooltipProvider>
-                </AnimationProvider>
-              </ThreeDProvider>
-            </PerfProvider>
-          </PreferencesProvider>
-        </AuthProvider>
+                </TTSProvider>
+              </AnimationProvider>
+            </ThreeDProvider>
+          </PerfProvider>
+        </PreferencesProvider>
+      </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
 );

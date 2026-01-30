@@ -15,6 +15,8 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { cn } from '@/lib/utils';
 import ThemeToggle from '@/components/ui/theme-toggle';
 import { VoiceCommand } from '@/components/VoiceCommand';
+import { TTSVisualizer } from '@/components/TTSVisualizer';
+import { useTTS } from '@/contexts/TTSContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
   const { colorTheme } = usePreferences();
+  const { isTTSActive } = useTTS();
 
   // Check if mobile on mount and window resize
   useEffect(() => {
@@ -161,10 +164,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </nav>
 
-        {/* Bottom Section - Theme Toggle & Voice Commands */}
+        {/* Bottom Section - Theme Toggle, TTS Visualizer & Voice Commands */}
         <div className="p-4 border-t border-white/10 space-y-2">
-          <div className="flex gap-2 flex-row flex-wrap">
+          <div className="flex gap-2 flex-row flex-wrap items-center">
             <ThemeToggle />
+            
+            {/* TTS Visualizer - Shows when AI is speaking */}
+            <div className="flex items-center gap-2 px-2 py-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+              <TTSVisualizer
+                isActive={isTTSActive}
+                color="#3b82f6"
+                lineCount={4}
+                height={20}
+                className="transition-opacity duration-300"
+              />
+              <span className="text-xs text-muted-foreground">
+                {isTTSActive ? 'AI Speaking' : 'TTS Ready'}
+              </span>
+            </div>
+            
             <VoiceCommand />
           </div>
         </div>

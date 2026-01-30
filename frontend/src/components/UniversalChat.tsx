@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { aiVoiceService } from '@/services/aiVoiceService';
 import { universalChatHistoryService, UniversalChatMessage } from '@/services/universalChatHistoryService';
+import { useTTS } from '@/contexts/TTSContext';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import LineVisualizer from '@/components/LineVisualizer';
 import TTSVisualizer from '@/components/TTSVisualizer';
@@ -36,10 +37,12 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
-  const [isTTSActive, setIsTTSActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionId = useRef(universalChatHistoryService.generateSessionId());
+  
+  // Use TTS context for global TTS state
+  const { isTTSActive, setTTSActive, stopTTS } = useTTS();
 
   // Load chat history on mount
   useEffect(() => {
@@ -399,13 +402,14 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       // Stop reading if already reading this message
       aiVoiceService.stopSpeaking();
       setReadingMessageId(null);
-      setIsTTSActive(false);
+      setTTSActive(false);
+      stopTTS();
       return;
     }
 
     try {
       setReadingMessageId(messageId);
-      setIsTTSActive(true);
+      setTTSActive(true, messageId);
       await aiVoiceService.speak(content, {
         useElevenLabs: true, // Use ElevenLabs for better quality
         rate: 1.2, // Enthusiastic pace
@@ -421,9 +425,10 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       });
     } finally {
       setReadingMessageId(null);
-      setIsTTSActive(false);
+      setTTSActive(false);
+      stopTTS();
     }
-  }, [readingMessageId]);
+  }, [readingMessageId, setTTSActive, stopTTS]);
 
   if (!isOpen) {
     return (
