@@ -73,6 +73,13 @@ export class UserIdManager {
   }
 
   /**
+   * Get user ID (alias for getGuestId for compatibility)
+   */
+  static getUserId(): string {
+    return this.getGuestId();
+  }
+
+  /**
    * Check if user has a guest ID
    */
   static hasGuestId(): boolean {

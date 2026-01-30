@@ -411,14 +411,29 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
   if (!isOpen) {
     return (
       <div className={cn("fixed bottom-6 right-6 z-50", className)}>
-        <Button
-          onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-primary to-secondary hover:scale-110"
-          size="icon"
-          title="Open AI Assistant (Ctrl+K)"
-        >
-          <MessageCircle className="h-6 w-6" />
-        </Button>
+        <div className="relative">
+          {/* Voice mode indicator */}
+          {isVoiceMode && (
+            <div className="absolute inset-0 -m-2 rounded-full border-2 border-blue-500 animate-pulse" />
+          )}
+          
+          <Button
+            onClick={() => setIsOpen(true)}
+            className={cn(
+              "h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-primary to-secondary hover:scale-110 relative",
+              isVoiceMode && "animate-pulse shadow-blue-500/50"
+            )}
+            size="icon"
+            title="Open AI Assistant (Ctrl+K)"
+          >
+            <MessageCircle className="h-6 w-6" />
+            
+            {/* Voice mode indicator */}
+            {isVoiceMode && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-white" />
+            )}
+          </Button>
+        </div>
       </div>
     );
   }
