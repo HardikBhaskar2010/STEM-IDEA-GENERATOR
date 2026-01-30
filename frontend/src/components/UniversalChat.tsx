@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { aiVoiceService } from '@/services/aiVoiceService';
 import { universalChatHistoryService, UniversalChatMessage } from '@/services/universalChatHistoryService';
+import AudioVisualizer from '@/components/AudioVisualizer';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -31,6 +32,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -310,21 +312,30 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       aiVoiceService.stopListening();
       setIsVoiceMode(false);
       setVoiceTranscript('');
+      setAudioStream(null);
     } else {
       // Start listening
       setIsVoiceMode(true);
       try {
+        // Get audio stream for visualizer
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setAudioStream(stream);
+        
         await aiVoiceService.startListening((transcript, isFinal) => {
           setVoiceTranscript(transcript);
           if (isFinal) {
             sendMessage(transcript);
             setIsVoiceMode(false);
             setVoiceTranscript('');
+            // Stop audio stream
+            stream.getTracks().forEach(track => track.stop());
+            setAudioStream(null);
           }
         });
       } catch (error) {
         console.error('Voice error:', error);
         setIsVoiceMode(false);
+        setAudioStream(null);
         toast({
           title: 'Voice Error',
           description: 'Failed to start voice input',
@@ -412,9 +423,18 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
     return (
       <div className={cn("fixed bottom-6 right-6 z-50", className)}>
         <div className="relative">
-          {/* Voice mode indicator */}
+          {/* Audio visualizer ring around the button when listening */}
           {isVoiceMode && (
-            <div className="absolute inset-0 -m-2 rounded-full border-2 border-blue-500 animate-pulse" />
+            <div className="absolute inset-0 -m-2">
+              <AudioVisualizer
+                isListening={isVoiceMode}
+                audioStream={audioStream}
+                variant="circle"
+                color="#3b82f6"
+                sensitivity={1.5}
+                className="w-full h-full"
+              />
+            </div>
           )}
           
           <Button
@@ -639,12 +659,26 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
           </div>
         </ScrollArea>
 
-        {/* Voice transcript display */}
-        {isVoiceMode && voiceTranscript && (
-          <div className="px-4 py-2 bg-primary/10 border-t border-primary/20">
-            <p className="text-sm text-muted-foreground">
-              🎤 Listening: <span className="text-foreground">{voiceTranscript}</span>
-            </p>
+        {/* Voice transcript display with visualizer */}
+        {isVoiceMode && (
+          <div className="px-4 py-3 bg-gradient-to-r from-primary/10 to-secondary/10 border-t border-primary/20">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <AudioVisualizer
+                  isListening={isVoiceMode}
+                  audioStream={audioStream}
+                  variant="wave"
+                  color="#3b82f6"
+                  sensitivity={1.2}
+                  className="rounded"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-muted-foreground">
+                  🎤 Listening: <span className="text-foreground font-medium">{voiceTranscript || 'Speak now...'}</span>
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -665,12 +699,19 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
               size="icon"
               onClick={toggleVoiceMode}
               className={cn(
-                "transition-colors",
-                isVoiceMode ? "bg-red-500 text-white hover:bg-red-600" : ""
+                "transition-all duration-200 relative",
+                isVoiceMode ? "bg-red-500 text-white hover:bg-red-600 shadow-lg" : "hover:bg-primary/10"
               )}
               title={isVoiceMode ? "Stop listening" : "Start voice input"}
             >
-              {isVoiceMode ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {isVoiceMode ? (
+                <>
+                  <MicOff className="h-4 w-4" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
+                </>
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
             </Button>
             <Button 
               type="submit" 
