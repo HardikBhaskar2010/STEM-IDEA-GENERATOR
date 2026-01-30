@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line Visualizer Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .visualizer-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-radius: 5px;
+        }
+        .line-visualizer {
+            display: flex;
+            align-items: end;
+            gap: 3px;
+            height: 40px;
+            padding: 5px;
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 5px;
+        }
+        .line {
+            width: 4px;
+            background: #3b82f6;
+            border-radius: 2px;
+            transition: height 0.1s ease;
+            min-height: 4px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .status.active { background: #d4edda; color: #155724; }
+        .status.inactive { background: #f8d7da; color: #721c24; }
+        .log {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Line Visualizer Test</h1>
+        <p>Testing the line visualizer functionality for the Universal Chat</p>
+
+        <div class="test-section">
+            <h3>🎤 Voice Input Test</h3>
+            <div id="voiceStatus" class="status inactive">Voice: Inactive</div>
+            <button id="startVoice">Start Voice Input</button>
+            <button id="stopVoice" disabled>Stop Voice Input</button>
+            
+            <div class="visualizer-container">
+                <span>Line Visualizer:</span>
+                <div class="line-visualizer" id="lineVisualizer">
+                    <div class="line" id="line1"></div>
+                    <div class="line" id="line2"></div>
+                    <div class="line" id="line3"></div>
+                    <div class="line" id="line4"></div>
+                    <div class="line" id="line5"></div>
+                </div>
+                <span id="volumeLevel">Volume: 0%</span>
+            </div>
+            
+            <div id="transcript" style="margin: 10px 0; padding: 10px; background: #333; border-radius: 5px;">
+                Transcript will appear here...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Visualizer Animation Test</h3>
+            <button id="testAnimation">Test Animation (No Audio)</button>
+            <p>This will simulate the visualizer animation without requiring microphone access.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Debug Information</h3>
+            <div id="debugLog" class="log">Debug information will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        let isListening = false;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let animationId = null;
+        let testAnimationId = null;
+
+        const voiceStatus = document.getElementById('voiceStatus');
+        const startButton = document.getElementById('startVoice');
+        const stopButton = document.getElementById('stopVoice');
+        const transcript = document.getElementById('transcript');
+        const volumeLevel = document.getElementById('volumeLevel');
+        const debugLog = document.getElementById('debugLog');
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateVisualizer(dataArray) {
+            const lines = document.querySelectorAll('.line');
+            
+            if (!dataArray) {
+                // Default animation
+                lines.forEach((line, index) => {
+                    const height = 8 + Math.sin(Date.now() * 0.01 + index) * 4;
+                    line.style.height = `${height}px`;
+                });
+                return;
+            }
+
+            // Real audio data
+            lines.forEach((line, index) => {
+                const dataIndex = Math.floor((index / lines.length) * dataArray.length);
+                const amplitude = dataArray[dataIndex] / 255;
+                const height = Math.max(4, amplitude * 32);
+                line.style.height = `${height}px`;
+            });
+
+            // Calculate average volume
+            const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+            const volume = Math.round((average / 255) * 100);
+            volumeLevel.textContent = `Volume: ${volume}%`;
+        }
+
+        function animate() {
+            if (!analyser) return;
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(dataArray);
+            
+            updateVisualizer(dataArray);
+            
+            if (isListening) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        async function startVoiceInput() {
+            try {
+                log('🎤 Starting voice input...');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                log('✅ Microphone access granted');
+
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.8;
+                microphone.connect(analyser);
+                
+                log('✅ Audio analysis setup complete');
+
+                isListening = true;
+                voiceStatus.textContent = 'Voice: Active';
+                voiceStatus.className = 'status active';
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                
+                animate();
+                log('🎵 Visualizer animation started');
+
+                // Start speech recognition if available
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+                    
+                    recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcriptPart = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcriptPart;
+                            } else {
+                                interimTranscript += transcriptPart;
+                            }
+                        }
+                        
+                        transcript.innerHTML = `
+                            <strong>Final:</strong> ${finalTranscript}<br>
+                            <strong>Interim:</strong> <em>${interimTranscript}</em>
+                        `;
+                    };
+                    
+                    recognition.start();
+                    log('🗣️ Speech recognition started');
+                    
+                    window.currentRecognition = recognition;
+                } else {
+                    log('⚠️ Speech recognition not supported');
+                    transcript.textContent = 'Speech recognition not supported in this browser';
+                }
+
+            } catch (error) {
+                log(`❌ Error starting voice input: ${error.message}`);
+                alert('Error accessing microphone: ' + error.message);
+            }
+        }
+
+        function stopVoiceInput() {
+            log('🛑 Stopping voice input...');
+            
+            isListening = false;
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            if (window.currentRecognition) {
+                window.currentRecognition.stop();
+            }
+            
+            if (microphone) {
+                microphone.disconnect();
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+            }
+            
+            voiceStatus.textContent = 'Voice: Inactive';
+            voiceStatus.className = 'status inactive';
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            volumeLevel.textContent = 'Volume: 0%';
+            
+            // Reset visualizer
+            document.querySelectorAll('.line').forEach(line => {
+                line.style.height = '4px';
+            });
+            
+            log('✅ Voice input stopped');
+        }
+
+        function testAnimation() {
+            log('🧪 Testing visualizer animation...');
+            
+            let frame = 0;
+            const testAnimate = () => {
+                const lines = document.querySelectorAll('.line');
+                lines.forEach((line, index) => {
+                    const height = 8 + Math.sin(frame * 0.1 + index * 0.5) * 12;
+                    line.style.height = `${height}px`;
+                });
+                
+                frame++;
+                if (frame < 300) { // Run for ~5 seconds at 60fps
+                    testAnimationId = requestAnimationFrame(testAnimate);
+                } else {
+                    lines.forEach(line => line.style.height = '4px');
+                    log('✅ Test animation complete');
+                }
+            };
+            
+            testAnimate();
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', startVoiceInput);
+        stopButton.addEventListener('click', stopVoiceInput);
+        document.getElementById('testAnimation').addEventListener('click', testAnimation);
+
+        // Initialize
+        log('🚀 Line Visualizer Test initialized');
+        log('📋 Instructions:');
+        log('1. Click "Start Voice Input" to test with real microphone');
+        log('2. Click "Test Animation" to see visualizer without microphone');
+        log('3. Check if the 5 vertical lines animate properly');
+    </script>
+</body>
+</html>

@@ -695,19 +695,17 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
               disabled={isLoading}
             />
             
-            {/* Line Visualizer next to voice button */}
+            {/* Line Visualizer next to voice button - Always visible for testing */}
             <div className="flex items-center gap-2">
-              {isVoiceMode && (
-                <div className="flex items-center justify-center px-2 py-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
-                  <LineVisualizer
-                    isListening={isVoiceMode}
-                    audioStream={audioStream}
-                    color="#3b82f6"
-                    lineCount={5}
-                    height={28}
-                  />
-                </div>
-              )}
+              <div className="flex items-center justify-center px-2 py-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+                <LineVisualizer
+                  isListening={isVoiceMode}
+                  audioStream={audioStream}
+                  color="#3b82f6"
+                  lineCount={5}
+                  height={28}
+                />
+              </div>
               
               <Button
                 type="button"
