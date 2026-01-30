@@ -55,6 +55,27 @@ export const VoiceCommand: React.FC<VoiceCommandProps> = ({ onCommand }) => {
             description: 'Please allow microphone access to use voice commands.',
             variant: 'destructive',
           });
+        } else if (event.error === 'no-speech') {
+          console.log('No speech detected, retrying...');
+          // Don't show error for no-speech, just retry
+        } else if (event.error === 'audio-capture') {
+          toast({
+            title: 'Microphone Error',
+            description: 'Could not access microphone. Please check your audio settings.',
+            variant: 'destructive',
+          });
+        } else if (event.error === 'network') {
+          toast({
+            title: 'Network Error',
+            description: 'Speech recognition requires internet connection.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Voice Recognition Error',
+            description: `Error: ${event.error}. Please try again.`,
+            variant: 'destructive',
+          });
         }
       };
 

@@ -34,27 +34,33 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
     return pos;
   }, [count]);
 
+  // Create geometry ref to prevent buffer size changes
+  const geometryRef = useRef<THREE.BufferGeometry>(null);
+
   useFrame((state) => {
-    if (!pointsRef.current || animationComplexity === 'minimal') return;
+    if (!pointsRef.current || !geometryRef.current || animationComplexity === 'minimal') return;
 
     const time = state.clock.getElapsedTime();
-    const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    const positions = geometryRef.current.attributes.position.array as Float32Array;
 
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3;
-      positions[i3 + 1] += Math.sin(time * 0.5 + i * 0.1) * 0.001;
-    }
+    // Only animate if the buffer size matches expected count
+    if (positions.length === count * 3) {
+      for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+        positions[i3 + 1] += Math.sin(time * 0.5 + i * 0.1) * 0.001;
+      }
 
-    pointsRef.current.geometry.attributes.position.needsUpdate = true;
-    
-    if (animationComplexity === 'full') {
-      pointsRef.current.rotation.z = time * 0.02;
+      geometryRef.current.attributes.position.needsUpdate = true;
+      
+      if (animationComplexity === 'full') {
+        pointsRef.current.rotation.z = time * 0.02;
+      }
     }
   });
 
   return (
     <points ref={pointsRef}>
-      <bufferGeometry>
+      <bufferGeometry ref={geometryRef}>
         <bufferAttribute
           attach="attributes-position"
           count={count}

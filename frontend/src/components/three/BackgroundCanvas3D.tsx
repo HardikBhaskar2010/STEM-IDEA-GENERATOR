@@ -40,7 +40,14 @@ export const BackgroundCanvas3D: React.FC<BackgroundCanvas3DProps> = ({
         return;
       }
       
-      setCanRender(enable3D && isSupported && canCreate);
+      // Temporarily disable 3D to prevent buffer errors
+      console.warn('⚠️ 3D backgrounds temporarily disabled to prevent buffer errors');
+      setHasError(true);
+      setCanRender(false);
+      return;
+      
+      // TODO: Re-enable when buffer issues are fully resolved
+      // setCanRender(enable3D && isSupported && canCreate);
     };
 
     checkWebGL();

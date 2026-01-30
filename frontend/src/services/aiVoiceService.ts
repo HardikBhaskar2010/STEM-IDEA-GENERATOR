@@ -104,6 +104,13 @@ class AIVoiceService {
       this.recognition.onerror = (event: any) => {
         console.error('Voice recognition error:', event.error);
         this.isListening = false;
+        
+        // Don't reject on no-speech errors, just log them
+        if (event.error === 'no-speech') {
+          console.log('No speech detected, recognition ended normally');
+          return;
+        }
+        
         reject(new Error(event.error));
       };
 

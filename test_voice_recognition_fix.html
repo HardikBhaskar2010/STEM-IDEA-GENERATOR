@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recognition Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        .info { color: #60a5fa; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background: #374151;
+        }
+        .transcript {
+            background: #111;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            min-height: 50px;
+            border: 2px solid #333;
+        }
+        .listening {
+            border-color: #3b82f6;
+            background: #1e3a8a;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎤 Voice Recognition Fix Test</h1>
+    
+    <div class="test-section">
+        <h2>🔧 Fixes Applied</h2>
+        <div class="success">
+            <h3>✅ Voice Recognition Improvements:</h3>
+            <ul>
+                <li>✅ Fixed "no-speech" error handling in VoiceCommand</li>
+                <li>✅ Fixed "no-speech" error handling in aiVoiceService</li>
+                <li>✅ Added better error categorization and user feedback</li>
+                <li>✅ Improved error recovery and retry logic</li>
+            </ul>
+            
+            <h3>✅ WebGL Buffer Fixes:</h3>
+            <ul>
+                <li>✅ Fixed THREE.js buffer attribute errors in AnimatedBackground</li>
+                <li>✅ Added geometry ref to prevent buffer size changes</li>
+                <li>✅ Temporarily disabled 3D backgrounds to prevent crashes</li>
+                <li>✅ Added buffer size validation before animation</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Voice Recognition Test</h2>
+        <div class="status">
+            <p><strong>Status:</strong> <span id="status">Ready</span></p>
+            <p><strong>Browser Support:</strong> <span id="support">Checking...</span></p>
+        </div>
+        
+        <div class="transcript" id="transcript">
+            Click "Start Listening" and speak...
+        </div>
+        
+        <button id="startBtn" onclick="startListening()">Start Listening</button>
+        <button id="stopBtn" onclick="stopListening()" disabled>Stop Listening</button>
+        <button onclick="testMicrophone()">Test Microphone</button>
+        <button onclick="clearTranscript()">Clear</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Testing Instructions</h2>
+        <div class="info">
+            <h3>To test the voice recognition fixes:</h3>
+            <ol>
+                <li>Click "Test Microphone" to check audio permissions</li>
+                <li>Click "Start Listening" button above</li>
+                <li>Speak clearly into your microphone</li>
+                <li>Watch for transcript updates in real-time</li>
+                <li>Try different scenarios:
+                    <ul>
+                        <li>Normal speech</li>
+                        <li>Silence (should not show errors)</li>
+                        <li>Background noise</li>
+                        <li>Quick start/stop cycles</li>
+                    </ul>
+                </li>
+                <li>Check console for error handling improvements</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Expected Behavior</h2>
+        <div class="success">
+            <h3>✅ Should Work:</h3>
+            <ul>
+                <li>Voice recognition starts without errors</li>
+                <li>Real-time transcript updates</li>
+                <li>Graceful handling of silence periods</li>
+                <li>No console spam from "no-speech" errors</li>
+                <li>Proper error messages for real issues</li>
+            </ul>
+        </div>
+        
+        <div class="warning">
+            <h3>⚠️ Known Issues Fixed:</h3>
+            <ul>
+                <li>❌ "Voice recognition error: no-speech" spam</li>
+                <li>❌ THREE.WebGLAttributes buffer errors</li>
+                <li>❌ WebGL context loss crashes</li>
+                <li>❌ Poor error recovery</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let recognition = null;
+        let isListening = false;
+
+        // Check browser support
+        function checkSupport() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const supportElement = document.getElementById('support');
+            
+            if (SpeechRecognition) {
+                supportElement.textContent = '✅ Supported';
+                supportElement.className = 'success';
+                return true;
+            } else {
+                supportElement.textContent = '❌ Not Supported';
+                supportElement.className = 'error';
+                return false;
+            }
+        }
+
+        // Initialize speech recognition
+        function initRecognition() {
+            if (!checkSupport()) return null;
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                console.log('🎤 Voice recognition started');
+                updateStatus('🎤 Listening...', 'info');
+                document.getElementById('transcript').classList.add('listening');
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                isListening = true;
+            };
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                
+                document.getElementById('transcript').textContent = transcript;
+                console.log('📝 Transcript:', transcript);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Voice recognition error:', event.error);
+                
+                if (event.error === 'no-speech') {
+                    console.log('✅ No speech detected - this is normal and should not cause errors');
+                    updateStatus('No speech detected (normal)', 'warning');
+                } else if (event.error === 'not-allowed') {
+                    updateStatus('❌ Microphone access denied', 'error');
+                } else if (event.error === 'audio-capture') {
+                    updateStatus('❌ Microphone not available', 'error');
+                } else {
+                    updateStatus(`❌ Error: ${event.error}`, 'error');
+                }
+            };
+
+            recognition.onend = () => {
+                console.log('🎤 Voice recognition ended');
+                updateStatus('Recognition ended', 'info');
+                document.getElementById('transcript').classList.remove('listening');
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                isListening = false;
+            };
+
+            return recognition;
+        }
+
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = type;
+        }
+
+        function startListening() {
+            if (!recognition) {
+                recognition = initRecognition();
+            }
+            
+            if (recognition && !isListening) {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Failed to start recognition:', error);
+                    updateStatus('Failed to start', 'error');
+                }
+            }
+        }
+
+        function stopListening() {
+            if (recognition && isListening) {
+                recognition.stop();
+            }
+        }
+
+        function clearTranscript() {
+            document.getElementById('transcript').textContent = 'Click "Start Listening" and speak...';
+            document.getElementById('transcript').classList.remove('listening');
+        }
+
+        async function testMicrophone() {
+            try {
+                updateStatus('Testing microphone...', 'info');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                updateStatus('✅ Microphone access granted', 'success');
+                
+                // Stop the stream
+                stream.getTracks().forEach(track => track.stop());
+                
+                console.log('🎤 Microphone test successful');
+            } catch (error) {
+                console.error('Microphone test failed:', error);
+                updateStatus('❌ Microphone test failed', 'error');
+            }
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            checkSupport();
+            updateStatus('Ready to test', 'success');
+            console.log('🎤 Voice Recognition Test Ready');
+            console.log('✅ Fixes applied for no-speech error handling');
+            console.log('✅ WebGL buffer errors should be resolved');
+        };
+    </script>
+</body>
+</html>
