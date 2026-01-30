@@ -3873,6 +3873,223 @@ async def process_voice_command(request: VoiceProcessRequest):
         )
 
 
+# ───────────────── UNIVERSAL CHAT ENDPOINTS ─────────────────
+
+# Universal Chat models
+class UniversalChatMessage(BaseModel):
+    user_id: str
+    session_id: str
+    role: str  # 'user' or 'assistant'
+    content: str
+    message_type: Optional[str] = 'text'
+    voice_transcript: Optional[str] = None
+    voice_duration: Optional[float] = None
+    voice_confidence: Optional[float] = None
+    action_type: Optional[str] = None
+    action_parameters: Optional[Dict[str, Any]] = None
+    response_metadata: Optional[Dict[str, Any]] = None
+    conversation_context: Optional[Dict[str, Any]] = None
+
+class UniversalChatResponse(BaseModel):
+    id: str
+    user_id: str
+    session_id: str
+    role: str
+    content: str
+    message_type: str
+    created_at: str
+    action_type: Optional[str] = None
+    action_parameters: Optional[Dict[str, Any]] = None
+
+class ChatSessionRequest(BaseModel):
+    user_id: str
+    session_id: Optional[str] = None
+    title: Optional[str] = None
+
+class ChatSessionResponse(BaseModel):
+    id: str
+    session_id: str
+    user_id: str
+    title: str
+    message_count: int
+    is_active: bool
+    created_at: str
+
+@api.post("/universal-chat/save-message", response_model=UniversalChatResponse)
+async def save_universal_chat_message(message: UniversalChatMessage):
+    """
+    Save a universal chat message to the database
+    """
+    try:
+        from services.universal_chat_service import universal_chat_service
+        
+        result = await universal_chat_service.save_message(
+            user_id=message.user_id,
+            session_id=message.session_id,
+            role=message.role,
+            content=message.content,
+            message_type=message.message_type,
+            voice_transcript=message.voice_transcript,
+            voice_duration=message.voice_duration,
+            voice_confidence=message.voice_confidence,
+            action_type=message.action_type,
+            action_parameters=message.action_parameters,
+            response_metadata=message.response_metadata,
+            conversation_context=message.conversation_context
+        )
+        
+        return UniversalChatResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Error saving universal chat message: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to save message",
+                "code": "save_message_error",
+                "message": str(e)
+            }
+        )
+
+@api.get("/universal-chat/sessions/{user_id}")
+async def get_user_chat_sessions(user_id: str, limit: int = 20, offset: int = 0):
+    """
+    Get chat sessions for a user
+    """
+    try:
+        from services.universal_chat_service import universal_chat_service
+        
+        sessions = await universal_chat_service.get_user_sessions(
+            user_id=user_id,
+            limit=limit,
+            offset=offset
+        )
+        
+        return {"sessions": sessions, "total": len(sessions)}
+        
+    except Exception as e:
+        logger.error(f"Error getting user chat sessions: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to get sessions",
+                "code": "get_sessions_error",
+                "message": str(e)
+            }
+        )
+
+@api.get("/universal-chat/messages/{user_id}/{session_id}")
+async def get_session_messages(user_id: str, session_id: str, limit: int = 50, offset: int = 0):
+    """
+    Get messages for a specific chat session
+    """
+    try:
+        from services.universal_chat_service import universal_chat_service
+        
+        messages = await universal_chat_service.get_session_messages(
+            user_id=user_id,
+            session_id=session_id,
+            limit=limit,
+            offset=offset
+        )
+        
+        return {"messages": messages, "total": len(messages)}
+        
+    except Exception as e:
+        logger.error(f"Error getting session messages: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to get messages",
+                "code": "get_messages_error",
+                "message": str(e)
+            }
+        )
+
+@api.post("/universal-chat/create-session", response_model=ChatSessionResponse)
+async def create_chat_session(request: ChatSessionRequest):
+    """
+    Create a new chat session
+    """
+    try:
+        from services.universal_chat_service import universal_chat_service
+        
+        session = await universal_chat_service.create_session(
+            user_id=request.user_id,
+            session_id=request.session_id,
+            title=request.title
+        )
+        
+        return ChatSessionResponse(**session)
+        
+    except Exception as e:
+        logger.error(f"Error creating chat session: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to create session",
+                "code": "create_session_error",
+                "message": str(e)
+            }
+        )
+
+@api.delete("/universal-chat/session/{user_id}/{session_id}")
+async def delete_chat_session(user_id: str, session_id: str):
+    """
+    Delete a chat session and all its messages
+    """
+    try:
+        from services.universal_chat_service import universal_chat_service
+        
+        success = await universal_chat_service.delete_session(
+            user_id=user_id,
+            session_id=session_id
+        )
+        
+        if success:
+            return {"success": True, "message": "Session deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+    except Exception as e:
+        logger.error(f"Error deleting chat session: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to delete session",
+                "code": "delete_session_error",
+                "message": str(e)
+            }
+        )
+
+@api.get("/universal-chat/context/{user_id}/{session_id}")
+async def get_conversation_context(user_id: str, session_id: str, limit: int = 5):
+    """
+    Get conversation context for AI continuity
+    """
+    try:
+        from services.universal_chat_service import universal_chat_service
+        
+        context = await universal_chat_service.get_conversation_context(
+            user_id=user_id,
+            session_id=session_id,
+            limit=limit
+        )
+        
+        return context
+        
+    except Exception as e:
+        logger.error(f"Error getting conversation context: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to get context",
+                "code": "get_context_error",
+                "message": str(e)
+            }
+        )
+
+
 @api.get("/performance/database")
 async def get_database_performance():
     """

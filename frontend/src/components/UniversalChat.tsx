@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { aiVoiceService } from '@/services/aiVoiceService';
-import { chatHistoryService } from '@/services/chatHistoryService';
+import { universalChatHistoryService, UniversalChatMessage } from '@/services/universalChatHistoryService';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -34,22 +34,63 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
   const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const sessionId = useRef(chatHistoryService.generateSessionId());
+  const sessionId = useRef(universalChatHistoryService.generateSessionId());
 
   // Load chat history on mount
   useEffect(() => {
-    const history = chatHistoryService.getProjectHistory('universal_chat');
-    if (history.length > 0) {
-      setMessages(history as Message[]);
-    } else {
-      // Welcome message
-      setMessages([{
-        id: 'welcome',
-        role: 'assistant',
-        content: "👋 **Welcome to your AI STEM Assistant!**\n\nI'm here to help you create amazing STEM projects! Here's what I can do:\n\n🔧 **Generate Projects**: \"Create a robotics project\" or \"Make an IoT device\"\n📱 **Navigate**: \"Open dashboard\" or \"Show my library\"\n🎓 **Learn**: \"Teach me about Arduino\" or \"How do sensors work?\"\n💬 **Chat**: Ask me anything about electronics, programming, or engineering!\n\n**Try saying:** \"Hi\" or \"Create a beginner robotics project\" to get started! 🚀",
-        timestamp: new Date()
-      }]);
-    }
+    const loadChatHistory = async () => {
+      try {
+        const sessionMessages = await universalChatHistoryService.getSessionMessages(sessionId.current);
+        if (sessionMessages.length > 0) {
+          const formattedMessages = sessionMessages.map(msg => ({
+            id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            role: msg.role,
+            content: msg.content,
+            timestamp: new Date(msg.created_at || Date.now())
+          }));
+          setMessages(formattedMessages as Message[]);
+          console.log(`✅ Loaded ${formattedMessages.length} messages from chat history`);
+        } else {
+          // Welcome message for new sessions
+          const welcomeMessage = {
+            id: 'welcome',
+            role: 'assistant' as const,
+            content: "👋 **Welcome to your AI STEM Assistant!**\n\nI'm here to help you create amazing STEM projects! Here's what I can do:\n\n🔧 **Generate Projects**: \"Create a robotics project\" or \"Make an IoT device\"\n📱 **Navigate**: \"Open dashboard\" or \"Show my library\"\n🎓 **Learn**: \"Teach me about Arduino\" or \"How do sensors work?\"\n💬 **Chat**: Ask me anything about electronics, programming, or engineering!\n\n**Try saying:** \"Hi\" or \"Create a beginner robotics project\" to get started! 🚀",
+            timestamp: new Date()
+          };
+          setMessages([welcomeMessage]);
+          
+          // Save welcome message to history
+          try {
+            await universalChatHistoryService.saveMessage({
+              session_id: sessionId.current,
+              role: 'assistant',
+              content: welcomeMessage.content,
+              message_type: 'text',
+              action_type: 'welcome',
+              conversation_context: {
+                is_welcome_message: true,
+                session_start: new Date().toISOString()
+              }
+            });
+            console.log('✅ Welcome message saved to chat history');
+          } catch (error) {
+            console.warn('⚠️ Failed to save welcome message:', error);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error loading chat history:', error);
+        // Fallback to welcome message
+        setMessages([{
+          id: 'welcome',
+          role: 'assistant',
+          content: "👋 **Welcome to your AI STEM Assistant!**\n\nI'm here to help you create amazing STEM projects! Here's what I can do:\n\n🔧 **Generate Projects**: \"Create a robotics project\" or \"Make an IoT device\"\n📱 **Navigate**: \"Open dashboard\" or \"Show my library\"\n🎓 **Learn**: \"Teach me about Arduino\" or \"How do sensors work?\"\n💬 **Chat**: Ask me anything about electronics, programming, or engineering!\n\n**Try saying:** \"Hi\" or \"Create a beginner robotics project\" to get started! 🚀",
+          timestamp: new Date()
+        }]);
+      }
+    };
+
+    loadChatHistory();
   }, []);
 
   // Auto-scroll to bottom
@@ -80,7 +121,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
     }
   }, [isOpen]);
 
-  const addMessage = useCallback((role: 'user' | 'assistant', content: string) => {
+  const addMessage = useCallback(async (role: 'user' | 'assistant', content: string, messageType: string = 'text', actionType?: string, actionParameters?: Record<string, any>) => {
     const newMessage: Message = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       role,
@@ -88,21 +129,37 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       timestamp: new Date()
     };
     
-    setMessages(prev => {
-      const updated = [...prev, newMessage];
-      // Save to localStorage
-      chatHistoryService.saveMessage('universal_chat', newMessage as any, sessionId.current);
-      return updated;
-    });
+    setMessages(prev => [...prev, newMessage]);
+
+    // Save to backend via universalChatHistoryService
+    try {
+      const savedMessage = await universalChatHistoryService.saveMessage({
+        session_id: sessionId.current,
+        role,
+        content,
+        message_type: messageType,
+        action_type: actionType,
+        action_parameters: actionParameters,
+        conversation_context: {
+          timestamp: new Date().toISOString(),
+          message_count: messages.length + 1
+        }
+      });
+      
+      console.log('✅ Message saved to backend:', savedMessage.id);
+    } catch (error) {
+      console.warn('⚠️ Failed to save message to backend:', error);
+      // Fallback to localStorage (already handled by universalChatHistoryService)
+    }
 
     return newMessage;
-  }, []);
+  }, [messages.length]);
 
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
 
     // Add user message
-    addMessage('user', content);
+    await addMessage('user', content, 'text');
     setInputValue('');
     setIsLoading(true);
 
@@ -113,8 +170,8 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       const aiResponse = await aiVoiceService.processWithAI(content);
       console.log('✅ UniversalChat - Received AI response:', aiResponse);
       
-      // Add assistant response
-      addMessage('assistant', aiResponse.text);
+      // Add assistant response with action metadata
+      await addMessage('assistant', aiResponse.text, 'text', aiResponse.action, aiResponse.parameters);
 
       // Execute action if specified
       if (aiResponse.action === 'navigate' && aiResponse.parameters?.path) {
@@ -194,22 +251,22 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
         });
         
         // Add follow-up message with options
-        setTimeout(() => {
+        setTimeout(async () => {
           if (saved) {
-            addMessage('assistant', `🎊 Your project "${project.title}" is now in your Library! Would you like me to:\n\n• 📋 Show you all your projects\n• 🚀 Create another awesome project\n• 🎯 Take you to your Library to start working on it\n\nJust let me know what you'd like to do next! I'm so excited about what you're going to build! ✨`);
+            await addMessage('assistant', `🎊 Your project "${project.title}" is now in your Library! Would you like me to:\n\n• 📋 Show you all your projects\n• 🚀 Create another awesome project\n• 🎯 Take you to your Library to start working on it\n\nJust let me know what you'd like to do next! I'm so excited about what you're going to build! ✨`, 'text', 'suggest_options');
           } else {
-            addMessage('assistant', `🎯 Want me to try saving "${project.title}" to your Library again? Or would you like me to:\n\n• 🚀 Create a different project\n• 📋 Show you the project details again\n• 🎨 Modify this project idea\n\nJust say what you'd prefer! 🌟`);
+            await addMessage('assistant', `🎯 Want me to try saving "${project.title}" to your Library again? Or would you like me to:\n\n• 🚀 Create a different project\n• 📋 Show you the project details again\n• 🎨 Modify this project idea\n\nJust say what you'd prefer! 🌟`, 'text', 'suggest_options');
           }
         }, 2000);
       } else if (aiResponse.action === 'suggest_navigation' && aiResponse.parameters?.path) {
         // Add follow-up message with navigation option
-        setTimeout(() => {
-          addMessage('assistant', `Would you like me to take you to the Project Lab to create a ${aiResponse.parameters.type || 'new'} project? Just say "yes" or "take me there"!`);
+        setTimeout(async () => {
+          await addMessage('assistant', `Would you like me to take you to the Project Lab to create a ${aiResponse.parameters.type || 'new'} project? Just say "yes" or "take me there"!`, 'text', 'suggest_navigation', aiResponse.parameters);
         }, 1000);
       } else if (aiResponse.action === 'suggest_options') {
         // Add follow-up with options
-        setTimeout(() => {
-          addMessage('assistant', 'Would you like to:\n• Browse Arduino components in the catalog\n• Create an Arduino-based project\n• Learn more about Arduino\n\nJust let me know what interests you!');
+        setTimeout(async () => {
+          await addMessage('assistant', 'Would you like to:\n• Browse Arduino components in the catalog\n• Create an Arduino-based project\n• Learn more about Arduino\n\nJust let me know what interests you!', 'text', 'suggest_options');
         }, 1000);
       }
 
@@ -221,7 +278,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
         ? "I'm having trouble connecting to my AI services right now. This might be a network issue. Please check your internet connection and try again."
         : `I encountered an error: ${error.message}. Please try rephrasing your question or try again in a moment.`;
       
-      addMessage('assistant', errorMessage);
+      await addMessage('assistant', errorMessage, 'text', 'error', { error: error.message });
       
       toast({
         title: 'Connection Issue',
@@ -277,18 +334,50 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
     }
   }, [isVoiceMode, sendMessage]);
 
-  const clearHistory = useCallback(() => {
-    chatHistoryService.clearProjectHistory('universal_chat');
-    setMessages([{
-      id: 'welcome',
-      role: 'assistant',
-      content: "Chat history cleared! How can I help you today?",
-      timestamp: new Date()
-    }]);
-    toast({
-      title: 'History Cleared',
-      description: 'Chat history has been cleared'
-    });
+  const clearHistory = useCallback(async () => {
+    try {
+      // Delete the current session from backend
+      await universalChatHistoryService.deleteSession(sessionId.current);
+      
+      // Generate new session ID
+      sessionId.current = universalChatHistoryService.generateSessionId();
+      
+      // Reset messages with welcome message
+      const welcomeMessage = {
+        id: 'welcome',
+        role: 'assistant' as const,
+        content: "Chat history cleared! How can I help you today?",
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      
+      // Save new welcome message
+      await universalChatHistoryService.saveMessage({
+        session_id: sessionId.current,
+        role: 'assistant',
+        content: welcomeMessage.content,
+        message_type: 'text',
+        action_type: 'history_cleared',
+        conversation_context: {
+          previous_session_cleared: true,
+          session_start: new Date().toISOString()
+        }
+      });
+      
+      toast({
+        title: 'History Cleared',
+        description: 'Chat history has been cleared and new session started'
+      });
+      
+      console.log('✅ Chat history cleared, new session:', sessionId.current);
+    } catch (error) {
+      console.error('❌ Error clearing chat history:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to clear chat history',
+        variant: 'destructive'
+      });
+    }
   }, []);
 
   const handleReadAloud = useCallback(async (messageId: string, content: string) => {
