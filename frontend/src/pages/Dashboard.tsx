@@ -16,6 +16,7 @@ import { ProjectsOverTimeChart } from '@/components/dashboard/ProjectsOverTimeCh
 import { ActivityBarChart } from '@/components/dashboard/ActivityBarChart';
 import { MiniLineChart } from '@/components/dashboard/MiniLineChart';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
+import { WebGLDebug } from '@/components/WebGLDebug';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -344,6 +345,13 @@ const Dashboard: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* WebGL Debug Info - Development Only */}
+          {import.meta.env.DEV && (
+            <div className="mt-8">
+              <WebGLDebug />
+            </div>
+          )}
         </div>
       </div>
     </Layout>

@@ -6,18 +6,23 @@ import { useThreeD } from '@/contexts/ThreeDContext';
 interface AnimatedBackgroundProps {
   density?: 'low' | 'medium' | 'high';
   color?: string;
+  particleCount?: number;
 }
 
 export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   density = 'medium',
-  color = '#a855f7'
+  color = '#a855f7',
+  particleCount: overrideParticleCount
 }) => {
-  const { particleCount, animationComplexity } = useThreeD();
+  const { particleCount: contextParticleCount, animationComplexity } = useThreeD();
   const pointsRef = useRef<THREE.Points>(null);
+
+  // Use override particle count if provided, otherwise use context
+  const baseParticleCount = overrideParticleCount || contextParticleCount;
 
   // Adjust count based on density
   const densityMultiplier = { low: 0.3, medium: 0.5, high: 0.8 };
-  const count = Math.floor(particleCount * densityMultiplier[density]);
+  const count = Math.floor(baseParticleCount * densityMultiplier[density]);
 
   const positions = React.useMemo(() => {
     const pos = new Float32Array(count * 3);
