@@ -10,6 +10,7 @@ import { aiVoiceService } from '@/services/aiVoiceService';
 import { universalChatHistoryService, UniversalChatMessage } from '@/services/universalChatHistoryService';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import LineVisualizer from '@/components/LineVisualizer';
+import TTSVisualizer from '@/components/TTSVisualizer';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -35,6 +36,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [readingMessageId, setReadingMessageId] = useState<string | null>(null);
+  const [isTTSActive, setIsTTSActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionId = useRef(universalChatHistoryService.generateSessionId());
@@ -397,11 +399,13 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       // Stop reading if already reading this message
       aiVoiceService.stopSpeaking();
       setReadingMessageId(null);
+      setIsTTSActive(false);
       return;
     }
 
     try {
       setReadingMessageId(messageId);
+      setIsTTSActive(true);
       await aiVoiceService.speak(content, {
         useElevenLabs: true, // Use ElevenLabs for better quality
         rate: 1.2, // Enthusiastic pace
@@ -417,6 +421,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       });
     } finally {
       setReadingMessageId(null);
+      setIsTTSActive(false);
     }
   }, [readingMessageId]);
 
@@ -473,6 +478,16 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
             <h3 className="font-bold text-lg">AI Assistant</h3>
+            
+            {/* TTS Visualizer - Shows when AI is speaking */}
+            <TTSVisualizer
+              isActive={isTTSActive}
+              color="#3b82f6"
+              lineCount={4}
+              height={16}
+              className="ml-2"
+            />
+            
             <Badge variant="outline" className="text-xs">
               {messages.length - 1} messages
             </Badge>
