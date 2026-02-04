@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SessionStorage Test</title>
+</head>
+<body>
+    <h1>SessionStorage Test</h1>
+    
+    <button onclick="setTestData()">Set Test Data</button>
+    <button onclick="getTestData()">Get Test Data</button>
+    <button onclick="clearTestData()">Clear Test Data</button>
+    
+    <div id="output"></div>
+    
+    <script>
+        function setTestData() {
+            const testData = {
+                projectType: 'robotics',
+                skillLevel: 'expert',
+                interests: 'Create an expert level robotics project',
+                budget: '',
+                duration: ''
+            };
+            
+            sessionStorage.setItem('generatorFormData', JSON.stringify(testData));
+            document.getElementById('output').innerHTML = '<p>✅ Test data set: ' + JSON.stringify(testData) + '</p>';
+        }
+        
+        function getTestData() {
+            const data = sessionStorage.getItem('generatorFormData');
+            if (data) {
+                const parsed = JSON.parse(data);
+                document.getElementById('output').innerHTML = '<p>📦 Retrieved data: ' + JSON.stringify(parsed) + '</p>';
+            } else {
+                document.getElementById('output').innerHTML = '<p>❌ No data found</p>';
+            }
+        }
+        
+        function clearTestData() {
+            sessionStorage.removeItem('generatorFormData');
+            document.getElementById('output').innerHTML = '<p>🗑️ Data cleared</p>';
+        }
+        
+        // Auto-check on load
+        window.onload = function() {
+            getTestData();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Endpoints Comprehensive Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .status {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .status.success {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+        }
+        .status.error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+        }
+        .status.info {
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid #3498db;
+        }
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .endpoint-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .endpoint-card h4 {
+            margin: 0 0 10px 0;
+            color: #fff;
+        }
+        .endpoint-card .url {
+            font-family: monospace;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px;
+            border-radius: 3px;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        .test-all {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            font-size: 18px;
+            padding: 15px 30px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Backend Endpoints Comprehensive Test</h1>
+        
+        <div class="test-section">
+            <h3>🌐 Base URL Configuration</h3>
+            <input type="text" id="baseUrl" value="https://perfection-v2.onrender.com" placeholder="Base URL (without /api)">
+            <p><strong>Issue:</strong> Frontend shows API_BASE_URL without /api, but endpoints need /api prefix</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Critical Endpoints Test</h3>
+            <button class="test-all" onclick="testAllEndpoints()">🚀 Test All Endpoints</button>
+            
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <h4>🏥 Health Check</h4>
+                    <div class="url" id="healthUrl">GET /api/health</div>
+                    <button onclick="testEndpoint('health', 'GET')">Test Health</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>🤖 AI Guidance</h4>
+                    <div class="url" id="aiGuidanceUrl">POST /api/ai-guidance/process-voice</div>
+                    <button onclick="testEndpoint('ai-guidance/process-voice', 'POST', getAIGuidancePayload())">Test AI Guidance</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>🚀 Generate Project</h4>
+                    <div class="url" id="generateProjectUrl">POST /api/generate-project</div>
+                    <button onclick="testEndpoint('generate-project', 'POST', getProjectPayload())">Test Generate Project</button>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>📡 Generate Project Stream</h4>
+                    <div class="url" id="generateStreamUrl">POST /api/generate-project-stream</div>
+                    <button onclick="testEndpoint('generate-project-stream', 'POST', getProjectPayload())">Test Stream</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 URL Variations Test</h3>
+            <p>Testing different URL combinations to find what works:</p>
+            <button onclick="testUrlVariations()">🔍 Test URL Variations</button>
+        </div>
+
+        <div id="status" class="status info">
+            Ready to test backend endpoints! 🔍
+            
+            🎯 The Problem:
+            - Frontend API_BASE_URL: https://perfection-v2.onrender.com (missing /api)
+            - Expected endpoints: /api/ai-guidance/process-voice, /api/generate-project
+            - Getting 404 errors on both endpoints
+            
+            🧪 This test will:
+            1. Verify which endpoints actually exist
+            2. Test different URL combinations
+            3. Check if backend is properly deployed
+            4. Identify the correct API base URL
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function updateEndpointUrls() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            document.getElementById('healthUrl').textContent = `GET ${baseUrl}/api/health`;
+            document.getElementById('aiGuidanceUrl').textContent = `POST ${baseUrl}/api/ai-guidance/process-voice`;
+            document.getElementById('generateProjectUrl').textContent = `POST ${baseUrl}/api/generate-project`;
+            document.getElementById('generateStreamUrl').textContent = `POST ${baseUrl}/api/generate-project-stream`;
+        }
+
+        function getAIGuidancePayload() {
+            return {
+                transcript: "Help me create a robotics project of expert level",
+                timestamp: new Date().toISOString(),
+                context: {}
+            };
+        }
+
+        function getProjectPayload() {
+            return {
+                projectType: "robotics",
+                skillLevel: "expert",
+                interests: "autonomous navigation and obstacle avoidance",
+                budget: "",
+                duration: ""
+            };
+        }
+
+        async function testEndpoint(endpoint, method = 'GET', payload = null) {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const fullUrl = `${baseUrl}/api/${endpoint}`;
+            
+            updateStatus(`🧪 Testing ${method} ${fullUrl}...`, 'info');
+            
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (payload && method !== 'GET') {
+                    options.body = JSON.stringify(payload);
+                }
+                
+                console.log(`🔍 Testing: ${method} ${fullUrl}`);
+                if (payload) console.log('📦 Payload:', payload);
+                
+                const response = await fetch(fullUrl, options);
+                const data = await response.json();
+                
+                let resultText = `✅ ${method} ${fullUrl}\n\n`;
+                resultText += `Status: ${response.status} ${response.statusText}\n`;
+                resultText += `Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}\n\n`;
+                resultText += `Response: ${JSON.stringify(data, null, 2)}`;
+                
+                if (response.ok) {
+                    updateStatus(resultText, 'success');
+                } else {
+                    updateStatus(`❌ ${method} ${fullUrl} FAILED\n\n${resultText}`, 'error');
+                }
+                
+                return { success: response.ok, status: response.status, data };
+                
+            } catch (error) {
+                const errorText = `❌ ${method} ${fullUrl} ERROR\n\nError: ${error.message}\n\nThis could be:\n- CORS issue\n- Network connectivity\n- Backend server down\n- Invalid URL`;
+                updateStatus(errorText, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testAllEndpoints() {
+            updateStatus('🚀 Testing all critical endpoints...', 'info');
+            
+            const results = [];
+            
+            // Test health first
+            const health = await testEndpoint('health', 'GET');
+            results.push({ name: 'Health', ...health });
+            
+            // Wait a bit between requests
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test AI guidance
+            const aiGuidance = await testEndpoint('ai-guidance/process-voice', 'POST', getAIGuidancePayload());
+            results.push({ name: 'AI Guidance', ...aiGuidance });
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test project generation
+            const generateProject = await testEndpoint('generate-project', 'POST', getProjectPayload());
+            results.push({ name: 'Generate Project', ...generateProject });
+            
+            // Summary
+            let summary = '📊 ENDPOINT TEST SUMMARY\n\n';
+            results.forEach(result => {
+                const status = result.success ? '✅' : '❌';
+                summary += `${status} ${result.name}: ${result.status || result.error}\n`;
+            });
+            
+            const successCount = results.filter(r => r.success).length;
+            summary += `\n🎯 Success Rate: ${successCount}/${results.length} endpoints working\n\n`;
+            
+            if (successCount === 0) {
+                summary += '🚨 ALL ENDPOINTS FAILED!\nPossible issues:\n- Backend not deployed\n- Wrong base URL\n- CORS configuration\n- Server down';
+            } else if (successCount < results.length) {
+                summary += '⚠️ SOME ENDPOINTS FAILED!\nCheck individual endpoint results above.';
+            } else {
+                summary += '🎉 ALL ENDPOINTS WORKING!\nThe issue might be in frontend configuration.';
+            }
+            
+            updateStatus(summary, successCount === results.length ? 'success' : 'error');
+        }
+
+        async function testUrlVariations() {
+            const baseUrl = document.getElementById('baseUrl').value.replace(/\/+$/, ''); // Remove trailing slashes
+            
+            const variations = [
+                `${baseUrl}/health`,
+                `${baseUrl}/api/health`,
+                `${baseUrl}/api/v1/health`,
+                `${baseUrl}/health/`,
+                `${baseUrl}/api/health/`,
+            ];
+            
+            updateStatus('🔍 Testing URL variations for health endpoint...', 'info');
+            
+            const results = [];
+            
+            for (const url of variations) {
+                try {
+                    console.log(`🧪 Testing variation: ${url}`);
+                    const response = await fetch(url);
+                    const status = response.status;
+                    const ok = response.ok;
+                    results.push({ url, status, ok, error: null });
+                } catch (error) {
+                    results.push({ url, status: null, ok: false, error: error.message });
+                }
+                
+                // Small delay between requests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            let resultText = '🔍 URL VARIATION TEST RESULTS\n\n';
+            results.forEach(result => {
+                const status = result.ok ? '✅' : '❌';
+                const statusCode = result.status ? ` (${result.status})` : '';
+                const error = result.error ? ` - ${result.error}` : '';
+                resultText += `${status} ${result.url}${statusCode}${error}\n`;
+            });
+            
+            const workingUrls = results.filter(r => r.ok);
+            if (workingUrls.length > 0) {
+                resultText += `\n🎉 WORKING URLS FOUND:\n`;
+                workingUrls.forEach(result => {
+                    resultText += `✅ ${result.url}\n`;
+                });
+                resultText += `\n💡 Use the working URL pattern for your API_BASE_URL!`;
+                updateStatus(resultText, 'success');
+            } else {
+                resultText += `\n🚨 NO WORKING URLS FOUND!\nThe backend might be:\n- Not deployed\n- Using different port\n- Different domain\n- Down for maintenance`;
+                updateStatus(resultText, 'error');
+            }
+        }
+
+        // Update URLs when base URL changes
+        document.getElementById('baseUrl').addEventListener('input', updateEndpointUrls);
+        
+        // Initialize
+        updateEndpointUrls();
+        updateStatus('🔍 Backend Endpoints Test Ready!\n\n🎯 Goal: Find why endpoints return 404\n\n1. Test individual endpoints\n2. Test all endpoints at once\n3. Try URL variations to find working pattern\n\nClick "Test All Endpoints" to start comprehensive testing!', 'info');
+    </script>
+</body>
+</html>
