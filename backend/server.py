@@ -3006,6 +3006,36 @@ Return ONLY a valid JSON object, no markdown formatting, no explanations.
                     'Intermediate': ['Data Acquisition System', 'Pressure Sensors', 'Gas Sensors MQ Series', 'Accelerometer ADXL345', 'Wireless Transmission', 'Database Storage', 'Calibration Standards'],
                     'Advanced': ['High-Precision Sensors', 'Multi-Channel DAQ', 'Industrial Protocols', 'Edge Computing', 'Machine Learning Processing', 'Professional Calibration Equipment'],
                     'Expert': ['Research-Grade Instruments', 'Custom Sensor Development', 'Advanced Signal Processing', 'Metrology Standards', 'Publication-Quality Data Systems']
+                },
+                'web-development': {
+                    'Beginner': ['HTML5', 'CSS3', 'JavaScript (ES6+)', 'Visual Studio Code', 'Git & GitHub', 'Chrome DevTools', 'Responsive Design Framework', 'Web Hosting Service'],
+                    'Intermediate': ['React.js or Vue.js', 'Node.js & Express', 'MongoDB or PostgreSQL', 'REST API Design', 'Authentication System', 'CSS Preprocessor (Sass/Less)', 'Build Tools (Webpack/Vite)', 'Domain & SSL Certificate'],
+                    'Advanced': ['TypeScript', 'Next.js or Nuxt.js', 'GraphQL', 'Docker & Containerization', 'CI/CD Pipeline', 'Cloud Services (AWS/Vercel)', 'Performance Optimization', 'SEO & Analytics'],
+                    'Expert': ['Microservices Architecture', 'Kubernetes', 'Advanced Security Implementation', 'Custom Framework Development', 'Enterprise Scalability', 'Advanced DevOps', 'Performance Monitoring', 'Multi-region Deployment']
+                },
+                'mobile-apps': {
+                    'Beginner': ['React Native or Flutter', 'Android Studio/Xcode', 'JavaScript/Dart', 'Mobile UI Components', 'Device Testing Setup', 'App Store Accounts', 'Basic State Management', 'Push Notification Service'],
+                    'Intermediate': ['Native Development (Swift/Kotlin)', 'Advanced State Management', 'API Integration', 'Local Database (SQLite)', 'Camera & GPS Integration', 'App Analytics', 'In-App Purchases', 'Beta Testing Platform'],
+                    'Advanced': ['Cross-Platform Architecture', 'Offline Data Sync', 'Advanced Animations', 'Custom Native Modules', 'Performance Optimization', 'Advanced Security', 'CI/CD for Mobile', 'App Store Optimization'],
+                    'Expert': ['Enterprise Mobile Solutions', 'Custom Framework Development', 'Advanced Native Integration', 'Scalable Backend Architecture', 'Advanced Analytics & ML', 'Multi-platform Distribution', 'Enterprise Security', 'Custom Development Tools']
+                },
+                'desktop-software': {
+                    'Beginner': ['Python (Tkinter/PyQt)', 'Visual Studio Code', 'Git Version Control', 'Basic GUI Framework', 'File System Operations', 'User Input Handling', 'Error Handling', 'Application Packaging'],
+                    'Intermediate': ['Electron.js or Tauri', 'Database Integration', 'Multi-threading', 'File Processing', 'System Integration', 'Auto-updater', 'Installer Creation', 'Cross-platform Compatibility'],
+                    'Advanced': ['Native Development (C++/C#)', 'Advanced UI Frameworks', 'Performance Optimization', 'System-level Integration', 'Plugin Architecture', 'Advanced Security', 'Memory Management', 'Professional Distribution'],
+                    'Expert': ['Custom Framework Development', 'System Driver Integration', 'Enterprise Architecture', 'Advanced Performance Tuning', 'Custom Compiler/Interpreter', 'Advanced Security Implementation', 'Large-scale Distribution', 'Professional Support Systems']
+                },
+                'game-development': {
+                    'Beginner': ['Unity 3D or Godot', 'C# or GDScript', 'Basic 3D Modeling (Blender)', 'Sprite Creation Tools', 'Audio Editing Software', 'Version Control (Git)', 'Game Assets Library', 'Platform SDK'],
+                    'Intermediate': ['Advanced Game Engine Features', 'Physics Systems', 'AI & Pathfinding', 'Multiplayer Networking', 'Advanced Graphics', 'Sound Design Tools', 'Performance Profiling', 'Platform-specific Optimization'],
+                    'Advanced': ['Custom Engine Development', 'Advanced Rendering Techniques', 'VR/AR Integration', 'Advanced AI Systems', 'Custom Shaders', 'Advanced Networking', 'Performance Optimization', 'Multi-platform Publishing'],
+                    'Expert': ['AAA Game Engine Architecture', 'Advanced Graphics Programming', 'Custom Tool Development', 'Enterprise Game Systems', 'Advanced Performance Engineering', 'Custom Platform Integration', 'Advanced Analytics', 'Professional Game Distribution']
+                },
+                'ai-ml': {
+                    'Beginner': ['Python', 'Jupyter Notebook', 'Pandas & NumPy', 'Scikit-learn', 'Matplotlib/Seaborn', 'Dataset Sources', 'Google Colab', 'Basic ML Algorithms'],
+                    'Intermediate': ['TensorFlow or PyTorch', 'Deep Learning Frameworks', 'GPU Computing (CUDA)', 'Advanced Data Processing', 'Model Deployment Tools', 'MLOps Basics', 'Cloud ML Services', 'Advanced Visualization'],
+                    'Advanced': ['Custom Neural Networks', 'Advanced Deep Learning', 'Distributed Training', 'Model Optimization', 'Production ML Systems', 'Advanced MLOps', 'Edge AI Deployment', 'Research-level Implementation'],
+                    'Expert': ['Custom Framework Development', 'Advanced Research Implementation', 'Large-scale ML Systems', 'Custom Hardware Integration', 'Advanced Optimization Techniques', 'Enterprise ML Architecture', 'Custom AI Chips', 'Research Publication Systems']
                 }
             }
             
@@ -3019,7 +3049,12 @@ Return ONLY a valid JSON object, no markdown formatting, no explanations.
                 'iot': ['IoT protocols (MQTT/HTTP)', 'WiFi connectivity', 'Cloud integration', 'Data visualization', 'Mobile app development'],
                 'electronics': ['Circuit design', 'Component selection', 'PCB layout', 'Signal analysis', 'Embedded programming'],
                 'automation': ['Control systems', 'PLC programming', 'Industrial protocols', 'Safety systems', 'Process optimization'],
-                'sensors': ['Sensor calibration', 'Data acquisition', 'Signal processing', 'Statistical analysis', 'Measurement uncertainty']
+                'sensors': ['Sensor calibration', 'Data acquisition', 'Signal processing', 'Statistical analysis', 'Measurement uncertainty'],
+                'web-development': ['HTML/CSS/JavaScript', 'Frontend frameworks', 'Backend development', 'Database design', 'API development', 'Responsive design'],
+                'mobile-apps': ['Mobile UI/UX design', 'Cross-platform development', 'API integration', 'App store deployment', 'Mobile performance optimization'],
+                'desktop-software': ['GUI development', 'System integration', 'File management', 'Cross-platform compatibility', 'Software architecture'],
+                'game-development': ['Game design principles', '3D modeling & animation', 'Physics simulation', 'Game engine programming', 'User experience design'],
+                'ai-ml': ['Machine learning algorithms', 'Data preprocessing', 'Model training & evaluation', 'Deep learning', 'AI deployment & optimization']
             }
             
             default_skills = skill_mappings.get(project_type, skill_mappings['electronics'])

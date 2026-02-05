@@ -317,6 +317,11 @@ const Generator: React.FC = () => {
                             <SelectItem value="electronics">Analog/Digital Electronics</SelectItem>
                             <SelectItem value="automation">Smart Automation</SelectItem>
                             <SelectItem value="sensors">Data & Monitoring</SelectItem>
+                            <SelectItem value="web-development">Web Development</SelectItem>
+                            <SelectItem value="mobile-apps">Mobile Applications</SelectItem>
+                            <SelectItem value="desktop-software">Desktop Software</SelectItem>
+                            <SelectItem value="game-development">Game Development</SelectItem>
+                            <SelectItem value="ai-ml">AI & Machine Learning</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
