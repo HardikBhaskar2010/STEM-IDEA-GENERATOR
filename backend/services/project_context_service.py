@@ -742,6 +742,300 @@ class ProjectContextService:
             logger.error(f"Error fetching milestones for project {project_id}: {e}")
             return []
     
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # CODE GENERATION INTEGRATION METHODS
+    # ═══════════════════════════════════════════════════════════════════════════════
+    
+    async def get_project_code_generation_status(self, project_id: str) -> Dict[str, Any]:
+        """
+        Get code generation status for a project
+        
+        Args:
+            project_id: ID of the project
+            
+        Returns:
+            Dictionary with code generation status information
+        """
+        try:
+            client = await get_db_client()
+            
+            # Get project's code generation info from the projects table
+            project_result = client.table("projects").select(
+                "has_generated_code, code_generation_count, last_code_generated_at"
+            ).eq("id", project_id).execute()
+            
+            if not project_result.data:
+                return {
+                    "has_generated_code": False,
+                    "code_generation_count": 0,
+                    "last_code_generated_at": None,
+                    "recent_generations": [],
+                    "available_platforms": ["arduino", "raspberry_pi", "web", "mobile"]
+                }
+            
+            project_data = project_result.data[0]
+            
+            # Get recent code generations
+            generations_result = client.table("generated_code").select(
+                "id, status, platform, created_at, completed_at, error_message"
+            ).eq("project_id", project_id).order("created_at", desc=True).limit(5).execute()
+            
+            recent_generations = []
+            if generations_result.data:
+                for gen in generations_result.data:
+                    recent_generations.append({
+                        "generation_id": gen["id"],
+                        "status": gen["status"],
+                        "platform": gen["platform"],
+                        "created_at": gen["created_at"],
+                        "completed_at": gen["completed_at"],
+                        "error_message": gen["error_message"]
+                    })
+            
+            return {
+                "has_generated_code": project_data.get("has_generated_code", False),
+                "code_generation_count": project_data.get("code_generation_count", 0),
+                "last_code_generated_at": project_data.get("last_code_generated_at"),
+                "recent_generations": recent_generations,
+                "available_platforms": ["arduino", "raspberry_pi", "web", "mobile"]
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting code generation status for project {project_id}: {e}")
+            return {
+                "has_generated_code": False,
+                "code_generation_count": 0,
+                "last_code_generated_at": None,
+                "recent_generations": [],
+                "available_platforms": ["arduino", "raspberry_pi", "web", "mobile"],
+                "error": str(e)
+            }
+    
+    async def get_project_generated_files_summary(self, project_id: str) -> Dict[str, Any]:
+        """
+        Get summary of generated files for a project
+        
+        Args:
+            project_id: ID of the project
+            
+        Returns:
+            Dictionary with files summary information
+        """
+        try:
+            client = await get_db_client()
+            
+            # Get all generations for this project
+            generations_result = client.table("generated_code").select(
+                "id, platform, status, created_at"
+            ).eq("project_id", project_id).eq("status", "completed").execute()
+            
+            if not generations_result.data:
+                return {
+                    "total_generations": 0,
+                    "total_files": 0,
+                    "platforms_used": [],
+                    "file_types": {},
+                    "recent_activity": []
+                }
+            
+            generation_ids = [gen["id"] for gen in generations_result.data]
+            
+            # Get file statistics
+            files_result = client.table("code_files").select(
+                "file_type, size_bytes, created_at, generated_code_id"
+            ).in_("generated_code_id", generation_ids).execute()
+            
+            # Analyze file data
+            file_types = {}
+            total_size = 0
+            
+            if files_result.data:
+                for file_data in files_result.data:
+                    file_type = file_data.get("file_type", "unknown")
+                    file_types[file_type] = file_types.get(file_type, 0) + 1
+                    total_size += file_data.get("size_bytes", 0)
+            
+            # Get platforms used
+            platforms_used = list(set(gen["platform"] for gen in generations_result.data))
+            
+            # Recent activity (last 5 generations)
+            recent_activity = []
+            for gen in sorted(generations_result.data, key=lambda x: x["created_at"], reverse=True)[:5]:
+                recent_activity.append({
+                    "generation_id": gen["id"],
+                    "platform": gen["platform"],
+                    "created_at": gen["created_at"]
+                })
+            
+            return {
+                "total_generations": len(generations_result.data),
+                "total_files": len(files_result.data) if files_result.data else 0,
+                "total_size_bytes": total_size,
+                "platforms_used": platforms_used,
+                "file_types": file_types,
+                "recent_activity": recent_activity
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting generated files summary for project {project_id}: {e}")
+            return {
+                "total_generations": 0,
+                "total_files": 0,
+                "platforms_used": [],
+                "file_types": {},
+                "recent_activity": [],
+                "error": str(e)
+            }
+    
+    async def update_project_code_generation_status(
+        self, 
+        project_id: str, 
+        has_generated_code: bool = True,
+        increment_count: bool = True
+    ) -> bool:
+        """
+        Update project's code generation status
+        
+        Args:
+            project_id: ID of the project
+            has_generated_code: Whether project has generated code
+            increment_count: Whether to increment the generation count
+            
+        Returns:
+            True if update successful, False otherwise
+        """
+        try:
+            updates = {
+                "has_generated_code": has_generated_code,
+                "last_code_generated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            if increment_count:
+                # Get current count and increment
+                client = await get_db_client()
+                current_result = client.table("projects").select(
+                    "code_generation_count"
+                ).eq("id", project_id).execute()
+                
+                current_count = 0
+                if current_result.data:
+                    current_count = current_result.data[0].get("code_generation_count", 0)
+                
+                updates["code_generation_count"] = current_count + 1
+            
+            success = await self._update_project_data(project_id, updates)
+            
+            if success:
+                logger.info(f"Updated code generation status for project {project_id}")
+                # Clear cached context to force refresh
+                await self._clear_cached_context(project_id)
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error updating code generation status for project {project_id}: {e}")
+            return False
+    
+    async def get_recommended_platform_for_project(self, project_id: str) -> Optional[str]:
+        """
+        Analyze project and recommend the best platform for code generation
+        
+        Args:
+            project_id: ID of the project
+            
+        Returns:
+            Recommended platform name or None
+        """
+        try:
+            # Get project context
+            project_context = await self.getProjectContext(project_id)
+            
+            if not project_context:
+                return None
+            
+            # Analyze project content for platform hints
+            text_to_analyze = f"{project_context.title} {project_context.description}".lower()
+            
+            # Platform detection patterns
+            platform_patterns = {
+                "arduino": ["arduino", "microcontroller", "sensor", "iot", "embedded", "atmega"],
+                "raspberry_pi": ["raspberry pi", "linux", "gpio", "python", "computer vision"],
+                "web": ["website", "web", "html", "css", "javascript", "browser", "online"],
+                "mobile": ["mobile", "app", "android", "ios", "smartphone", "tablet"]
+            }
+            
+            # Score each platform
+            platform_scores = {}
+            for platform, keywords in platform_patterns.items():
+                score = sum(1 for keyword in keywords if keyword in text_to_analyze)
+                if score > 0:
+                    platform_scores[platform] = score
+            
+            # Return platform with highest score
+            if platform_scores:
+                recommended_platform = max(platform_scores, key=platform_scores.get)
+                logger.info(f"Recommended platform for project {project_id}: {recommended_platform}")
+                return recommended_platform
+            
+            # Default recommendation based on project type or complexity
+            return "web"  # Default to web as most accessible
+            
+        except Exception as e:
+            logger.error(f"Error getting platform recommendation for project {project_id}: {e}")
+            return None
+    
+    async def get_project_with_code_generation_context(self, project_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get complete project context including code generation information
+        
+        Args:
+            project_id: ID of the project
+            
+        Returns:
+            Dictionary with project context and code generation data
+        """
+        try:
+            # Get base project context
+            project_context = await self.getProjectContext(project_id)
+            
+            if not project_context:
+                return None
+            
+            # Get code generation status
+            code_gen_status = await self.get_project_code_generation_status(project_id)
+            
+            # Get files summary
+            files_summary = await self.get_project_generated_files_summary(project_id)
+            
+            # Get platform recommendation
+            recommended_platform = await self.get_recommended_platform_for_project(project_id)
+            
+            # Combine all data
+            enhanced_context = {
+                "project": {
+                    "id": project_context.project_id,
+                    "title": project_context.title,
+                    "description": project_context.description,
+                    "goals": project_context.goals,
+                    "current_phase": project_context.current_phase,
+                    "progress": project_context.progress,
+                    "tasks_count": len(project_context.tasks),
+                    "milestones_count": len(project_context.milestones)
+                },
+                "code_generation": code_gen_status,
+                "generated_files": files_summary,
+                "recommendations": {
+                    "platform": recommended_platform,
+                    "complexity_level": "intermediate"  # Could be enhanced with more analysis
+                }
+            }
+            
+            return enhanced_context
+            
+        except Exception as e:
+            logger.error(f"Error getting enhanced project context for {project_id}: {e}")
+            return None
+    
     async def _update_project_data(self, project_id: str, updates: Dict[str, Any]) -> bool:
         """
         Update project data in database

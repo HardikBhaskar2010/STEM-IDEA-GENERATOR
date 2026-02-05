@@ -12,6 +12,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { PerfProvider } from "@/contexts/PerfContext";
 import { ThreeDProvider } from "@/contexts/ThreeDContext";
 import { TTSProvider } from "@/contexts/TTSContext";
+import { CodeGenerationProvider } from "@/contexts/CodeGenerationContext";
 import { PageLoading } from "@/components/ui/loading";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { preloadAnimations } from "@/lib/animation";
@@ -23,6 +24,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 const Welcome = React.lazy(() => import("./pages/Welcome"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const Generator = React.lazy(() => import("./pages/Generator"));
+const CodeGenerator = React.lazy(() => import("./pages/CodeGenerator"));
 const Components = React.lazy(() => import("./pages/Components"));
 const Library = React.lazy(() => import("./pages/Library"));
 const Learn = React.lazy(() => import("./pages/Learn"));
@@ -61,37 +63,40 @@ const App = () => {
               <ThreeDProvider>
                 <AnimationProvider>
                   <TTSProvider>
-                    <TooltipProvider>
-                    {/* 🔥 Vercel magic */}
-                    <SpeedInsights />
-                    <Analytics />
+                    <CodeGenerationProvider>
+                      <TooltipProvider>
+                      {/* 🔥 Vercel magic */}
+                      <SpeedInsights />
+                      <Analytics />
 
-                    <Toaster />
-                    <Sonner />
+                      <Toaster />
+                      <Sonner />
 
-                    <BrowserRouter>
-                      {/* 🚀 CMD+K Command Palette */}
-                      <CommandPalette />
-                      <PerfPromptBanner />
-                      <Suspense fallback={<PageLoading />}>
-                        <Routes>
-                          <Route path="/" element={<Welcome />} />
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/auth/callback" element={<AuthCallback />} />
-                          <Route path="/project/:id" element={<ProjectDetail />} />
-                          <Route path="/generator" element={<Generator />} />
-                          <Route path="/components" element={<Components />} />
-                          <Route path="/components/compare" element={<ComponentComparison />} />
-                          <Route path="/library" element={<Library />} />
-                          <Route path="/learn" element={<Learn />} />
-                          <Route path="/profile" element={<Profile />} />
-                          <Route path="/about" element={<About />} />
-                          <Route path="/presentation" element={<Presentation />} />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </Suspense>
-                    </BrowserRouter>
-                  </TooltipProvider>
+                      <BrowserRouter>
+                        {/* 🚀 CMD+K Command Palette */}
+                        <CommandPalette />
+                        <PerfPromptBanner />
+                        <Suspense fallback={<PageLoading />}>
+                          <Routes>
+                            <Route path="/" element={<Welcome />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/auth/callback" element={<AuthCallback />} />
+                            <Route path="/project/:id" element={<ProjectDetail />} />
+                            <Route path="/generator" element={<Generator />} />
+                            <Route path="/code-generator" element={<CodeGenerator />} />
+                            <Route path="/components" element={<Components />} />
+                            <Route path="/components/compare" element={<ComponentComparison />} />
+                            <Route path="/library" element={<Library />} />
+                            <Route path="/learn" element={<Learn />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/presentation" element={<Presentation />} />
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </Suspense>
+                      </BrowserRouter>
+                    </TooltipProvider>
+                  </CodeGenerationProvider>
                 </TTSProvider>
               </AnimationProvider>
             </ThreeDProvider>

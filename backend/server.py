@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, APIRouter, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
@@ -4170,6 +4170,628 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=False,
 )
+
+# ───────────────── CODE GENERATION ENDPOINTS ─────────────────
+
+from services.code_generation_service import (
+    CodeGenerationService, GenerationParams, Platform, ComplexityLevel
+)
+from services.file_management_service import FileManagementService
+from services.streaming_service import get_streaming_service
+from fastapi import WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
+from typing import Union
+
+# Code Generation Models
+class CodeGenerationRequest(BaseModel):
+    platform: str  # arduino, raspberry_pi, web, mobile
+    complexity_level: str = "intermediate"  # beginner, intermediate, advanced
+    include_comments: bool = True
+    include_tests: bool = False
+    custom_requirements: Optional[str] = None
+
+class CodeGenerationResponse(BaseModel):
+    generation_id: str
+    status: str
+    message: str
+    estimated_completion_time: Optional[int] = None
+
+class GenerationStatusResponse(BaseModel):
+    generation_id: str
+    project_id: str
+    status: str
+    platform: str
+    created_at: str
+    completed_at: Optional[str] = None
+    error_message: Optional[str] = None
+    files_count: int = 0
+
+class CodeFileResponse(BaseModel):
+    id: str
+    file_name: str
+    file_path: str
+    file_type: str
+    content: str
+    description: Optional[str] = None
+    size_bytes: int
+    is_main_file: bool
+
+class GeneratedFilesResponse(BaseModel):
+    generation_id: str
+    files: List[CodeFileResponse]
+
+class SelectedFilesDownloadRequest(BaseModel):
+    file_ids: List[str]
+    total_files: int
+
+# Initialize services
+code_generation_service = CodeGenerationService()
+file_management_service = FileManagementService()
+
+@api.post("/projects/{project_id}/generate-code", response_model=CodeGenerationResponse)
+async def start_code_generation(project_id: str, request: CodeGenerationRequest):
+    """
+    Start code generation for a project
+    
+    Args:
+        project_id: ID of the project to generate code for
+        request: Code generation parameters
+        
+    Returns:
+        Generation response with ID and status
+    """
+    try:
+        # Validate platform
+        try:
+            platform = Platform(request.platform.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid platform: {request.platform}. Must be one of: arduino, raspberry_pi, web, mobile"
+            )
+        
+        # Validate complexity level
+        try:
+            complexity_level = ComplexityLevel(request.complexity_level.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid complexity level: {request.complexity_level}. Must be one of: beginner, intermediate, advanced"
+            )
+        
+        # Create generation parameters
+        params = GenerationParams(
+            platform=platform,
+            complexity_level=complexity_level,
+            include_comments=request.include_comments,
+            include_tests=request.include_tests,
+            custom_requirements=request.custom_requirements
+        )
+        
+        # Get project context (assuming we have a service for this)
+        from services.project_context_service import ProjectContextService
+        project_context_service = ProjectContextService()
+        project_context = await project_context_service.getProjectContext(project_id)
+        
+        if not project_context:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Project {project_id} not found or inaccessible"
+            )
+        
+        # Start code generation (this will create a database record)
+        generation_id = await code_generation_service._create_generation_record(
+            project_id, "user_id_placeholder", params  # TODO: Get actual user_id from auth
+        )
+        
+        # Estimate completion time based on complexity
+        estimated_time = {
+            ComplexityLevel.BEGINNER: 30,
+            ComplexityLevel.INTERMEDIATE: 60,
+            ComplexityLevel.ADVANCED: 120
+        }.get(complexity_level, 60)
+        
+        return CodeGenerationResponse(
+            generation_id=generation_id,
+            status="queued",
+            message="Code generation has been queued. Connect to WebSocket for real-time updates.",
+            estimated_completion_time=estimated_time
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error starting code generation: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to start code generation: {str(e)}"
+        )
+
+@api.get("/projects/{project_id}/code-generation/{generation_id}", response_model=GenerationStatusResponse)
+async def get_generation_status(project_id: str, generation_id: str):
+    """
+    Get the status of a code generation
+    
+    Args:
+        project_id: ID of the project
+        generation_id: ID of the generation
+        
+    Returns:
+        Generation status and details
+    """
+    try:
+        # Get generation status from service
+        generation_data = await code_generation_service.get_generation_status(generation_id)
+        
+        if not generation_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Generation {generation_id} not found"
+            )
+        
+        # Verify project ID matches
+        if generation_data["project_id"] != project_id:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Generation {generation_id} not found for project {project_id}"
+            )
+        
+        # Get file count
+        files = await code_generation_service.get_generated_files(generation_id)
+        
+        return GenerationStatusResponse(
+            generation_id=generation_id,
+            project_id=generation_data["project_id"],
+            status=generation_data["status"],
+            platform=generation_data["platform"],
+            created_at=generation_data["created_at"],
+            completed_at=generation_data.get("completed_at"),
+            error_message=generation_data.get("error_message"),
+            files_count=len(files)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting generation status: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get generation status: {str(e)}"
+        )
+
+@api.websocket("/projects/{project_id}/code-generation/{generation_id}/stream")
+async def websocket_code_generation(websocket: WebSocket, project_id: str, generation_id: str):
+    """
+    WebSocket endpoint for real-time code generation streaming
+    
+    Args:
+        websocket: WebSocket connection
+        project_id: ID of the project
+        generation_id: ID of the generation
+    """
+    streaming_service = await get_streaming_service()
+    connection = None
+    
+    try:
+        # Connect WebSocket
+        connection = await streaming_service.connect_websocket(
+            websocket=websocket,
+            user_id="user_id_placeholder",  # TODO: Get from auth
+            project_id=project_id,
+            generation_id=generation_id
+        )
+        
+        if not connection:
+            await websocket.close(code=1008, reason="Connection failed")
+            return
+        
+        # Listen for messages from client
+        while True:
+            try:
+                # Wait for message from client
+                message = await websocket.receive_text()
+                data = json.loads(message)
+                
+                # Handle different message types
+                if data.get("type") == "start_generation":
+                    # Start code generation with parameters
+                    generation_params = data.get("params", {})
+                    await streaming_service.start_code_generation_stream(
+                        connection.connection_id, generation_params
+                    )
+                elif data.get("type") == "cancel_generation":
+                    # Cancel ongoing generation
+                    await streaming_service.cancel_generation(connection.connection_id)
+                elif data.get("type") == "ping":
+                    # Respond to ping with pong
+                    await connection.send_event("pong", {"timestamp": datetime.now().isoformat()})
+                
+            except WebSocketDisconnect:
+                break
+            except json.JSONDecodeError:
+                await connection.send_event("error", {"message": "Invalid JSON message"})
+            except Exception as e:
+                logger.error(f"Error processing WebSocket message: {e}")
+                await connection.send_event("error", {"message": f"Error processing message: {str(e)}"})
+    
+    except Exception as e:
+        logger.error(f"WebSocket connection error: {e}")
+        if connection:
+            await connection.send_event("error", {"message": f"Connection error: {str(e)}"})
+    
+    finally:
+        # Clean up connection
+        if connection:
+            await streaming_service.disconnect_websocket(connection.connection_id)
+
+@api.get("/projects/{project_id}/generated-code", response_model=List[GenerationStatusResponse])
+async def get_project_generations(project_id: str):
+    """
+    Get all code generations for a project
+    
+    Args:
+        project_id: ID of the project
+        
+    Returns:
+        List of generation status responses
+    """
+    try:
+        # TODO: Implement method to get all generations for a project
+        # For now, return empty list
+        return []
+        
+    except Exception as e:
+        logger.error(f"Error getting project generations: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get project generations: {str(e)}"
+        )
+
+@api.get("/generated-code/{generation_id}/files", response_model=GeneratedFilesResponse)
+async def get_generated_files(generation_id: str):
+    """
+    Get all files for a generation
+    
+    Args:
+        generation_id: ID of the generation
+        
+    Returns:
+        List of generated files
+    """
+    try:
+        # Get files from service
+        files = await file_management_service.get_generation_files(
+            generation_id, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        # Convert to response format
+        file_responses = []
+        for i, file in enumerate(files):
+            file_responses.append(CodeFileResponse(
+                id=f"{generation_id}_{i}",  # TODO: Use actual file ID from database
+                file_name=file.file_name,
+                file_path=file.file_path,
+                file_type=file.file_type,
+                content=file.content,
+                description=file.description,
+                size_bytes=file.size_bytes,
+                is_main_file=file.is_main_file
+            ))
+        
+        return GeneratedFilesResponse(
+            generation_id=generation_id,
+            files=file_responses,
+            total_files=len(file_responses)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting generated files: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get generated files: {str(e)}"
+        )
+
+@api.get("/generated-code/{generation_id}/files/{file_id}")
+async def get_file_content(generation_id: str, file_id: str):
+    """
+    Get content of a specific file
+    
+    Args:
+        generation_id: ID of the generation
+        file_id: ID of the file
+        
+    Returns:
+        File content as plain text
+    """
+    try:
+        # Get file from service
+        file = await file_management_service.get_file(
+            file_id, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        if not file:
+            raise HTTPException(
+                status_code=404,
+                detail=f"File {file_id} not found"
+            )
+        
+        # Track download
+        await file_management_service.track_file_download(
+            file_id, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        return Response(
+            content=file.content,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename={file.file_name}",
+                "Content-Length": str(file.size_bytes)
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting file content: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get file content: {str(e)}"
+        )
+
+@api.put("/generated-code/{generation_id}/files/{file_id}")
+async def update_file_content(generation_id: str, file_id: str, content: str = None):
+    """
+    Update content of a specific file
+    
+    Args:
+        generation_id: ID of the generation
+        file_id: ID of the file
+        content: New file content
+        
+    Returns:
+        Success message
+    """
+    try:
+        if not content:
+            raise HTTPException(
+                status_code=400,
+                detail="File content is required"
+            )
+        
+        # Update file content
+        success = await file_management_service.update_file(
+            file_id, content, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail=f"File {file_id} not found or update failed"
+            )
+        
+        return {"message": "File updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating file content: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update file content: {str(e)}"
+        )
+
+@api.delete("/generated-code/{generation_id}/files/{file_id}")
+async def delete_file(generation_id: str, file_id: str):
+    """
+    Delete a specific file
+    
+    Args:
+        generation_id: ID of the generation
+        file_id: ID of the file
+        
+    Returns:
+        Success message
+    """
+    try:
+        # Delete file
+        success = await file_management_service.delete_file(
+            file_id, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail=f"File {file_id} not found or deletion failed"
+            )
+        
+        return {"message": "File deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting file: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete file: {str(e)}"
+        )
+
+@api.get("/generated-code/{generation_id}/files/{file_id}/download")
+async def download_individual_file(generation_id: str, file_id: str):
+    """
+    Download an individual file
+    
+    Args:
+        generation_id: ID of the generation
+        file_id: ID of the specific file
+        
+    Returns:
+        File content as downloadable attachment
+    """
+    try:
+        # Get file content
+        file = await file_management_service.get_file(
+            file_id, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        if not file:
+            raise HTTPException(
+                status_code=404,
+                detail=f"File {file_id} not found"
+            )
+        
+        # Track download
+        await file_management_service.track_file_download(
+            file_id, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        # Determine content type based on file extension
+        content_type_map = {
+            'js': 'application/javascript',
+            'ts': 'application/typescript',
+            'py': 'text/x-python',
+            'cpp': 'text/x-c++src',
+            'c': 'text/x-csrc',
+            'h': 'text/x-chdr',
+            'html': 'text/html',
+            'css': 'text/css',
+            'json': 'application/json',
+            'md': 'text/markdown',
+            'txt': 'text/plain',
+            'ino': 'text/x-arduino'
+        }
+        
+        content_type = content_type_map.get(file.file_type.lower(), 'text/plain')
+        
+        # Return file content
+        return Response(
+            content=file.content.encode('utf-8'),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"attachment; filename={file.file_name}",
+                "Content-Length": str(len(file.content.encode('utf-8')))
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading file {file_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to download file: {str(e)}"
+        )
+
+@api.post("/generated-code/{generation_id}/download/selected")
+async def download_selected_files(generation_id: str, request: SelectedFilesDownloadRequest):
+    """
+    Download selected files as a ZIP archive
+    
+    Args:
+        generation_id: ID of the generation
+        file_ids: List of file IDs to include in the ZIP
+        
+    Returns:
+        ZIP file containing selected files
+    """
+    try:
+        if not request.file_ids:
+            raise HTTPException(
+                status_code=400,
+                detail="No files selected for download"
+            )
+        
+        # Get selected files
+        selected_files = []
+        for file_id in request.file_ids:
+            file = await file_management_service.get_file(
+                file_id, "user_id_placeholder"  # TODO: Get from auth
+            )
+            if file:
+                selected_files.append(file)
+        
+        if not selected_files:
+            raise HTTPException(
+                status_code=404,
+                detail="No valid files found for download"
+            )
+        
+        # Create ZIP with selected files
+        import zipfile
+        import io
+        
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for file in selected_files:
+                zip_file.writestr(file.file_path, file.content)
+        
+        zip_bytes = zip_buffer.getvalue()
+        
+        # Track downloads for all files
+        for file_id in request.file_ids:
+            await file_management_service.track_file_download(
+                file_id, "user_id_placeholder"  # TODO: Get from auth
+            )
+        
+        # Return ZIP file
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f"attachment; filename=selected_files_{generation_id}.zip",
+                "Content-Length": str(len(zip_bytes))
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating selected files ZIP: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create selected files ZIP: {str(e)}"
+        )
+
+@api.get("/generated-code/{generation_id}/download/zip")
+async def download_project_zip(generation_id: str):
+    """
+    Download all files as a ZIP archive
+    
+    Args:
+        generation_id: ID of the generation
+        
+    Returns:
+        ZIP file containing all generated files
+    """
+    try:
+        # Create ZIP archive
+        zip_bytes = await file_management_service.create_zip_archive(
+            generation_id, "user_id_placeholder"  # TODO: Get from auth
+        )
+        
+        if not zip_bytes:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No files found for generation {generation_id}"
+            )
+        
+        # Return ZIP file
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f"attachment; filename=generated_code_{generation_id}.zip",
+                "Content-Length": str(len(zip_bytes))
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating ZIP download: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create ZIP download: {str(e)}"
+        )
 
 # ───────────────── REGISTER ROUTER ─────────────────
 app.include_router(api)

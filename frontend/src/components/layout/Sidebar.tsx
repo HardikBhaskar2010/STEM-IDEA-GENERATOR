@@ -8,7 +8,8 @@ import {
   GraduationCap, 
   Info, 
   X,
-  User
+  User,
+  Code
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -75,6 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/generator', label: 'Generator', icon: Zap },
+    { path: '/code-generator', label: 'Code Generator', icon: Code },
     { path: '/components', label: 'Components', icon: Cpu },
     { path: '/library', label: 'Library', icon: BookOpen },
     { path: '/learn', label: 'Learn', icon: GraduationCap },

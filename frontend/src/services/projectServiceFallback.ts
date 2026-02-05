@@ -308,11 +308,161 @@ class ProjectServiceFallback {
   private getStoredProjects(): SavedProject[] {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      let projects = stored ? JSON.parse(stored) : [];
+      
+      // If no projects exist, create some sample projects for testing
+      if (projects.length === 0) {
+        projects = this.createSampleProjects();
+        this.saveToStorage(projects);
+      }
+      
+      return projects;
     } catch (error) {
       console.error('Error reading from localStorage:', error);
-      return [];
+      return this.createSampleProjects();
     }
+  }
+
+  /**
+   * Create sample projects for testing
+   */
+  private createSampleProjects(): SavedProject[] {
+    const now = new Date().toISOString();
+    
+    return [
+      {
+        id: 'sample_1',
+        title: 'Smart Home LED Controller',
+        description: 'Build an Arduino-based LED controller that can be controlled via smartphone app with color changing and scheduling features.',
+        difficulty: 'intermediate',
+        estimatedTime: '4-6 hours',
+        estimatedCost: '$25-35',
+        components: ['Arduino Uno', 'RGB LED Strip', 'Bluetooth Module', 'Resistors', 'Breadboard'],
+        skills: ['Arduino Programming', 'Circuit Design', 'Mobile App Integration'],
+        steps: [
+          'Set up Arduino development environment',
+          'Wire RGB LED strip to Arduino',
+          'Install and configure Bluetooth module',
+          'Write Arduino code for LED control',
+          'Create smartphone app interface',
+          'Test and debug the system'
+        ],
+        status: 'in-progress',
+        progress: 65,
+        notes: 'Working on the mobile app integration. Hardware is complete.',
+        starred: true,
+        tags: ['arduino', 'iot', 'smart-home'],
+        completed_steps: [0, 1, 2, 3],
+        generated_from_params: {
+          projectType: 'electronics',
+          skillLevel: 'intermediate',
+          interests: 'smart home, lighting',
+          budget: '$30',
+          duration: '5 hours'
+        },
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+        updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+      },
+      {
+        id: 'sample_2',
+        title: 'Weather Station Dashboard',
+        description: 'Create a web-based weather monitoring system using Raspberry Pi with sensors for temperature, humidity, and pressure.',
+        difficulty: 'advanced',
+        estimatedTime: '8-12 hours',
+        estimatedCost: '$45-60',
+        components: ['Raspberry Pi 4', 'DHT22 Sensor', 'BMP280 Sensor', 'LCD Display', 'Case'],
+        skills: ['Python Programming', 'Web Development', 'Sensor Integration', 'Data Visualization'],
+        steps: [
+          'Set up Raspberry Pi OS',
+          'Connect and calibrate sensors',
+          'Write Python data collection script',
+          'Create web dashboard with Flask',
+          'Implement data logging and charts',
+          'Deploy and test the system'
+        ],
+        status: 'planning',
+        progress: 0,
+        notes: 'Waiting for sensors to arrive. Planning the database structure.',
+        starred: false,
+        tags: ['raspberry-pi', 'web-dev', 'sensors'],
+        completed_steps: [],
+        generated_from_params: {
+          projectType: 'web',
+          skillLevel: 'advanced',
+          interests: 'weather, data visualization',
+          budget: '$50',
+          duration: '10 hours'
+        },
+        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+        updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'sample_3',
+        title: 'Mobile Robot Car',
+        description: 'Build a remote-controlled robot car with obstacle avoidance using ultrasonic sensors and camera streaming.',
+        difficulty: 'intermediate',
+        estimatedTime: '6-8 hours',
+        estimatedCost: '$35-50',
+        components: ['Arduino Mega', 'Motor Driver', 'DC Motors', 'Ultrasonic Sensor', 'Camera Module', 'Chassis'],
+        skills: ['Robotics', 'Motor Control', 'Sensor Programming', 'Wireless Communication'],
+        steps: [
+          'Assemble robot chassis and motors',
+          'Wire motor driver and sensors',
+          'Program basic movement controls',
+          'Implement obstacle avoidance',
+          'Add camera streaming',
+          'Create remote control interface'
+        ],
+        status: 'completed',
+        progress: 100,
+        notes: 'Project completed successfully! Works great for indoor navigation.',
+        starred: true,
+        tags: ['robotics', 'arduino', 'mobile'],
+        completed_steps: [0, 1, 2, 3, 4, 5],
+        generated_from_params: {
+          projectType: 'robotics',
+          skillLevel: 'intermediate',
+          interests: 'robotics, remote control',
+          budget: '$40',
+          duration: '7 hours'
+        },
+        created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
+        updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+      },
+      {
+        id: 'sample_4',
+        title: 'Plant Monitoring System',
+        description: 'IoT system to monitor soil moisture, light levels, and automatically water plants when needed.',
+        difficulty: 'beginner',
+        estimatedTime: '3-4 hours',
+        estimatedCost: '$20-30',
+        components: ['ESP32', 'Soil Moisture Sensor', 'Light Sensor', 'Water Pump', 'Relay Module'],
+        skills: ['IoT Programming', 'Sensor Reading', 'Automation'],
+        steps: [
+          'Set up ESP32 development environment',
+          'Connect soil moisture and light sensors',
+          'Program sensor reading logic',
+          'Add water pump control',
+          'Create simple web interface',
+          'Test automated watering'
+        ],
+        status: 'in-progress',
+        progress: 40,
+        notes: 'Sensors are working. Need to add the water pump control.',
+        starred: false,
+        tags: ['iot', 'automation', 'plants'],
+        completed_steps: [0, 1, 2],
+        generated_from_params: {
+          projectType: 'iot',
+          skillLevel: 'beginner',
+          interests: 'gardening, automation',
+          budget: '$25',
+          duration: '4 hours'
+        },
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+        updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      }
+    ];
   }
 
   /**

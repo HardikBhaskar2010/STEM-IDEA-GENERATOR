@@ -1,0 +1,324 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Code, 
+  FileText, 
+  CheckCircle, 
+  AlertCircle, 
+  Loader2, 
+  Download, 
+  Copy, 
+  Eye, 
+  X,
+  Pause,
+  Play,
+  RotateCcw
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+
+interface CodeFile {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  content: string;
+  description?: string;
+  size_bytes: number;
+  is_main_file: boolean;
+}
+
+interface StreamingEvent {
+  type: 'status_update' | 'file_generated' | 'progress_update' | 'error' | 'completion' | 'connection_ack' | 'info' | 'success' | 'progress';
+  timestamp: Date;
+  message: string;
+  details?: string;
+  data?: any;
+}
+
+interface StreamingCodeViewProps {
+  generationId: string;
+  projectId: string;
+  isVisible: boolean;
+  onClose: () => void;
+  onComplete?: (files: CodeFile[]) => void;
+  onError?: (error: string) => void;
+  onCancel?: () => void;
+}
+
+const StreamingCodeView: React.FC<StreamingCodeViewProps> = ({
+  generationId,
+  projectId,
+  isVisible,
+  onClose,
+  onComplete,
+  onError,
+  onCancel
+}) => {
+  const [status, setStatus] = useState<'connecting' | 'generating' | 'completed' | 'error' | 'cancelled'>('connecting');
+  const [progress, setProgress] = useState(0);
+  const [currentMessage, setCurrentMessage] = useState('Initializing...');
+  const [generatedFiles, setGeneratedFiles] = useState<CodeFile[]>([]);
+  const [events, setEvents] = useState<StreamingEvent[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filesGenerated, setFilesGenerated] = useState(0);
+  const [estimatedTotal, setEstimatedTotal] = useState(3);
+  
+  const wsRef = useRef<WebSocket | null>(null);
+  const eventsEndRef = useRef<HTMLDivElement>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const maxReconnectAttempts = 3;
+
+  // Initialize mock streaming simulation
+  useEffect(() => {
+    if (!isVisible) return;
+
+    // Simulate streaming events
+    const simulateStreaming = () => {
+      const mockEvents: Omit<StreamingEvent, 'timestamp'>[] = [
+        { type: 'info', message: 'Connecting to generation service...', details: 'WebSocket connection established' },
+        { type: 'info', message: 'Analyzing project requirements...', details: 'Processing generation parameters' },
+        { type: 'progress', message: 'Starting code generation...', details: 'Platform: Web Application' },
+        { type: 'progress', message: 'Generating HTML structure...', details: 'Creating index.html' },
+        { type: 'success', message: 'Generated index.html', details: 'Main HTML file created successfully' },
+        { type: 'progress', message: 'Generating CSS styles...', details: 'Creating style.css' },
+        { type: 'success', message: 'Generated style.css', details: 'Stylesheet created successfully' },
+        { type: 'progress', message: 'Generating JavaScript...', details: 'Creating script.js' },
+        { type: 'success', message: 'Generated script.js', details: 'JavaScript file created successfully' },
+        { type: 'success', message: 'Code generation completed!', details: 'All files generated successfully' }
+      ];
+
+      let eventIndex = 0;
+      const interval = setInterval(() => {
+        if (eventIndex < mockEvents.length) {
+          const event = mockEvents[eventIndex];
+          setEvents(prev => [...prev, { ...event, timestamp: new Date() }]);
+          setProgress(((eventIndex + 1) / mockEvents.length) * 100);
+          setCurrentMessage(event.message);
+          
+          if (event.type === 'success' && event.message.includes('Generated')) {
+            setFilesGenerated(prev => prev + 1);
+          }
+          
+          eventIndex++;
+        } else {
+          clearInterval(interval);
+          setStatus('completed');
+          
+          // Mock generated files
+          const mockFiles: CodeFile[] = [
+            {
+              id: 'file_1',
+              file_name: 'index.html',
+              file_path: 'index.html',
+              file_type: 'html',
+              content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Generated Project</title>\n    <link rel="stylesheet" href="css/style.css">\n</head>\n<body>\n    <div class="container">\n        <h1>Welcome to Your Generated Project!</h1>\n        <p>This is a sample web application generated by AI.</p>\n        <button id="clickMe" class="btn">Click Me!</button>\n    </div>\n    <script src="js/script.js"></script>\n</body>\n</html>',
+              description: 'Main HTML file with basic structure',
+              size_bytes: 450,
+              is_main_file: true
+            },
+            {
+              id: 'file_2',
+              file_name: 'style.css',
+              file_path: 'css/style.css',
+              file_type: 'css',
+              content: '/* Generated CSS Styles */\n* {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n}\n\nbody {\n    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;\n    line-height: 1.6;\n    color: #333;\n    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n    min-height: 100vh;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.container {\n    background: white;\n    padding: 2rem;\n    border-radius: 10px;\n    box-shadow: 0 10px 30px rgba(0,0,0,0.2);\n    text-align: center;\n    max-width: 500px;\n    width: 90%;\n}\n\nh1 {\n    color: #4a5568;\n    margin-bottom: 1rem;\n    font-size: 2rem;\n}\n\np {\n    margin-bottom: 2rem;\n    color: #718096;\n}\n\n.btn {\n    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n    color: white;\n    border: none;\n    padding: 12px 24px;\n    border-radius: 25px;\n    cursor: pointer;\n    font-size: 1rem;\n    transition: transform 0.2s, box-shadow 0.2s;\n}\n\n.btn:hover {\n    transform: translateY(-2px);\n    box-shadow: 0 5px 15px rgba(0,0,0,0.2);\n}\n\n.btn:active {\n    transform: translateY(0);\n}',
+              description: 'Modern CSS with gradient background and animations',
+              size_bytes: 1200,
+              is_main_file: false
+            },
+            {
+              id: 'file_3',
+              file_name: 'script.js',
+              file_path: 'js/script.js',
+              file_type: 'js',
+              content: '// Generated JavaScript\nconsole.log("🚀 Generated project loaded successfully!");\n\n// Wait for DOM to be ready\ndocument.addEventListener("DOMContentLoaded", function() {\n    console.log("✅ DOM Content Loaded");\n    \n    // Get the button element\n    const button = document.getElementById("clickMe");\n    const container = document.querySelector(".container");\n    \n    if (button) {\n        let clickCount = 0;\n        \n        button.addEventListener("click", function() {\n            clickCount++;\n            \n            // Update button text\n            button.textContent = `Clicked ${clickCount} time${clickCount !== 1 ? "s" : ""}!`;\n            \n            // Add some visual feedback\n            button.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;\n            \n            // Create a celebration effect\n            if (clickCount % 5 === 0) {\n                createConfetti();\n            }\n            \n            console.log(`🎉 Button clicked ${clickCount} times!`);\n        });\n    }\n    \n    // Simple confetti effect\n    function createConfetti() {\n        for (let i = 0; i < 20; i++) {\n            const confetti = document.createElement("div");\n            confetti.style.position = "fixed";\n            confetti.style.width = "10px";\n            confetti.style.height = "10px";\n            confetti.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;\n            confetti.style.left = Math.random() * window.innerWidth + "px";\n            confetti.style.top = "-10px";\n            confetti.style.borderRadius = "50%";\n            confetti.style.pointerEvents = "none";\n            confetti.style.zIndex = "1000";\n            \n            document.body.appendChild(confetti);\n            \n            // Animate the confetti\n            const animation = confetti.animate([\n                { transform: "translateY(0px) rotate(0deg)", opacity: 1 },\n                { transform: `translateY(${window.innerHeight + 20}px) rotate(360deg)`, opacity: 0 }\n            ], {\n                duration: 2000 + Math.random() * 1000,\n                easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)"\n            });\n            \n            animation.onfinish = () => {\n                confetti.remove();\n            };\n        }\n    }\n});',
+              description: 'Interactive JavaScript with click counter and confetti effect',
+              size_bytes: 2100,
+              is_main_file: false
+            }
+          ];
+          
+          setGeneratedFiles(mockFiles);
+          onComplete?.(mockFiles);
+        }
+      }, 1500);
+
+      return () => clearInterval(interval);
+    };
+
+    const cleanup = simulateStreaming();
+    return cleanup;
+  }, [isVisible, onComplete]);
+
+  // Scroll to bottom of events
+  const scrollToBottom = () => {
+    eventsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [events]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="h-full flex flex-col bg-black/40 backdrop-blur-xl">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <div className={cn(
+            "w-2 h-2 rounded-full",
+            status === 'generating' && "bg-green-400 animate-pulse",
+            status === 'completed' && "bg-blue-400",
+            status === 'error' && "bg-red-400",
+            status === 'connecting' && "bg-yellow-400 animate-pulse"
+          )} />
+          <span className="text-sm font-medium text-white">
+            {status === 'connecting' && 'Connecting...'}
+            {status === 'generating' && 'Generating Code...'}
+            {status === 'completed' && 'Generation Complete'}
+            {status === 'error' && 'Generation Failed'}
+          </span>
+          <Badge variant="secondary" className="text-xs">
+            {filesGenerated}/{estimatedTotal} files
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          {status === 'generating' && onCancel && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Cancel
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-white/60 hover:text-white hover:bg-white/10"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Tabs defaultValue="events" className="flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-2 bg-white/5 border-b border-white/10">
+            <TabsTrigger value="events" className="text-white data-[state=active]:bg-white/10">
+              Events
+            </TabsTrigger>
+            <TabsTrigger value="files" className="text-white data-[state=active]:bg-white/10">
+              Files ({generatedFiles.length})
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="events" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full p-4">
+              <div className="space-y-2">
+                {events.map((event, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "p-3 rounded-lg border text-sm",
+                      event.type === 'error' && "bg-red-500/10 border-red-500/30 text-red-300",
+                      event.type === 'success' && "bg-green-500/10 border-green-500/30 text-green-300",
+                      event.type === 'info' && "bg-blue-500/10 border-blue-500/30 text-blue-300",
+                      event.type === 'progress' && "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-white/60">
+                        {event.timestamp.toLocaleTimeString()}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {event.type}
+                      </Badge>
+                    </div>
+                    <div>{event.message}</div>
+                    {event.details && (
+                      <div className="mt-2 text-xs text-white/60 font-mono">
+                        {event.details}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div ref={eventsEndRef} />
+              </div>
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="files" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full p-4">
+              <div className="space-y-2">
+                {generatedFiles.map((file) => (
+                  <Card key={file.id} className="bg-white/5 border-white/10">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-blue-400" />
+                          <span className="font-medium text-white">{file.file_name}</span>
+                          {file.is_main_file && (
+                            <Badge variant="secondary" className="text-xs">Main</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="text-white/60 hover:text-white">
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-white/60 hover:text-white">
+                            <Download className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="text-xs text-white/60 mb-2">
+                        {file.description} • {(file.size_bytes / 1024).toFixed(1)} KB
+                      </div>
+                      <div className="bg-black/20 rounded p-2 text-xs font-mono text-white/80 max-h-32 overflow-y-auto">
+                        {file.content.substring(0, 200)}
+                        {file.content.length > 200 && '...'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Progress */}
+      {progress > 0 && progress < 100 && (
+        <div className="p-4 border-t border-white/10">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-white/80">Generation Progress</span>
+            <span className="text-sm text-white/60">{Math.round(progress)}%</span>
+          </div>
+          <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default StreamingCodeView;
