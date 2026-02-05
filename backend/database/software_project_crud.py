@@ -28,7 +28,9 @@ def dict_to_model(data: Dict[str, Any], model_class):
         
         return model_class(**data)
     except Exception as e:
-        logger.error(f\"Error converting dict to model: {e}\")\n        logger.error(f\"Data: {data}\")\n        raise
+        logger.error(f"Error converting dict to model: {e}")
+        logger.error(f"Data: {data}")
+        raise
 
 
 class SoftwareProjectCRUD:
