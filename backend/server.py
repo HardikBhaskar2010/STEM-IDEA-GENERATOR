@@ -5291,6 +5291,475 @@ async def get_application_template(template_id: str):
         )
 
 
+
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 1: VERONICA AI CODE - SOFTWARE PROJECT PLANNING
+# ═══════════════════════════════════════════════════════════════
+
+from models.software_project import (
+    ProjectAnalysisRequest, ProjectAnalysisResponse,
+    ArchitectureDiagramRequest, DatabaseSchemaRequest,
+    APISpecificationRequest, SoftwareProject
+)
+from services.enhanced_software_planning_service import enhanced_planning_service
+from database.software_project_crud import (
+    SoftwareProjectCRUD, ArchitectureDiagramCRUD,
+    DatabaseSchemaCRUD, APISpecificationCRUD
+)
+
+
+@api.post("/software-projects/analyze", response_model=Dict[str, Any])
+async def analyze_project_requirements(request: ProjectAnalysisRequest):
+    """
+    Analyze project requirements and generate comprehensive software project plan.
+    Uses AI-powered analysis with OpenRouter for intelligent recommendations.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Analyzing project requirements for platforms: {request.target_platforms}")
+        
+        # For demo, use a test user ID. In production, get from auth context
+        user_id = "00000000-0000-0000-0000-000000000000"  # Test user
+        
+        # Analyze project with AI
+        project = await enhanced_planning_service.analyze_project_requirements(
+            description=request.description,
+            target_platforms=request.target_platforms,
+            user_id=user_id,
+            budget=request.budget,
+            timeline=request.timeline,
+            team_size=request.team_size,
+            team_expertise=request.team_expertise,
+            custom_requirements=request.custom_requirements
+        )
+        
+        logger.info(f"Project analysis completed: {project.id}")
+        
+        # Return comprehensive analysis
+        response = {
+            "project_id": project.id,
+            "title": project.title,
+            "project_type": project.project_type.value,
+            "platforms": [p.value for p in project.platforms],
+            "complexity_level": project.complexity_level.value,
+            "features": [f.dict() for f in project.features],
+            "user_stories": [us.dict() for us in project.user_stories],
+            "tech_stack": project.recommended_tech_stack.dict() if project.recommended_tech_stack else None,
+            "architecture_type": project.architecture_type.value if project.architecture_type else None,
+            "database_recommendations": [db.dict() for db in project.database_recommendations],
+            "estimated_timeline": project.estimated_timeline,
+            "estimated_budget": project.estimated_budget,
+            "team_recommendations": project.team_recommendations.dict() if project.team_recommendations else None,
+            "deployment_recommendations": [dr.dict() for dr in project.deployment_recommendations],
+            "non_functional_requirements": project.non_functional_requirements.dict() if project.non_functional_requirements else None,
+            "ai_confidence_score": project.ai_confidence_score,
+            "created_at": project.created_at.isoformat()
+        }
+        
+        return JSONResponse(content=response, status_code=200)
+        
+    except ValueError as e:
+        logger.error(f"Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error analyzing project: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to analyze project: {str(e)}"
+        )
+
+
+@api.get("/software-projects/{project_id}")
+async def get_software_project(project_id: str):
+    """
+    Get software project details by ID.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Fetching project: {project_id}")
+        
+        project = await SoftwareProjectCRUD.get_project(project_id)
+        
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Convert to dict for JSON response
+        response = {
+            "id": project.id,
+            "title": project.title,
+            "description": project.description,
+            "project_type": project.project_type.value,
+            "platforms": [p.value for p in project.platforms],
+            "complexity_level": project.complexity_level.value,
+            "features": [f.dict() for f in project.features],
+            "user_stories": [us.dict() for us in project.user_stories],
+            "tech_stack": project.recommended_tech_stack.dict() if project.recommended_tech_stack else None,
+            "architecture_type": project.architecture_type.value if project.architecture_type else None,
+            "estimated_timeline": project.estimated_timeline,
+            "estimated_budget": project.estimated_budget,
+            "status": project.status,
+            "created_at": project.created_at.isoformat()
+        }
+        
+        return JSONResponse(content=response)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching project: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.get("/software-projects/user/{user_id}")
+async def get_user_projects(user_id: str, limit: int = 50):
+    """
+    Get all software projects for a user.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Fetching projects for user: {user_id}")
+        
+        projects = await SoftwareProjectCRUD.get_user_projects(user_id, limit)
+        
+        # Convert to list of dicts
+        projects_data = []
+        for project in projects:
+            projects_data.append({
+                "id": project.id,
+                "title": project.title,
+                "description": project.description[:200] + "..." if len(project.description) > 200 else project.description,
+                "project_type": project.project_type.value,
+                "platforms": [p.value for p in project.platforms],
+                "complexity_level": project.complexity_level.value,
+                "status": project.status,
+                "created_at": project.created_at.isoformat()
+            })
+        
+        return JSONResponse(content={"projects": projects_data, "total": len(projects_data)})
+        
+    except Exception as e:
+        logger.error(f"Error fetching user projects: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.post("/software-projects/{project_id}/architecture-diagram")
+async def generate_architecture_diagram(project_id: str, request: ArchitectureDiagramRequest):
+    """
+    Generate Mermaid architecture diagram for a project.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Generating architecture diagram for project: {project_id}")
+        
+        # Generate diagram
+        diagram = await enhanced_planning_service.generate_architecture_diagram(
+            project_id=project_id,
+            diagram_type=request.diagram_type,
+            include_database=request.include_database,
+            include_frontend=request.include_frontend,
+            include_backend=request.include_backend
+        )
+        
+        # Save to database
+        diagram_id = await ArchitectureDiagramCRUD.create_diagram(diagram)
+        diagram.id = diagram_id
+        
+        logger.info(f"Architecture diagram created: {diagram_id}")
+        
+        return JSONResponse(content={
+            "id": diagram.id,
+            "project_id": diagram.project_id,
+            "diagram_type": diagram.diagram_type,
+            "mermaid_code": diagram.mermaid_code,
+            "description": diagram.description,
+            "components": diagram.components,
+            "created_at": diagram.created_at.isoformat()
+        })
+        
+    except ValueError as e:
+        logger.error(f"Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error generating architecture diagram: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.get("/software-projects/{project_id}/architecture-diagrams")
+async def get_project_diagrams(project_id: str):
+    """
+    Get all architecture diagrams for a project.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Fetching diagrams for project: {project_id}")
+        
+        diagrams = await ArchitectureDiagramCRUD.get_project_diagrams(project_id)
+        
+        diagrams_data = []
+        for diagram in diagrams:
+            diagrams_data.append({
+                "id": diagram.id,
+                "diagram_type": diagram.diagram_type,
+                "mermaid_code": diagram.mermaid_code,
+                "description": diagram.description,
+                "components": diagram.components,
+                "created_at": diagram.created_at.isoformat()
+            })
+        
+        return JSONResponse(content={"diagrams": diagrams_data, "total": len(diagrams_data)})
+        
+    except Exception as e:
+        logger.error(f"Error fetching diagrams: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.post("/software-projects/{project_id}/database-schema")
+async def generate_database_schema(project_id: str, request: DatabaseSchemaRequest):
+    """
+    Generate database schema for a project.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Generating database schema for project: {project_id}")
+        
+        # Generate schema
+        schema = await enhanced_planning_service.generate_database_schema(
+            project_id=project_id,
+            database_type=request.database_type
+        )
+        
+        # Save to database
+        schema_id = await DatabaseSchemaCRUD.create_schema(schema)
+        schema.id = schema_id
+        
+        logger.info(f"Database schema created: {schema_id}")
+        
+        return JSONResponse(content={
+            "id": schema.id,
+            "project_id": schema.project_id,
+            "database_type": schema.database_type,
+            "tables": schema.tables,
+            "relationships": schema.relationships,
+            "indexes": schema.indexes,
+            "schema_sql": schema.schema_sql,
+            "schema_json": schema.schema_json,
+            "created_at": schema.created_at.isoformat()
+        })
+        
+    except ValueError as e:
+        logger.error(f"Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error generating database schema: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.get("/software-projects/{project_id}/database-schema")
+async def get_project_schema(project_id: str):
+    """
+    Get database schema for a project.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Fetching schema for project: {project_id}")
+        
+        schema = await DatabaseSchemaCRUD.get_project_schema(project_id)
+        
+        if not schema:
+            raise HTTPException(status_code=404, detail="Schema not found")
+        
+        return JSONResponse(content={
+            "id": schema.id,
+            "project_id": schema.project_id,
+            "database_type": schema.database_type,
+            "tables": schema.tables,
+            "relationships": schema.relationships,
+            "indexes": schema.indexes,
+            "schema_sql": schema.schema_sql,
+            "schema_json": schema.schema_json,
+            "created_at": schema.created_at.isoformat()
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching schema: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.post("/software-projects/{project_id}/api-specification")
+async def generate_api_specification(project_id: str, request: APISpecificationRequest):
+    """
+    Generate OpenAPI specification for a project.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Generating API specification for project: {project_id}")
+        
+        # Generate specification
+        spec = await enhanced_planning_service.generate_api_specification(
+            project_id=project_id,
+            include_authentication=request.include_authentication
+        )
+        
+        # Save to database
+        spec_id = await APISpecificationCRUD.create_specification(spec)
+        spec.id = spec_id
+        
+        logger.info(f"API specification created: {spec_id}")
+        
+        return JSONResponse(content={
+            "id": spec.id,
+            "project_id": spec.project_id,
+            "title": spec.title,
+            "version": spec.version,
+            "description": spec.description,
+            "base_url": spec.base_url,
+            "endpoints": [e.dict() for e in spec.endpoints],
+            "authentication_scheme": spec.authentication_scheme,
+            "openapi_spec": spec.openapi_spec,
+            "created_at": spec.created_at.isoformat()
+        })
+        
+    except ValueError as e:
+        logger.error(f"Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error generating API specification: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.get("/software-projects/{project_id}/api-specification")
+async def get_project_api_specification(project_id: str):
+    """
+    Get API specification for a project.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        logger.info(f"Fetching API spec for project: {project_id}")
+        
+        spec = await APISpecificationCRUD.get_project_specification(project_id)
+        
+        if not spec:
+            raise HTTPException(status_code=404, detail="API specification not found")
+        
+        return JSONResponse(content={
+            "id": spec.id,
+            "project_id": spec.project_id,
+            "title": spec.title,
+            "version": spec.version,
+            "description": spec.description,
+            "base_url": spec.base_url,
+            "endpoints": [e.dict() for e in spec.endpoints],
+            "authentication_scheme": spec.authentication_scheme,
+            "openapi_spec": spec.openapi_spec,
+            "created_at": spec.created_at.isoformat()
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching API specification: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.get("/technology-stacks")
+async def get_technology_stacks(category: Optional[str] = None):
+    """
+    Get all available technology stacks with recommendations.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        from services.technology_stack_service import technology_stack_service
+        
+        logger.info(f"Fetching technology stacks, category: {category}")
+        
+        stacks = technology_stack_service.get_all_stacks(category)
+        
+        stacks_data = []
+        for stack in stacks:
+            stacks_data.append({
+                "id": stack.id,
+                "name": stack.name,
+                "description": stack.description,
+                "category": stack.category,
+                "frontend_framework": stack.frontend_framework,
+                "backend_framework": stack.backend_framework,
+                "database": stack.database,
+                "popularity_score": stack.popularity_score,
+                "learning_curve": stack.learning_curve,
+                "community_size": stack.community_size,
+                "maturity": stack.maturity,
+                "pros": stack.pros,
+                "cons": stack.cons,
+                "best_for": stack.best_for,
+                "estimated_hosting_cost": stack.estimated_hosting_cost
+            })
+        
+        return JSONResponse(content={"stacks": stacks_data, "total": len(stacks_data)})
+        
+    except Exception as e:
+        logger.error(f"Error fetching technology stacks: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.get("/technology-stacks/{stack_id}")
+async def get_technology_stack(stack_id: str):
+    """
+    Get detailed information about a specific technology stack.
+    
+    Requirements: Phase 1 - Backend Foundation
+    """
+    try:
+        from services.technology_stack_service import technology_stack_service
+        
+        logger.info(f"Fetching technology stack: {stack_id}")
+        
+        stack = technology_stack_service.get_stack_by_id(stack_id)
+        
+        if not stack:
+            raise HTTPException(status_code=404, detail="Technology stack not found")
+        
+        return JSONResponse(content={
+            "id": stack.id,
+            "name": stack.name,
+            "description": stack.description,
+            "category": stack.category,
+            "frontend_framework": stack.frontend_framework,
+            "backend_framework": stack.backend_framework,
+            "database": stack.database,
+            "additional_technologies": stack.additional_technologies,
+            "popularity_score": stack.popularity_score,
+            "learning_curve": stack.learning_curve,
+            "community_size": stack.community_size,
+            "maturity": stack.maturity,
+            "pros": stack.pros,
+            "cons": stack.cons,
+            "best_for": stack.best_for,
+            "documentation_url": stack.documentation_url,
+            "tutorial_links": stack.tutorial_links,
+            "estimated_hosting_cost": stack.estimated_hosting_cost,
+            "requires_paid_services": stack.requires_paid_services
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching technology stack: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ───────────────── REGISTER ROUTER ─────────────────
 app.include_router(api)
 
