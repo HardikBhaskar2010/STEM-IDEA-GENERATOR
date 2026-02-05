@@ -27,6 +27,8 @@ const Generator: React.FC = () => {
   const [isSynthesized, setIsSynthesized] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
+  const [showCodeGenModal, setShowCodeGenModal] = useState(false);
   const [generatedProject, setGeneratedProject] = useState<{
     title: string;
     description: string;
