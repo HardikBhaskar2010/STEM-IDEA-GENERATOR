@@ -211,7 +211,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="h-[300px]">
-                  <ActivityBarChart />
+                  <ActivityBarChart data={dailyActivityData} />
                 </div>
               </CardContent>
             </Card>
