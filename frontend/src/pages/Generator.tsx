@@ -530,6 +530,46 @@ const Generator: React.FC = () => {
                                 ))}
                               </div>
                             </div>
+
+                            {/* Generate with Veronica Button */}
+                            <div className="pt-8 border-t border-primary/10">
+                              <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-purple-500/10 rounded-2xl p-6 border border-purple-500/20">
+                                <div className="flex items-start gap-4">
+                                  <div className="flex-shrink-0 p-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600">
+                                    <Sparkles className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                      Ready to Build This Project?
+                                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none">
+                                        AI Powered
+                                      </Badge>
+                                    </h3>
+                                    <p className="text-sm text-white/70 mb-4">
+                                      Let Veronica AI generate complete, production-ready code for your project. Get a full-stack application with proper structure, best practices, and documentation.
+                                    </p>
+                                    <Button
+                                      onClick={handleGenerateWithVeronica}
+                                      disabled={isSaving}
+                                      size="lg"
+                                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl h-12 px-8 shadow-lg hover:shadow-xl transition-all"
+                                    >
+                                      {isSaving ? (
+                                        <>
+                                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                          Preparing Workspace...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Code className="h-5 w-5 mr-2" />
+                                          Generate with Veronica AI
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </CardContent>
                         )}
                       </Card>
