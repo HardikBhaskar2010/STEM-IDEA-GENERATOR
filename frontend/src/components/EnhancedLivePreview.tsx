@@ -705,9 +705,24 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
                 >
                   {isLoading && (
                     <div className="flex items-center justify-center h-full bg-white">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-                        <span className="text-sm text-gray-600">Building preview...</span>
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative">
+                          <div className="w-16 h-16 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Zap className="w-6 h-6 text-purple-500 animate-pulse" />
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-700">Building preview...</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {devServerStatus.status === 'building' ? devServerStatus.message : 'Compiling code'}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
                       </div>
                     </div>
                   )}
