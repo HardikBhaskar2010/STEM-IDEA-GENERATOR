@@ -45,7 +45,8 @@ interface GeneratedCode {
 // Real API functions
 const api = {
   async post(endpoint: string, data: any): Promise<any> {
-    const response = await enhancedFetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +58,8 @@ const api = {
   },
   
   async get(endpoint: string): Promise<any> {
-    const response = await enhancedFetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -68,7 +70,8 @@ const api = {
   },
   
   async delete(endpoint: string): Promise<any> {
-    const response = await enhancedFetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
