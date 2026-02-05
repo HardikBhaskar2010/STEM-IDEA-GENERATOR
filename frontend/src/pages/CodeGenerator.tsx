@@ -333,6 +333,30 @@ const CodeGenerator: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Layout selector */}
+          <Select value={workspaceLayout} onValueChange={(value: any) => setWorkspaceLayout(value)}>
+            <SelectTrigger className="w-40 bg-black/40 border-white/10 text-white text-sm">
+              <LayoutIcon className="w-4 h-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10">
+              <SelectItem value="standard">Standard</SelectItem>
+              <SelectItem value="editor-focus">Editor Focus</SelectItem>
+              <SelectItem value="preview-focus">Preview Focus</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Terminal toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowTerminal(!showTerminal)}
+            className="text-white/60 hover:text-white hover:bg-white/10"
+            title="Toggle Terminal"
+          >
+            <TerminalIcon className="w-4 h-4" />
+          </Button>
+
           {currentGeneration && (
             <Button
               variant="ghost"
@@ -355,95 +379,144 @@ const CodeGenerator: React.FC = () => {
         </div>
       </div>
 
-      {/* Main workspace */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-80 border-r border-white/10 bg-black/30 flex flex-col">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 bg-black/40 border-b border-white/10 rounded-none">
-              <TabsTrigger value="files" className="data-[state=active]:bg-purple-500/20">
-                <FileText className="w-4 h-4 mr-2" />
-                Files
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="data-[state=active]:bg-purple-500/20">
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="files" className="flex-1 overflow-hidden">
-              {isGenerating ? (
-                <StreamingCodeView
-                  generationId={currentGeneration?.id || ''}
-                  onComplete={() => {}}
-                  onError={() => {}}
-                />
-              ) : files.length > 0 ? (
-                <FileTreeView
-                  files={files}
-                  selectedFile={selectedFile}
-                  onFileSelect={selectFile}
-                  onFileOperation={handleFileOperation}
-                  className="h-full"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                  <Code className="w-12 h-12 text-white/20 mb-4" />
-                  <h3 className="text-lg font-medium text-white/60 mb-2">No Code Generated</h3>
-                  <p className="text-sm text-white/40 mb-4">
-                    Let Veronica generate code for this project
-                  </p>
-                  <Button
-                    onClick={() => openModal()}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    Start with Veronica
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="preview" className="flex-1 overflow-hidden">
-              {currentGeneration ? (
-                <LivePreview
-                  files={files}
-                  platform={currentGeneration.platform as any}
-                  className="h-full"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                  <Eye className="w-12 h-12 text-white/20 mb-4" />
-                  <h3 className="text-lg font-medium text-white/60 mb-2">No Preview Available</h3>
-                  <p className="text-sm text-white/40">
-                    Generate code to see a live preview
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Main content area */}
-        <div className="flex-1 flex flex-col">
-          {selectedFile ? (
-            <CodeEditor
-              file={selectedFile}
-              onSave={(content) => updateFile(selectedFile.id, content)}
-              className="flex-1"
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <FileText className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white/60 mb-2">Select a File</h3>
-                <p className="text-white/40">
-                  Choose a file from the sidebar to view and edit its contents
+      {/* Main workspace with resizable panels */}
+      <div className="flex-1 overflow-hidden">
+        <SplitPane
+          split="vertical"
+          minSize={250}
+          defaultSize={
+            workspaceLayout === 'editor-focus' ? '20%' : 
+            workspaceLayout === 'preview-focus' ? '40%' : 
+            '30%'
+          }
+          style={{ position: 'relative' }}
+        >
+          {/* Left Sidebar - File Tree */}
+          <div className="h-full border-r border-white/10 bg-black/30 overflow-hidden">
+            {isGenerating ? (
+              <StreamingCodeView
+                generationId={currentGeneration?.id || ''}
+                onComplete={() => {}}
+                onError={() => {}}
+              />
+            ) : files.length > 0 ? (
+              <FileTreeView
+                files={files}
+                selectedFile={selectedFile}
+                onFileSelect={selectFile}
+                onFileOperation={handleFileOperation}
+                enableDragDrop={true}
+                className="h-full overflow-auto"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                <Code className="w-12 h-12 text-white/20 mb-4" />
+                <h3 className="text-lg font-medium text-white/60 mb-2">No Code Generated</h3>
+                <p className="text-sm text-white/40 mb-4">
+                  Let Veronica generate code for this project
                 </p>
+                <Button
+                  onClick={() => openModal()}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Start with Veronica
+                </Button>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+
+          {/* Right Content Area - Editor & Preview */}
+          <div className="h-full">
+            <SplitPane
+              split={showTerminal ? "horizontal" : "vertical"}
+              minSize={showTerminal ? 300 : 400}
+              defaultSize={
+                showTerminal ? '65%' : 
+                workspaceLayout === 'editor-focus' ? '60%' : 
+                workspaceLayout === 'preview-focus' ? '40%' : 
+                '50%'
+              }
+              style={{ position: 'relative' }}
+            >
+              {/* Top/Left - Editor & Preview Split */}
+              <div className="h-full">
+                <SplitPane
+                  split="vertical"
+                  minSize={400}
+                  defaultSize={
+                    workspaceLayout === 'editor-focus' ? '70%' : 
+                    workspaceLayout === 'preview-focus' ? '30%' : 
+                    '50%'
+                  }
+                  style={{ position: 'relative' }}
+                >
+                  {/* Editor */}
+                  <div className="h-full border-r border-white/10">
+                    {selectedFile ? (
+                      <EnhancedCodeEditor
+                        file={selectedFile}
+                        onSave={(content) => updateFile(selectedFile.id, content)}
+                        onContentChange={(content) => {}}
+                        className="h-full"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-black/30">
+                        <div className="text-center">
+                          <FileText className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                          <h3 className="text-xl font-semibold text-white/60 mb-2">Select a File</h3>
+                          <p className="text-white/40">
+                            Choose a file from the sidebar to view and edit
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Preview */}
+                  <div className="h-full">
+                    {currentGeneration ? (
+                      <EnhancedLivePreview
+                        files={files}
+                        platform={currentGeneration.platform as any}
+                        autoRefresh={true}
+                        refreshInterval={1000}
+                        className="h-full"
+                      />
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center bg-black/30 p-6 text-center">
+                        <Eye className="w-16 h-16 text-white/20 mb-4" />
+                        <h3 className="text-xl font-semibold text-white/60 mb-2">No Preview Available</h3>
+                        <p className="text-white/40 mb-4">
+                          Generate code to see a live preview with dev server simulation
+                        </p>
+                        <div className="flex flex-wrap gap-2 text-sm text-white/50">
+                          <Badge variant="secondary" className="bg-white/10">JSX/TSX Transpilation</Badge>
+                          <Badge variant="secondary" className="bg-white/10">Hot Reload</Badge>
+                          <Badge variant="secondary" className="bg-white/10">Console Capture</Badge>
+                          <Badge variant="secondary" className="bg-white/10">Network Monitor</Badge>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </SplitPane>
+              </div>
+
+              {/* Bottom - Terminal */}
+              {showTerminal && (
+                <div className="h-full border-t border-white/10">
+                  <Terminal
+                    className="h-full"
+                    onCommandExecute={async (command) => {
+                      // Handle custom commands here
+                      return `Executed: ${command}`;
+                    }}
+                  />
+                </div>
+              )}
+            </SplitPane>
+          </div>
+        </SplitPane>
       </div>
     </div>
   );
