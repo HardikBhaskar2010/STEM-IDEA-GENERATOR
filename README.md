@@ -281,6 +281,8 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 
 ## 🎬 Screenshots
 
+> **Note**: All screenshots are captured in dark mode for optimal viewing experience.
+
 <div align="center">
 
 ### 🏠 Hero Section with 3D Particles
@@ -317,6 +319,21 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 <img src="./screenshots/05-learn-page.jpeg" alt="Learn" width="800"/>
 
 *Digital book experience with immersive 3D visualizations*
+
+---
+
+### 💻 Veronica AI Code Generator (Phase 4)
+<img src="./screenshots/06-code-generator.jpeg" alt="Code Generator" width="800"/>
+
+*Professional workspace with Monaco editor, live preview, and terminal emulation*
+
+**Features Shown:**
+- Real-time code preview with dev server simulation
+- Multi-panel layout with resizable sections
+- Integrated terminal with command history
+- Console output with error tracking
+- Network request monitoring
+- Build status indicators
 
 </div>
 
