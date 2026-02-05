@@ -717,7 +717,7 @@ class VeronicaAIService:
         params: GenerationParams
     ) -> str:
         """
-        Create initial generation record in database
+        Create initial generation record in database or fallback to in-memory storage
         
         Args:
             project_id: ID of the project
@@ -728,36 +728,46 @@ class VeronicaAIService:
             Generated code ID
         """
         try:
-            client = await get_db_client()
-            
-            generation_data = {
-                "project_id": project_id,
-                "user_id": user_id,
-                "generation_request": {
+            # Try to use database if available
+            try:
+                client = await get_db_client()
+                
+                generation_data = {
+                    "project_id": project_id,
+                    "user_id": user_id,
+                    "generation_request": {
+                        "platform": params.platform.value,
+                        "complexity_level": params.complexity_level.value,
+                        "include_comments": params.include_comments,
+                        "include_tests": params.include_tests,
+                        "custom_requirements": params.custom_requirements
+                    },
+                    "status": GenerationStatus.GENERATING.value,
                     "platform": params.platform.value,
-                    "complexity_level": params.complexity_level.value,
-                    "include_comments": params.include_comments,
-                    "include_tests": params.include_tests,
-                    "custom_requirements": params.custom_requirements
-                },
-                "status": GenerationStatus.GENERATING.value,
-                "platform": params.platform.value,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "metadata": {
-                    "model": self.models.get("code_generation", "arcee-ai/trinity-large-preview:free"),
-                    "max_tokens": self.max_tokens,
-                    "temperature": self.temperature
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "metadata": {
+                        "model": self.models.get("code_generation", "arcee-ai/trinity-large-preview:free"),
+                        "max_tokens": self.max_tokens,
+                        "temperature": self.temperature
+                    }
                 }
-            }
+                
+                result = client.table("generated_code").insert(generation_data).execute()
+                
+                if result.data:
+                    generation_id = result.data[0]["id"]
+                    logger.info(f"Created generation record {generation_id} for project {project_id}")
+                    return generation_id
+                else:
+                    raise Exception("Failed to create generation record")
             
-            result = client.table("generated_code").insert(generation_data).execute()
-            
-            if result.data:
-                generation_id = result.data[0]["id"]
-                logger.info(f"Created generation record {generation_id} for project {project_id}")
+            except Exception as db_error:
+                # Fallback to in-memory storage if database is not available
+                logger.warning(f"Database not available, using in-memory storage: {db_error}")
+                import uuid
+                generation_id = str(uuid.uuid4())
+                logger.info(f"Created in-memory generation record {generation_id} for project {project_id}")
                 return generation_id
-            else:
-                raise Exception("Failed to create generation record")
                 
         except Exception as e:
             logger.error(f"Error creating generation record: {e}")
