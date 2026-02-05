@@ -5,17 +5,9 @@ interface ActivityBarChartProps {
   data?: Array<{ time: string; activity: number }>;
 }
 
-// Generate mock activity data
-const generateMockData = () => {
-  const times = ['12 AM', '4 AM', '8 AM', '12 PM', '4 PM', '8 PM'];
-  return times.map(time => ({
-    time,
-    activity: Math.floor(Math.random() * 100) + 20,
-  }));
-};
-
 export const ActivityBarChart: React.FC<ActivityBarChartProps> = ({ data }) => {
-  const chartData = data || generateMockData();
+  // Use provided data or empty array if no data
+  const chartData = data || [];
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {

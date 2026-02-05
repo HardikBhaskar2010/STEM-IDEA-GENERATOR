@@ -20,7 +20,7 @@ export const sendFeedback = async (data: FeedbackData) => {
     
     // Simulate API delay for better UX even without keys
     await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true, mock: true };
+    return { success: true };
   }
 
   try {

@@ -1,5 +1,5 @@
-// Mock API service for code generation
-// This will be replaced with actual backend calls once the API is ready
+// Real API service for code generation
+// Connected to backend API endpoints
 
 import { 
   withRetry, 
@@ -42,59 +42,40 @@ interface GeneratedCode {
   files: CodeFile[];
 }
 
-// Mock API functions
-const mockApi = {
+// Real API functions
+const api = {
   async post(endpoint: string, data: any): Promise<any> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await enhancedFetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
     
-    if (endpoint.includes('/generate-code')) {
-      return {
-        generation_id: `gen_${Date.now()}`,
-        status: 'generating'
-      };
-    }
-    
-    throw new Error(`Mock API: Endpoint ${endpoint} not implemented`);
+    return response.json();
   },
   
   async get(endpoint: string): Promise<any> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await enhancedFetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     
-    if (endpoint.includes('/code-generation/')) {
-      return {
-        id: 'gen_123',
-        project_id: 'proj_123',
-        status: 'completed',
-        platform: 'web',
-        created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
-        files: [
-          {
-            id: 'file_1',
-            file_name: 'index.html',
-            file_path: 'index.html',
-            file_type: 'html',
-            content: '<!DOCTYPE html>\n<html>\n<head>\n    <title>Generated Project</title>\n</head>\n<body>\n    <h1>Hello World!</h1>\n</body>\n</html>',
-            description: 'Main HTML file',
-            size_bytes: 150,
-            is_main_file: true
-          }
-        ]
-      };
-    }
-    
-    if (endpoint.includes('/generated-code')) {
-      return [];
-    }
-    
-    throw new Error(`Mock API: Endpoint ${endpoint} not implemented`);
+    return response.json();
   },
   
   async delete(endpoint: string): Promise<any> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { success: true };
+    const response = await enhancedFetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return response.json();
   }
 };
 
@@ -186,7 +167,7 @@ class CodeGenerationService {
     try {
       return await circuitBreaker.execute(async () => {
         return await withRetry(async () => {
-          const response = await mockApi.post(
+          const response = await api.post(
             `/projects/${projectId}/generate-code`,
             params
           );
@@ -233,7 +214,7 @@ class CodeGenerationService {
 
     try {
       return await withRetry(async () => {
-        const response = await mockApi.get(
+        const response = await api.get(
           `/projects/${projectId}/code-generation/${generationId}`
         );
         
@@ -269,7 +250,7 @@ class CodeGenerationService {
    */
   async getProjectGenerations(projectId: string): Promise<GeneratedCode[]> {
     try {
-      const response = await mockApi.get(`/projects/${projectId}/generated-code`);
+      const response = await api.get(`/projects/${projectId}/generated-code`);
       
       return [
         {
@@ -294,7 +275,7 @@ class CodeGenerationService {
    */
   async getGeneratedFiles(generationId: string): Promise<CodeFile[]> {
     try {
-      const response = await mockApi.get(`/generated-code/${generationId}/files`);
+      const response = await api.get(`/generated-code/${generationId}/files`);
       
       return [
         {
@@ -339,7 +320,7 @@ class CodeGenerationService {
    */
   async getFileContent(generationId: string, fileId: string): Promise<CodeFile> {
     try {
-      const response = await mockApi.get(
+      const response = await api.get(
         `/generated-code/${generationId}/files/${fileId}`
       );
       
@@ -368,7 +349,7 @@ class CodeGenerationService {
     content: string
   ): Promise<CodeFile> {
     try {
-      const response = await mockApi.post(
+      const response = await api.post(
         `/generated-code/${generationId}/files/${fileId}`,
         { content }
       );
@@ -394,7 +375,7 @@ class CodeGenerationService {
    */
   async deleteFile(generationId: string, fileId: string): Promise<void> {
     try {
-      const response = await mockApi.delete(
+      const response = await api.delete(
         `/generated-code/${generationId}/files/${fileId}`
       );
       
@@ -633,7 +614,7 @@ class CodeGenerationService {
    */
   async analyzeProject(projectId: string): Promise<any> {
     try {
-      const response = await mockApi.get(`/projects/${projectId}/analyze-for-generation`);
+      const response = await api.get(`/projects/${projectId}/analyze-for-generation`);
       
       return {
         project_id: projectId,
@@ -654,7 +635,7 @@ class CodeGenerationService {
    */
   async getGenerationStats(): Promise<any> {
     try {
-      const response = await mockApi.get('/user/generation-stats');
+      const response = await api.get('/user/generation-stats');
       
       return {
         total_generations: 12,

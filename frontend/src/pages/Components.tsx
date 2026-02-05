@@ -59,76 +59,6 @@ const Components: React.FC = () => {
     return () => unsubscribe();
   }, [category]);
 
-  // Mock data for fallback when Supabase is empty
-  const mockComponents = [
-    {
-      id: 1,
-      name: 'Arduino Uno R3',
-      category: 'Microcontroller',
-      price: '$25.00',
-      description: 'Popular microcontroller board based on ATmega328P',
-      stock: 'In Stock',
-      icon: Cpu,
-      tags: ['Beginner', 'Popular'],
-      color: 'bg-gradient-primary'
-    },
-    {
-      id: 2,
-      name: 'ESP8266 WiFi Module',
-      category: 'Communication',
-      price: '$8.50',
-      description: 'Low-cost WiFi microchip with TCP/IP stack',
-      stock: 'In Stock',
-      icon: Wifi,
-      tags: ['IoT', 'Wireless'],
-      color: 'bg-gradient-secondary'
-    },
-    {
-      id: 3,
-      name: 'DHT22 Sensor',
-      category: 'Sensor',
-      price: '$12.00',
-      description: 'Digital temperature and humidity sensor',
-      stock: 'In Stock',
-      icon: Activity,
-      tags: ['Environmental', 'Digital'],
-      color: 'bg-gradient-accent'
-    },
-    {
-      id: 4,
-      name: 'L298N Motor Driver',
-      category: 'Motor Control',
-      price: '$15.00',
-      description: 'Dual H-Bridge motor driver for DC and stepper motors',
-      stock: 'Low Stock',
-      icon: Zap,
-      tags: ['Robotics', 'Power'],
-      color: 'bg-gradient-primary'
-    },
-    {
-      id: 5,
-      name: '18650 Li-ion Battery',
-      category: 'Power',
-      price: '$6.00',
-      description: 'Rechargeable lithium-ion battery 3.7V 2600mAh',
-      stock: 'In Stock',
-      icon: Battery,
-      tags: ['Rechargeable', 'High Capacity'],
-      color: 'bg-gradient-secondary'
-    },
-    {
-      id: 6,
-      name: 'Raspberry Pi 4B',
-      category: 'Single Board Computer',
-      price: '$85.00',
-      description: 'Powerful SBC with 4GB RAM, WiFi, and Bluetooth',
-      stock: 'In Stock',
-      icon: CircuitBoard,
-      tags: ['Advanced', 'Linux'],
-      color: 'bg-gradient-accent'
-    }
-  ];
-
   const categories = [
     'All Categories',
     'Microcontroller',
@@ -139,8 +69,8 @@ const Components: React.FC = () => {
     'Single Board Computer'
   ];
 
-  // Use Supabase components if available, otherwise use mock data for demo
-  const displayComponents = components.length > 0 ? components : mockComponents;
+  // Use Supabase components only - no fallback mock data
+  const displayComponents = components;
 
   const filteredComponents = displayComponents.filter(component => {
     const matchesSearch = component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

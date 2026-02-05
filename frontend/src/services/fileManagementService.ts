@@ -1,5 +1,5 @@
-// Mock API service for file management
-// This will be replaced with actual backend calls once the API is ready
+// Real API service for file management
+// Connected to backend API endpoints
 
 import { CodeFile } from './codeGenerationService';
 import { 
@@ -12,30 +12,37 @@ import {
   DEFAULT_RETRY_OPTIONS
 } from '@/utils/errorHandler';
 
-// Mock API functions
-const mockApi = {
+// Real API functions
+const api = {
   async get(endpoint: string): Promise<any> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     
-    if (endpoint.includes('/metadata')) {
-      return {
-        id: 'meta_123',
-        code_file_id: 'file_123',
-        download_count: 5,
-        last_downloaded_at: new Date().toISOString(),
-        is_modified: false,
-        original_content: 'Original file content',
-        modification_history: []
-      };
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
     
-    throw new Error(`Mock API: Endpoint ${endpoint} not implemented`);
+    return response.json();
   },
   
   async post(endpoint: string, data?: any): Promise<any> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return { success: true };
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+    
+    return response.json();
   }
 };
 
@@ -102,17 +109,8 @@ class FileManagementService {
    */
   async getFileMetadata(fileId: string): Promise<FileMetadata | null> {
     try {
-      const response = await mockApi.get(`/files/${fileId}/metadata`);
-      
-      return {
-        id: 'meta_' + fileId,
-        code_file_id: fileId,
-        download_count: Math.floor(Math.random() * 10),
-        last_downloaded_at: new Date().toISOString(),
-        is_modified: false,
-        original_content: 'Mock original content',
-        modification_history: []
-      };
+      const response = await api.get(`/files/${fileId}/metadata`);
+      return response;
     } catch (error) {
       console.error('Error getting file metadata:', error);
       return null;
@@ -137,8 +135,8 @@ class FileManagementService {
    */
   async trackFileDownload(fileId: string): Promise<void> {
     try {
-      const response = await mockApi.post(`/files/${fileId}/track-download`);
-      console.log(`Mock: Tracked download for file ${fileId}`);
+      const response = await api.post(`/files/${fileId}/track-download`);
+      console.log(`Tracked download for file ${fileId}`);
     } catch (error) {
       console.warn('Error tracking file download:', error);
     }
