@@ -762,23 +762,29 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
 
               <TabsContent value="console" className="flex-1 overflow-y-auto p-3 space-y-1 m-0">
                 {consoleMessages.length === 0 ? (
-                  <div className="text-white/40 text-xs">No console messages</div>
+                  <div className="flex flex-col items-center justify-center h-full text-white/40 text-xs py-8">
+                    <TerminalIcon className="w-8 h-8 mb-2 opacity-50" />
+                    <p>No console messages</p>
+                    <p className="text-[10px] mt-1">Console output will appear here</p>
+                  </div>
                 ) : (
                   consoleMessages.map((msg, index) => (
                     <div
                       key={index}
                       className={cn(
-                        "text-xs font-mono p-1 rounded",
-                        msg.type === 'error' && "text-red-300 bg-red-500/10",
-                        msg.type === 'warn' && "text-yellow-300 bg-yellow-500/10",
-                        msg.type === 'info' && "text-blue-300 bg-blue-500/10",
-                        msg.type === 'log' && "text-white/70"
+                        "text-xs font-mono p-2 rounded border-l-2 transition-colors",
+                        msg.type === 'error' && "text-red-300 bg-red-500/10 border-red-500",
+                        msg.type === 'warn' && "text-yellow-300 bg-yellow-500/10 border-yellow-500",
+                        msg.type === 'info' && "text-blue-300 bg-blue-500/10 border-blue-500",
+                        msg.type === 'log' && "text-white/70 bg-white/5 border-white/20"
                       )}
                     >
-                      <span className="text-white/40 mr-2">
-                        {msg.timestamp.toLocaleTimeString()}
-                      </span>
-                      {msg.message}
+                      <div className="flex items-start gap-2">
+                        <span className="text-white/40 text-[10px] shrink-0 mt-0.5">
+                          {msg.timestamp.toLocaleTimeString()}
+                        </span>
+                        <span className="flex-1 break-all whitespace-pre-wrap">{msg.message}</span>
+                      </div>
                     </div>
                   ))
                 )}
