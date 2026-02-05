@@ -1,277 +1,170 @@
-# AI Code Generation Integration Requirements
+# Veronica AI - Full-Stack Code Generation Integration Requirements
 
 ## Overview
 
-This specification outlines the integration of the Buddy (AppForge) AI code generation platform into the existing STEM Idea Adventure application. The goal is to enhance the current STEM project generation capabilities with actual working code generation, live preview, and comprehensive development tools while maintaining the existing 3D visual experience and user interface consistency.
+This specification outlines the integration of Veronica AI, an intelligent full-stack code generation system, into the existing STEM Idea Adventure platform. Veronica AI transforms both hardware project ideas and software application concepts into complete, working code solutions, making the platform a comprehensive development environment for both STEM education and professional software development.
 
 ## Feature Summary
 
-Transform STEM Idea Adventure from a project idea generator into a complete development platform by integrating AI-powered code generation, enabling users to go from concept to working application seamlessly.
+Transform STEM Idea Adventure from a project idea generator into a complete development platform by integrating Veronica AI - an intelligent coding companion that generates full-stack applications, hardware project code, and comprehensive development solutions.
 
 ## User Stories
 
-### Epic 1: Enhanced Project Generation
-**As a STEM student/educator, I want to generate working code for my project ideas so that I can see my concepts come to life immediately.**
+### Epic 1: Enhanced Project Generation with Software Domain
+**As a STEM student/educator/developer, I want to generate both hardware projects and complete software applications so that I can build comprehensive solutions across all domains.**
 
-#### 1.1 AI Code Generation from Project Ideas
-- **As a user**, I want to click "Generate Code" on any existing or new STEM project so that I can get working code implementations
-- **As a user**, I want the AI to understand my project requirements (components, skills, steps) and generate appropriate code
-- **As a user**, I want to specify the target platform (Arduino, Raspberry Pi, Web App, Mobile) for code generation
+#### 1.1 Hardware Project Code Generation (Existing Enhanced)
+- **As a user**, I want to click "Generate with Veronica" on any existing STEM hardware project so that I can get working code implementations
+- **As a user**, I want Veronica AI to understand my project requirements (components, skills, steps) and generate appropriate embedded code
+- **As a user**, I want to specify the target platform (Arduino, Raspberry Pi, ESP32, STM32) for hardware code generation
+- **As a user**, I want Veronica to generate circuit diagrams and wiring instructions alongside the code
 
-#### 1.2 Streaming Code Generation Experience
-- **As a user**, I want to see code being generated in real-time with streaming responses so that I feel engaged in the process
-- **As a user**, I want beautiful loading animations consistent with the existing 3D theme while code is being generated
-- **As a user**, I want clear progress indicators showing which files are being created
+#### 1.2 Full-Stack Web Application Generation (NEW)
+- **As a user**, I want to select "Apps & Websites" in the project generator so that I can create software applications
+- **As a user**, I want to specify application type (e-commerce, social media, productivity, portfolio, business tools) and have Veronica generate a complete full-stack solution
+- **As a user**, I want Veronica to generate frontend (React/Vue/Angular), backend (Node.js/Python/Java), database schema, and deployment configurations
+- **As a user**, I want authentication, user management, and security features automatically included in web applications
 
-#### 1.3 Multi-File Project Support
-- **As a user**, I want the AI to generate complete project structures with multiple files (main code, libraries, configuration files)
-- **As a user**, I want to see a file tree view of all generated files
-- **As a user**, I want to navigate between different files easily
+#### 1.3 Mobile Application Generation (NEW)
+- **As a user**, I want to generate cross-platform mobile applications (React Native/Flutter) so that I can create mobile solutions
+- **As a user**, I want Veronica to include native device integrations (camera, GPS, sensors, push notifications)
+- **As a user**, I want app store deployment configurations and proper app assets generated automatically
 
-### Epic 2: Code Preview and Testing
-**As a developer, I want to preview and test generated code immediately so that I can validate the implementation before downloading.**
+#### 1.4 Software Project Planning Integration (NEW)
+- **As a user**, I want the project generator to include an "Apps & Websites" domain that creates detailed development plans
+- **As a user**, I want Veronica to analyze my software requirements and generate:
+  - Technical architecture diagrams
+  - Database design specifications  
+  - API endpoint documentation
+  - User interface mockups
+  - Development timeline and milestones
+  - Technology stack recommendations
+- **As a user**, I want these plans to seamlessly integrate with Veronica AI for automatic code generation
 
-#### 2.1 Live Code Preview
-- **As a user**, I want to see a live preview of web-based projects (HTML/CSS/JS) in an embedded iframe
-- **As a user**, I want to see syntax-highlighted code for all file types
-- **As a user**, I want to toggle between code view and preview view seamlessly
+### Epic 2: Intelligent Development Assistant
+**As a developer, I want Veronica AI to act as an intelligent coding companion that understands context and provides smart recommendations.**
 
-#### 2.2 Code Editing and Customization
-- **As a user**, I want to make minor edits to generated code directly in the interface
-- **As a user**, I want syntax highlighting and basic code completion
-- **As a user**, I want to save my modifications back to the project
+#### 2.1 Project Analysis and Recommendations
+- **As a user**, I want Veronica to analyze my project requirements and automatically recommend optimal technology stacks
+- **As a user**, I want Veronica to suggest database solutions based on my data requirements
+- **As a user**, I want Veronica to recommend deployment strategies based on scale expectations
+- **As a user**, I want Veronica to provide technology trade-off explanations and project estimations
 
-### Epic 3: File Management and Export
-**As a user, I want comprehensive file management capabilities so that I can organize and export my generated code projects.**
+#### 2.2 Interactive Development Planning
+- **As a user**, I want to chat with Veronica during the planning phase to refine requirements and specifications
+- **As a user**, I want Veronica to generate multiple architecture options for me to choose from
+- **As a user**, I want to prioritize features and define MVP scope with Veronica's assistance
+- **As a user**, I want Veronica to create user story mapping and acceptance criteria
 
-#### 3.1 Individual File Operations
-- **As a user**, I want to copy individual files to clipboard
-- **As a user**, I want to download individual files
-- **As a user**, I want to view file details (size, type, description)
+### Epic 3: Real-Time Code Generation Experience
+**As a user, I want an engaging real-time code generation experience that shows Veronica working on my project.**
 
-#### 3.2 Project Export
-- **As a user**, I want to download the entire project as a ZIP file
-- **As a user**, I want the ZIP to maintain proper folder structure
-- **As a user**, I want to include a README file with project setup instructions
+#### 3.1 Streaming Code Generation with Veronica Personality
+- **As a user**, I want to see Veronica generating code in real-time with detailed progress updates
+- **As a user**, I want Veronica to explain what she's currently working on (planning, coding, testing, documentation)
+- **As a user**, I want beautiful loading animations consistent with the existing 3D theme while Veronica works
+- **As a user**, I want to see estimated completion times and be able to cancel or modify during generation
 
-### Epic 4: Integration with Existing Features
-**As an existing STEM Idea Adventure user, I want the new code generation features to work seamlessly with current functionality.**
+#### 3.2 Multi-Language and Framework Support
+- **As a user**, I want Veronica to generate code in multiple programming languages (JavaScript/TypeScript, Python, Java, C++, C#, Go, Rust)
+- **As a user**, I want framework-specific code generation (React, Vue, Angular, Express, Django, Spring Boot)
+- **As a user**, I want proper dependency management and build scripts included
+- **As a user**, I want code that follows language-specific best practices and conventions
 
-#### 4.1 Universal Chat Integration
-- **As a user**, I want to ask the AI chat to generate code for specific projects
-- **As a user**, I want to request code modifications through natural language in chat
-- **As a user**, I want the chat to remember the context of my current project and generated code
+### Epic 4: Integrated Development Environment Features
+**As a developer, I want IDE-like features within Veronica AI so that I can review, test, and modify generated code effectively.**
 
-#### 4.2 Project Library Integration
-- **As a user**, I want generated code to be automatically saved to my project library
-- **As a user**, I want to see code generation status in my project list
-- **As a user**, I want to regenerate or modify code for existing projects
+#### 4.1 Advanced Code Editor
+- **As a user**, I want syntax highlighting for all supported programming languages
+- **As a user**, I want code folding, navigation, and intelligent code completion
+- **As a user**, I want integrated terminal access for testing and debugging
+- **As a user**, I want Git integration for version control of my generated projects
 
-#### 4.3 Component Integration
-- **As a user**, I want the AI to use components from the existing component library when generating code
-- **As a user**, I want to see which components are used in generated code
-- **As a user**, I want links to component specifications and datasheets
+#### 4.2 Live Preview and Testing
+- **As a user**, I want to see live previews of web applications in an embedded iframe
+- **As a user**, I want to test mobile applications in device simulators
+- **As a user**, I want to run unit tests and see code coverage reports
+- **As a user**, I want performance metrics and code quality analysis
 
-### Epic 5: Educational Enhancement
-**As an educator, I want the code generation to enhance learning outcomes by providing educational context and explanations.**
+### Epic 5: Cloud Integration and Deployment
+**As a user, I want Veronica to generate deployment-ready applications with cloud platform integration.**
 
-#### 5.1 Code Explanation and Documentation
-- **As a user**, I want detailed comments in generated code explaining how it works
-- **As a user**, I want the AI to explain complex code sections in simple terms
-- **As a user**, I want links to relevant learning materials from the existing Learn section
+#### 5.1 Automated Deployment Configuration
+- **As a user**, I want Veronica to generate Docker containers and docker-compose files
+- **As a user**, I want cloud deployment configurations for AWS, Azure, GCP, Vercel, and Netlify
+- **As a user**, I want CI/CD pipeline configurations (GitHub Actions, GitLab CI) automatically created
+- **As a user**, I want environment variable templates and monitoring configurations included
 
-#### 5.2 Progressive Complexity
-- **As a user**, I want code complexity to match my specified skill level (beginner, intermediate, advanced)
-- **As a user**, I want simpler code for educational projects and more advanced code for production projects
-- **As a user**, I want the option to see both simple and advanced versions of the same functionality
+#### 5.2 One-Click Deployment
+- **As a user**, I want to deploy my generated applications directly from Veronica AI to cloud platforms
+- **As a user**, I want automatic domain setup and SSL certificate configuration
+- **As a user**, I want monitoring dashboards and logging automatically configured
 
-## Acceptance Criteria
+### Epic 6: Software Application Categories
+**As a user, I want Veronica to support various software application categories with specialized templates and features.**
 
-### 1.1 AI Code Generation from Project Ideas
-- [ ] "Generate Code" button appears on all project cards and detail pages
-- [ ] Code generation modal opens with platform selection (Arduino, Raspberry Pi, Web, Mobile)
-- [ ] AI generates code based on project components, skills, and requirements
-- [ ] Generated code includes all necessary files for a complete project
-- [ ] Code generation respects user's skill level setting
+#### 6.1 Web Application Types
+- **As a user**, I want to generate e-commerce platforms with shopping carts, payment integration, and inventory management
+- **As a user**, I want to create social media applications with user profiles, feeds, messaging, and content sharing
+- **As a user**, I want productivity tools like task management, calendars, note-taking, and collaboration platforms
+- **As a user**, I want educational platforms with course management, quizzes, and progress tracking
+- **As a user**, I want portfolio websites and business applications (CRM, ERP, analytics dashboards)
 
-### 1.2 Streaming Code Generation Experience
-- [ ] Code generation shows real-time streaming with animated loading states
-- [ ] Loading animation matches existing 3D particle theme
-- [ ] Progress indicators show current file being generated
-- [ ] User can see partial code as it's being generated
-- [ ] Streaming stops gracefully when generation is complete
+#### 6.2 Mobile Application Types
+- **As a user**, I want to generate utility apps (calculators, converters, tools, widgets)
+- **As a user**, I want social and gaming applications with proper mobile UX patterns
+- **As a user**, I want IoT control apps for smart home devices and sensor monitoring
+- **As a user**, I want productivity apps optimized for mobile workflows
 
-### 1.3 Multi-File Project Support
-- [ ] File tree view shows all generated files with proper hierarchy
-- [ ] Each file has appropriate icon based on file type
-- [ ] File tree supports folders and nested structures
-- [ ] User can expand/collapse folders in the tree view
+### Epic 7: STEM Integration and Educational Features
+**As an educator/student, I want Veronica to integrate software generation with hardware STEM projects and provide educational content.**
 
-### 2.1 Live Code Preview
-- [ ] Preview tab shows live rendering of HTML/CSS/JS projects
-- [ ] Preview updates automatically when code is modified
-- [ ] Preview iframe is sandboxed for security
-- [ ] Preview shows appropriate message for non-web projects (Arduino, etc.)
+#### 7.1 Hardware-Software Integration
+- **As a user**, I want Veronica to generate companion mobile apps for my hardware projects
+- **As a user**, I want web dashboards for IoT device monitoring and control
+- **As a user**, I want data visualization tools for sensor data analysis
+- **As a user**, I want remote control interfaces for robotics projects
 
-### 2.2 Code Editing and Customization
-- [ ] Code editor has syntax highlighting for all supported languages
-- [ ] Basic code completion works for common languages
-- [ ] User modifications are saved automatically
-- [ ] Modified files are marked with visual indicator
+#### 7.2 Educational Content Generation
+- **As a user**, I want Veronica to generate comprehensive code documentation and tutorials
+- **As a user**, I want learning resources explaining the technologies used in my project
+- **As a user**, I want troubleshooting guides and FAQ sections
+- **As a user**, I want code comments that explain complex logic and concepts
 
-### 3.1 Individual File Operations
-- [ ] Copy button copies file content to clipboard with success toast
-- [ ] Download button downloads individual file with proper filename
-- [ ] File details show in tooltip or sidebar (size, type, description)
+### Epic 8: File Management and Export
+**As a user, I want comprehensive file management capabilities for both simple and complex multi-file projects.**
 
-### 3.2 Project Export
-- [ ] "Download ZIP" button creates complete project archive
-- [ ] ZIP maintains proper folder structure and file organization
-- [ ] README.md file is automatically generated with setup instructions
-- [ ] ZIP filename includes project name and timestamp
+#### 8.1 Advanced File Operations
+- **As a user**, I want to navigate complex project structures with hierarchical file trees
+- **As a user**, I want to copy, download, and share individual files or entire projects
+- **As a user**, I want to create ZIP archives with proper folder structures and dependencies
+- **As a user**, I want README files and setup instructions automatically generated
 
-### 4.1 Universal Chat Integration
-- [ ] Chat recognizes code generation requests ("generate code for my robot project")
-- [ ] Chat can modify existing generated code through natural language
-- [ ] Chat maintains context of current project and its generated code
-- [ ] Chat responses include code snippets when relevant
+#### 8.2 Version Control and Collaboration
+- **As a user**, I want Git repositories automatically initialized for my projects
+- **As a user**, I want to share projects with team members and collaborators
+- **As a user**, I want to fork and modify existing generated projects
+- **As a user**, I want to track changes and maintain project history
 
-### 4.2 Project Library Integration
-- [ ] Generated code is automatically saved to project in database
-- [ ] Project cards show "Code Generated" badge when code exists
-- [ ] User can regenerate code for existing projects
-- [ ] Code generation history is maintained
+## Acceptance Criteria Summary
 
-### 4.3 Component Integration
-- [ ] AI uses actual components from the component library in generated code
-- [ ] Generated code includes component specifications as comments
-- [ ] Component usage is tracked and displayed in project details
-- [ ] Links to component datasheets are included in code comments
+### Core Functionality
+1. **Veronica AI Integration**: Seamless integration with Anthropic Claude API for intelligent code generation
+2. **Multi-Domain Support**: Hardware projects (Arduino, RPi, ESP32) and software applications (web, mobile, desktop)
+3. **Full-Stack Generation**: Complete applications with frontend, backend, database, and deployment configurations
+4. **Real-Time Streaming**: Live progress updates with engaging user experience
+5. **Project Planning**: Intelligent analysis and recommendation system for technology choices
 
-### 5.1 Code Explanation and Documentation
-- [ ] Generated code includes comprehensive comments explaining functionality
-- [ ] Complex algorithms have step-by-step explanations
-- [ ] Code includes links to relevant learning materials
-- [ ] AI can explain code sections when asked in chat
+### Software Domain Categories
+1. **Web Applications**: E-commerce, social media, productivity, educational, portfolio, business tools
+2. **Mobile Applications**: Utility, social, gaming, productivity, IoT control apps
+3. **Desktop Applications**: Cross-platform applications using Electron, Qt, .NET, JavaFX
+4. **Integration Projects**: Hardware-software combinations, IoT dashboards, robotics interfaces
 
-### 5.2 Progressive Complexity
-- [ ] Beginner level generates simple, well-commented code
-- [ ] Advanced level generates optimized, production-ready code
-- [ ] User can request both simple and advanced versions
-- [ ] Code complexity matches project difficulty level
+### Quality Standards
+1. **Code Quality**: Industry-standard practices, security, performance optimization, comprehensive testing
+2. **User Experience**: Intuitive interface, real-time feedback, educational content, accessibility
+3. **Performance**: Reasonable generation times, scalable architecture, efficient resource usage
+4. **Security**: Secure code generation, user data protection, proper authentication and authorization
 
-## Technical Requirements
-
-### Frontend Integration
-- Integrate Buddy's streaming code generation UI components into existing React app
-- Maintain existing Tailwind CSS theme and 3D particle effects
-- Add new routes for code generation and preview
-- Integrate with existing authentication and user context
-
-### Backend Integration
-- Add Anthropic Claude API integration to existing FastAPI backend
-- Create new endpoints for code generation and file management
-- Integrate with existing project and chat services
-- Maintain compatibility with existing OpenRouter AI services
-
-### Database Schema Updates
-- Add code generation tables to existing Supabase schema
-- Store generated files, project code status, and generation history
-- Maintain relationships with existing projects and users tables
-
-### API Requirements
-- RESTful endpoints for code generation, file operations, and project management
-- WebSocket support for real-time streaming code generation
-- File upload/download capabilities with proper security
-- Integration with existing AI guidance and chat APIs
-
-## Non-Functional Requirements
-
-### Performance
-- Code generation should start streaming within 2 seconds
-- File operations (copy, download) should complete within 1 second
-- Preview updates should render within 500ms of code changes
-- ZIP generation should complete within 5 seconds for typical projects
-
-### Security
-- All generated code should be sandboxed in preview
-- File downloads should be validated for security
-- User-generated code modifications should be sanitized
-- API keys should be properly secured and not exposed to frontend
-
-### Usability
-- Code generation UI should be intuitive and match existing design patterns
-- Error messages should be clear and actionable
-- Loading states should be engaging and informative
-- Mobile responsiveness should be maintained
-
-### Scalability
-- System should handle concurrent code generation requests
-- File storage should scale with user growth
-- Database queries should be optimized for performance
-- Caching should be implemented for frequently accessed code
-
-## Dependencies
-
-### External Services
-- Anthropic Claude API for code generation
-- Existing OpenRouter API for chat functionality
-- Supabase for database and file storage
-- Existing component library and learning materials
-
-### Technical Dependencies
-- Integration with existing React/TypeScript frontend
-- Compatibility with existing FastAPI backend
-- Maintenance of existing Three.js 3D visualizations
-- Preservation of existing authentication and user management
-
-## Success Metrics
-
-### User Engagement
-- 70% of users who generate projects also generate code
-- Average session time increases by 40% after code generation feature launch
-- 60% of generated code projects are downloaded or exported
-
-### Educational Impact
-- 80% of educators report improved learning outcomes with code generation
-- Students spend 50% more time exploring generated code vs. just reading project descriptions
-- 90% of users find generated code comments helpful for learning
-
-### Technical Performance
-- Code generation completes successfully 95% of the time
-- Average code generation time under 30 seconds
-- Preview rendering works correctly for 90% of web-based projects
-- File download success rate above 99%
-
-## Risks and Mitigations
-
-### Technical Risks
-- **Risk**: Integration complexity between Next.js and React codebases
-- **Mitigation**: Extract reusable components and create shared libraries
-
-- **Risk**: Performance impact of real-time code generation
-- **Mitigation**: Implement proper caching and optimize streaming responses
-
-- **Risk**: Security vulnerabilities in code preview
-- **Mitigation**: Use sandboxed iframes and validate all user inputs
-
-### User Experience Risks
-- **Risk**: Feature complexity overwhelming existing users
-- **Mitigation**: Implement progressive disclosure and optional advanced features
-
-- **Risk**: Generated code quality not meeting expectations
-- **Mitigation**: Implement feedback system and continuous AI model improvement
-
-## Future Enhancements
-
-### Phase 2 Features
-- Real-time collaborative code editing
-- Integration with GitHub for version control
-- Advanced debugging and testing tools
-- Custom AI model training for specific domains
-
-### Phase 3 Features
-- Mobile app development capabilities
-- IoT device simulation and testing
-- Integration with hardware development boards
-- Marketplace for sharing generated projects
+This comprehensive requirements document ensures that Veronica AI becomes a powerful, intelligent coding companion capable of generating complete software solutions across multiple domains while maintaining the educational focus and engaging experience of the STEM Idea Adventure platform.

@@ -77,7 +77,7 @@ This document outlines the implementation tasks for integrating Buddy's AI code 
 
 #### 3.2 Integration Testing
 - [x] Test complete code generation workflow
-- [-] Test WebSocket streaming functionality
+- [x] Test WebSocket streaming functionality
 - [ ] Test file upload/download operations
 - [ ] Test integration with existing services
 - [ ] Test error scenarios and edge cases

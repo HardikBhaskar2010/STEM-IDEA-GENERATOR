@@ -165,10 +165,10 @@ const CodeGenerator: React.FC = () => {
           </div>
         </div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-          AI Code Generator
+          Veronica AI
         </h1>
         <p className="text-xl text-white/60 max-w-2xl mx-auto">
-          Transform your STEM project ideas into working code with AI assistance
+          Your intelligent coding companion - Transform ideas into full-stack applications
         </p>
       </div>
 
@@ -258,7 +258,7 @@ const CodeGenerator: React.FC = () => {
                         }}
                       >
                         <Zap className="w-4 h-4 mr-2" />
-                        Generate Code
+                        Generate with Veronica
                       </Button>
                       <Button
                         variant="ghost"
@@ -322,7 +322,7 @@ const CodeGenerator: React.FC = () => {
           <div className="h-6 w-px bg-white/20" />
           <div>
             <h2 className="text-xl font-semibold text-white">{selectedProject?.title}</h2>
-            <p className="text-sm text-white/60">AI Code Generation Workspace</p>
+            <p className="text-sm text-white/60">Veronica AI Workspace</p>
           </div>
         </div>
 
@@ -385,14 +385,14 @@ const CodeGenerator: React.FC = () => {
                   <Code className="w-12 h-12 text-white/20 mb-4" />
                   <h3 className="text-lg font-medium text-white/60 mb-2">No Code Generated</h3>
                   <p className="text-sm text-white/40 mb-4">
-                    Generate code for this project to see files here
+                    Let Veronica generate code for this project
                   </p>
                   <Button
                     onClick={() => openModal()}
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
                   >
                     <Zap className="w-4 h-4 mr-2" />
-                    Generate Code
+                    Start with Veronica
                   </Button>
                 </div>
               )}
