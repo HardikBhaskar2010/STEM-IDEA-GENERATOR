@@ -4811,6 +4811,486 @@ async def download_project_zip(generation_id: str):
             detail=f"Failed to create ZIP download: {str(e)}"
         )
 
+# ═══════════════════════════════════════════════════════════════════════════
+# SOFTWARE PROJECT PLANNING & APPS DOMAIN ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
+# Requirements: 1.1 Apps & Websites Domain Implementation
+# Endpoints for software project planning, technology stack recommendations,
+# architecture design, database design, API planning, and deployment configs
+
+from services.software_project_planning_service import software_planning_service
+from services.technology_stack_service import technology_stack_service
+
+# ───────────────── REQUEST/RESPONSE MODELS ─────────────────
+
+class SoftwareProjectAnalysisRequest(BaseModel):
+    """Request model for software project analysis"""
+    description: str
+    target_platforms: List[str]  # ['web', 'mobile', 'desktop']
+    budget: Optional[str] = None
+    timeline: Optional[str] = None
+    team_size: Optional[int] = None
+    team_expertise: Optional[str] = None  # 'beginner', 'intermediate', 'advanced', 'expert'
+
+
+class TechnologyStackRecommendationRequest(BaseModel):
+    """Request model for technology stack recommendations"""
+    project_type: str  # 'web_app', 'mobile_app', 'desktop_app', etc.
+    platforms: List[str]
+    complexity: str  # 'simple', 'moderate', 'complex', 'enterprise'
+    team_expertise: Optional[str] = None
+    budget_conscious: bool = False
+
+
+class TechnologyStackComparisonRequest(BaseModel):
+    """Request model for comparing technology stacks"""
+    stack_ids: List[str]
+
+
+# ───────────────── API ENDPOINTS ─────────────────
+
+@api.post("/software-planning/analyze")
+async def analyze_software_project(request: SoftwareProjectAnalysisRequest):
+    """
+    Analyze software project requirements and generate comprehensive project plan.
+    
+    Returns:
+        - Project type and classification
+        - Extracted features with priorities
+        - Generated user stories
+        - Technology stack recommendations
+        - Architecture recommendations
+        - Database recommendations
+        - Timeline and budget estimates
+        - Team composition recommendations
+        - Deployment platform recommendations
+        - Non-functional requirements
+    """
+    try:
+        logger.info(f"Analyzing software project: {request.description[:100]}...")
+        
+        # Analyze requirements
+        project_plan = await software_planning_service.analyze_requirements(
+            description=request.description,
+            target_platforms=request.target_platforms,
+            budget=request.budget,
+            timeline=request.timeline,
+            team_size=request.team_size,
+            team_expertise=request.team_expertise
+        )
+        
+        return JSONResponse(content=project_plan.to_dict())
+        
+    except Exception as e:
+        logger.error(f"Error analyzing software project: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to analyze project: {str(e)}"
+        )
+
+
+@api.post("/technology-stack/recommend")
+async def recommend_technology_stacks(request: TechnologyStackRecommendationRequest):
+    """
+    Get technology stack recommendations based on project requirements.
+    
+    Returns list of recommended stacks with:
+        - Stack details (frontend, backend, database)
+        - Popularity score
+        - Learning curve
+        - Community size
+        - Pros and cons
+        - Best use cases
+        - Documentation and tutorial links
+        - Hosting cost estimates
+    """
+    try:
+        logger.info(f"Recommending stacks for {request.project_type}")
+        
+        recommendations = technology_stack_service.recommend_stacks(
+            project_type=request.project_type,
+            platforms=request.platforms,
+            complexity=request.complexity,
+            team_expertise=request.team_expertise,
+            budget_conscious=request.budget_conscious
+        )
+        
+        return JSONResponse(content={
+            "recommendations": [
+                {
+                    "id": stack.id,
+                    "name": stack.name,
+                    "description": stack.description,
+                    "category": stack.category,
+                    "frontend_framework": stack.frontend_framework,
+                    "backend_framework": stack.backend_framework,
+                    "database": stack.database,
+                    "additional_technologies": stack.additional_technologies,
+                    "popularity_score": stack.popularity_score,
+                    "learning_curve": stack.learning_curve,
+                    "community_size": stack.community_size,
+                    "maturity": stack.maturity,
+                    "pros": stack.pros,
+                    "cons": stack.cons,
+                    "best_for": stack.best_for,
+                    "documentation_url": stack.documentation_url,
+                    "tutorial_links": stack.tutorial_links,
+                    "estimated_hosting_cost": stack.estimated_hosting_cost,
+                    "requires_paid_services": stack.requires_paid_services
+                }
+                for stack in recommendations
+            ]
+        })
+        
+    except Exception as e:
+        logger.error(f"Error recommending technology stacks: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to recommend stacks: {str(e)}"
+        )
+
+
+@api.post("/technology-stack/compare")
+async def compare_technology_stacks(request: TechnologyStackComparisonRequest):
+    """
+    Compare multiple technology stacks side by side.
+    
+    Returns comparison data with:
+        - Side-by-side comparison table
+        - Detailed pros and cons
+        - Recommendations based on comparison
+    """
+    try:
+        logger.info(f"Comparing stacks: {request.stack_ids}")
+        
+        comparison = technology_stack_service.compare_stacks(request.stack_ids)
+        
+        return JSONResponse(content=comparison)
+        
+    except Exception as e:
+        logger.error(f"Error comparing technology stacks: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to compare stacks: {str(e)}"
+        )
+
+
+@api.get("/technology-stacks")
+async def get_all_technology_stacks(category: Optional[str] = None):
+    """
+    Get all available technology stacks.
+    
+    Query Parameters:
+        - category: Filter by category (web, mobile, desktop, full_stack, backend, frontend)
+    
+    Returns list of all technology stacks with full details.
+    """
+    try:
+        stacks = technology_stack_service.get_all_stacks(category=category)
+        
+        return JSONResponse(content={
+            "stacks": [
+                {
+                    "id": stack.id,
+                    "name": stack.name,
+                    "description": stack.description,
+                    "category": stack.category,
+                    "frontend_framework": stack.frontend_framework,
+                    "backend_framework": stack.backend_framework,
+                    "database": stack.database,
+                    "popularity_score": stack.popularity_score,
+                    "learning_curve": stack.learning_curve,
+                    "community_size": stack.community_size,
+                    "maturity": stack.maturity,
+                    "estimated_hosting_cost": stack.estimated_hosting_cost
+                }
+                for stack in stacks
+            ],
+            "total": len(stacks)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching technology stacks: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch stacks: {str(e)}"
+        )
+
+
+@api.get("/technology-stacks/{stack_id}")
+async def get_technology_stack(stack_id: str):
+    """
+    Get detailed information about a specific technology stack.
+    
+    Returns complete stack details including:
+        - All frameworks and technologies
+        - Popularity and metrics
+        - Pros and cons
+        - Best use cases
+        - Learning resources
+        - Prerequisites
+    """
+    try:
+        stack = technology_stack_service.get_stack_by_id(stack_id)
+        
+        if not stack:
+            raise HTTPException(status_code=404, detail="Technology stack not found")
+        
+        # Get learning resources
+        learning_resources = technology_stack_service.get_learning_resources(stack_id)
+        
+        return JSONResponse(content={
+            "id": stack.id,
+            "name": stack.name,
+            "description": stack.description,
+            "category": stack.category,
+            "frontend_framework": stack.frontend_framework,
+            "backend_framework": stack.backend_framework,
+            "database": stack.database,
+            "additional_technologies": stack.additional_technologies,
+            "popularity_score": stack.popularity_score,
+            "learning_curve": stack.learning_curve,
+            "community_size": stack.community_size,
+            "maturity": stack.maturity,
+            "pros": stack.pros,
+            "cons": stack.cons,
+            "best_for": stack.best_for,
+            "documentation_url": stack.documentation_url,
+            "tutorial_links": stack.tutorial_links,
+            "estimated_hosting_cost": stack.estimated_hosting_cost,
+            "requires_paid_services": stack.requires_paid_services,
+            "learning_resources": learning_resources
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching technology stack: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch stack: {str(e)}"
+        )
+
+
+@api.get("/application-templates")
+async def get_application_templates(category: Optional[str] = None):
+    """
+    Get all available application templates.
+    
+    Query Parameters:
+        - category: Filter by category (ecommerce, social_media, productivity, etc.)
+    
+    Returns list of application templates with:
+        - Template details
+        - Features included
+        - Technology stack
+        - Complexity level
+        - Preview images
+        - Setup instructions
+    
+    Note: This endpoint returns mock data. In production, this would query the database.
+    """
+    try:
+        # Mock templates data (in production, this would query the database)
+        templates = [
+            {
+                "id": "ecommerce_starter",
+                "name": "E-Commerce Starter",
+                "description": "Full-featured e-commerce platform with cart, checkout, and admin panel",
+                "category": "ecommerce",
+                "features": [
+                    "Product catalog",
+                    "Shopping cart",
+                    "Stripe payment integration",
+                    "Order management",
+                    "Admin dashboard",
+                    "User authentication",
+                    "Product reviews",
+                    "Inventory tracking"
+                ],
+                "tech_stack": {
+                    "frontend": "React",
+                    "backend": "Node.js + Express",
+                    "database": "PostgreSQL",
+                    "payment": "Stripe"
+                },
+                "complexity_level": "moderate",
+                "preview_images": [
+                    "https://via.placeholder.com/800x600/6366f1/ffffff?text=E-Commerce+Preview"
+                ],
+                "setup_instructions": "1. Clone repository\\n2. Install dependencies: npm install\\n3. Configure Stripe API keys\\n4. Setup database: npm run db:setup\\n5. Run: npm run dev",
+                "popularity_score": 95
+            },
+            {
+                "id": "social_media_platform",
+                "name": "Social Media Platform",
+                "description": "Social networking platform with posts, messaging, and notifications",
+                "category": "social_media",
+                "features": [
+                    "User profiles",
+                    "News feed",
+                    "Post creation",
+                    "Like/Comment/Share",
+                    "Real-time messaging",
+                    "Push notifications",
+                    "Friend/Follow system",
+                    "Media uploads"
+                ],
+                "tech_stack": {
+                    "frontend": "React",
+                    "backend": "Node.js + Express",
+                    "database": "MongoDB",
+                    "realtime": "Socket.io"
+                },
+                "complexity_level": "complex",
+                "preview_images": [
+                    "https://via.placeholder.com/800x600/ec4899/ffffff?text=Social+Media+Preview"
+                ],
+                "setup_instructions": "1. Clone repository\\n2. Install dependencies\\n3. Setup MongoDB\\n4. Configure WebSocket server\\n5. Setup cloud storage for media\\n6. Run: npm start",
+                "popularity_score": 88
+            },
+            {
+                "id": "business_dashboard",
+                "name": "Business Dashboard",
+                "description": "Comprehensive business management system with CRM and analytics",
+                "category": "business",
+                "features": [
+                    "Analytics dashboard",
+                    "Customer management",
+                    "Invoice generation",
+                    "Reporting",
+                    "Calendar integration",
+                    "Email automation",
+                    "Role-based access",
+                    "PDF exports"
+                ],
+                "tech_stack": {
+                    "frontend": "Vue",
+                    "backend": "Python FastAPI",
+                    "database": "PostgreSQL"
+                },
+                "complexity_level": "complex",
+                "preview_images": [
+                    "https://via.placeholder.com/800x600/10b981/ffffff?text=Business+Dashboard+Preview"
+                ],
+                "setup_instructions": "1. Clone repository\\n2. Install backend: pip install -r requirements.txt\\n3. Install frontend: npm install\\n4. Setup PostgreSQL\\n5. Run migrations\\n6. Start services",
+                "popularity_score": 82
+            },
+            {
+                "id": "learning_management_system",
+                "name": "Learning Management System",
+                "description": "Educational platform with courses, quizzes, and progress tracking",
+                "category": "educational",
+                "features": [
+                    "Course catalog",
+                    "Video player",
+                    "Quiz system",
+                    "Progress tracking",
+                    "Discussion forums",
+                    "Certificate generation",
+                    "Student dashboard",
+                    "Instructor portal"
+                ],
+                "tech_stack": {
+                    "frontend": "React",
+                    "backend": "Python FastAPI",
+                    "database": "PostgreSQL",
+                    "storage": "AWS S3"
+                },
+                "complexity_level": "complex",
+                "preview_images": [
+                    "https://via.placeholder.com/800x600/3b82f6/ffffff?text=LMS+Preview"
+                ],
+                "setup_instructions": "1. Clone repository\\n2. Install dependencies\\n3. Setup database and video storage\\n4. Configure authentication\\n5. Seed sample course data\\n6. Run: npm run dev",
+                "popularity_score": 90
+            }
+        ]
+        
+        # Filter by category if provided
+        if category:
+            templates = [t for t in templates if t["category"] == category]
+        
+        return JSONResponse(content={
+            "templates": templates,
+            "total": len(templates)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching application templates: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch templates: {str(e)}"
+        )
+
+
+@api.get("/application-templates/{template_id}")
+async def get_application_template(template_id: str):
+    """
+    Get detailed information about a specific application template.
+    
+    Returns complete template details including:
+        - All features
+        - Technology stack
+        - Complexity level
+        - Preview images
+        - Setup instructions
+        - Customization options
+    """
+    try:
+        # Mock template data (in production, this would query the database)
+        templates = {
+            "ecommerce_starter": {
+                "id": "ecommerce_starter",
+                "name": "E-Commerce Starter",
+                "description": "Full-featured e-commerce platform with cart, checkout, and admin panel",
+                "category": "ecommerce",
+                "features": [
+                    "Product catalog",
+                    "Shopping cart",
+                    "Stripe payment integration",
+                    "Order management",
+                    "Admin dashboard",
+                    "User authentication",
+                    "Product reviews",
+                    "Inventory tracking"
+                ],
+                "tech_stack": {
+                    "frontend": "React",
+                    "backend": "Node.js + Express",
+                    "database": "PostgreSQL",
+                    "payment": "Stripe"
+                },
+                "complexity_level": "moderate",
+                "preview_images": [
+                    "https://via.placeholder.com/800x600/6366f1/ffffff?text=E-Commerce+Preview"
+                ],
+                "setup_instructions": "1. Clone repository\\n2. Install dependencies: npm install\\n3. Configure Stripe API keys\\n4. Setup database: npm run db:setup\\n5. Run: npm run dev",
+                "customization_options": {
+                    "payment_gateways": ["Stripe", "PayPal", "Square"],
+                    "themes": ["Light", "Dark", "Custom"],
+                    "features": ["Wishlist", "Product Comparison", "Live Chat", "Multi-currency"]
+                },
+                "popularity_score": 95
+            }
+        }
+        
+        template = templates.get(template_id)
+        
+        if not template:
+            raise HTTPException(status_code=404, detail="Application template not found")
+        
+        return JSONResponse(content=template)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching application template: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch template: {str(e)}"
+        )
+
+
 # ───────────────── REGISTER ROUTER ─────────────────
 app.include_router(api)
 
