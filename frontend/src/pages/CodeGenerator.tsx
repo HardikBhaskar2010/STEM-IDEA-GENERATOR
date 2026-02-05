@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import SplitPane from 'react-split-pane';
 import { 
   Code, 
   Zap, 
@@ -17,7 +18,9 @@ import {
   Sparkles,
   ArrowLeft,
   Plus,
-  Search
+  Search,
+  Terminal as TerminalIcon,
+  Layout as LayoutIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,8 +41,9 @@ import { projectService, type SavedProject } from '@/services/projectService';
 import { toast } from '@/hooks/use-toast';
 import CodeGenerationModal from '@/components/CodeGenerationModal';
 import FileTreeView from '@/components/FileTreeView';
-import CodeEditor from '@/components/CodeEditor';
-import LivePreview from '@/components/LivePreview';
+import EnhancedCodeEditor from '@/components/EnhancedCodeEditor';
+import EnhancedLivePreview from '@/components/EnhancedLivePreview';
+import Terminal from '@/components/Terminal';
 import StreamingCodeView from '@/components/StreamingCodeView';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
 
