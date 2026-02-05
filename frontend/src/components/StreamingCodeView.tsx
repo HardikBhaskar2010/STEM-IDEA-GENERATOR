@@ -82,7 +82,9 @@ const StreamingCodeView: React.FC<StreamingCodeViewProps> = ({
 
     // Connect to real WebSocket endpoint
     const connectWebSocket = () => {
-      const wsUrl = `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000'}/api/projects/${generationId}/stream`;
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+      const wsBaseUrl = import.meta.env.VITE_WS_BASE_URL || apiBaseUrl.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '');
+      const wsUrl = `${wsBaseUrl}/api/projects/${generationId}/stream`;
       const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
