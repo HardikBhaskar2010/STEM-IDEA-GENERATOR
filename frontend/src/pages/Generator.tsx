@@ -166,6 +166,7 @@ const Generator: React.FC = () => {
       });
 
       if (savedProject) {
+        setSavedProjectId(savedProject.id);
         toast({
           title: "Project Saved!",
           description: "Your project has been added to your library.",
