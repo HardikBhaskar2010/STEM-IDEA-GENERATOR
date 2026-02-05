@@ -552,7 +552,10 @@ class CodeGenerationService {
     onError?: (error: Event) => void,
     onClose?: (event: CloseEvent) => void
   ): WebSocket {
-    const wsUrl = `${this.baseUrl.replace('http', 'ws')}/projects/${projectId}/code-generation/${generationId}/stream`;
+    // Get the WebSocket base URL from environment or derive from API URL
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const wsBaseUrl = import.meta.env.VITE_WS_BASE_URL || apiBaseUrl.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '');
+    const wsUrl = `${wsBaseUrl}/api/projects/${projectId}/code-generation/${generationId}/stream`;
     const ws = new WebSocket(wsUrl);
     
     ws.onopen = () => {
