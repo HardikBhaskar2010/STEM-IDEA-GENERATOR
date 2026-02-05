@@ -10,7 +10,7 @@
 [![FastAPI](https://img.shields.io/badge/⚡_FastAPI-0.110.1-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 
 <img src="./screenshots/01-home-page.jpeg" alt="STEM Idea Adventure Hero" width="800"/>
-
+ 
 **An immersive 3D platform combining AI intelligence with stunning visuals to revolutionize STEM education**
 
 [✨ Features](#-features) • [🎬 Screenshots](#-screenshots) • [🚀 Quick Start](#-quick-start) • [📚 Documentation](#-api-documentation) • [🤝 Contributing](#-contributing)
