@@ -588,12 +588,26 @@ class CodeGenerationService {
   /**
    * Cancel ongoing generation
    */
-  cancelGeneration(generationId: string): void {
-    const ws = this.wsConnections.get(generationId);
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        action: 'cancel_generation'
-      }));
+  async cancelGeneration(generationId: string): Promise<void> {
+    try {
+      // Send cancel request to API
+      await api.post(`/generated-code/${generationId}/cancel`, {});
+      
+      // Also close WebSocket connection if exists
+      const ws = this.wsConnections.get(generationId);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          action: 'cancel_generation'
+        }));
+        ws.close(1000, 'Generation cancelled by user');
+      }
+    } catch (error) {
+      console.error('Error cancelling generation:', error);
+      // Still try to close the websocket even if API call fails
+      const ws = this.wsConnections.get(generationId);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close(1000, 'Generation cancelled by user');
+      }
     }
   }
 
