@@ -554,15 +554,15 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
           <Badge 
             variant="secondary" 
             className={cn(
-              "text-xs",
-              devServerStatus.status === 'ready' && "bg-green-500/20 text-green-300 border-green-500/30",
-              devServerStatus.status === 'building' && "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-              devServerStatus.status === 'error' && "bg-red-500/20 text-red-300 border-red-500/30",
+              "text-xs transition-all duration-300",
+              devServerStatus.status === 'ready' && "bg-green-500/20 text-green-300 border-green-500/30 shadow-green-500/20 shadow-sm",
+              devServerStatus.status === 'building' && "bg-yellow-500/20 text-yellow-300 border-yellow-500/30 shadow-yellow-500/20 shadow-sm animate-pulse",
+              devServerStatus.status === 'error' && "bg-red-500/20 text-red-300 border-red-500/30 shadow-red-500/20 shadow-sm",
               devServerStatus.status === 'idle' && "bg-white/10 text-white/60"
             )}
           >
-            {devServerStatus.status === 'ready' && <CheckCircle className="w-3 h-3 mr-1" />}
-            {devServerStatus.status === 'building' && <Zap className="w-3 h-3 mr-1 animate-pulse" />}
+            {devServerStatus.status === 'ready' && <CheckCircle className="w-3 h-3 mr-1 animate-pulse" />}
+            {devServerStatus.status === 'building' && <Zap className="w-3 h-3 mr-1" />}
             {devServerStatus.status === 'error' && <XCircle className="w-3 h-3 mr-1" />}
             {devServerStatus.message}
           </Badge>
