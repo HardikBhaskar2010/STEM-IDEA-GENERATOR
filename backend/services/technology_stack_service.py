@@ -465,9 +465,75 @@ class TechnologyStackService:
             "recommendations": self._generate_comparison_recommendations(stacks)
         }
         
-        return comparison\n    \n    def _generate_comparison_recommendations(self, stacks: List[TechnologyStack]) -> Dict[str, str]:\n        \"\"\"Generate recommendations based on stack comparison\"\"\"\n        \n        # Find stack with highest popularity\n        most_popular = max(stacks, key=lambda x: x.popularity_score)\n        \n        # Find easiest to learn\n        learning_order = {\"easy\": 1, \"moderate\": 2, \"steep\": 3}\n        easiest = min(stacks, key=lambda x: learning_order.get(x.learning_curve, 2))\n        \n        # Find most cost-effective\n        cost_effective = [s for s in stacks if not s.requires_paid_services]\n        \n        recommendations = {\n            \"most_popular\": f\"{most_popular.name} is the most popular choice with a score of {most_popular.popularity_score}/100\",\n            \"easiest_to_learn\": f\"{easiest.name} has the easiest learning curve ({easiest.learning_curve})\",\n        }\n        \n        if cost_effective:\n            cheapest = min(cost_effective, key=lambda x: int(x.estimated_hosting_cost.split(\"-\")[0].replace(\"$\", \"\").replace(\"/month\", \"\")))\n            recommendations[\"most_cost_effective\"] = f\"{cheapest.name} is the most cost-effective at {cheapest.estimated_hosting_cost}\"\n        \n        return recommendations
+        return comparison
+    
+    def _generate_comparison_recommendations(self, stacks: List[TechnologyStack]) -> Dict[str, str]:
+        """Generate recommendations based on stack comparison"""
+        
+        # Find stack with highest popularity
+        most_popular = max(stacks, key=lambda x: x.popularity_score)
+        
+        # Find easiest to learn
+        learning_order = {"easy": 1, "moderate": 2, "steep": 3}
+        easiest = min(stacks, key=lambda x: learning_order.get(x.learning_curve, 2))
+        
+        # Find most cost-effective
+        cost_effective = [s for s in stacks if not s.requires_paid_services]
+        
+        recommendations = {
+            "most_popular": f"{most_popular.name} is the most popular choice with a score of {most_popular.popularity_score}/100",
+            "easiest_to_learn": f"{easiest.name} has the easiest learning curve ({easiest.learning_curve})",
+        }
+        
+        if cost_effective:
+            cheapest = min(cost_effective, key=lambda x: int(x.estimated_hosting_cost.split("-")[0].replace("$", "").replace("/month", "")))
+            recommendations["most_cost_effective"] = f"{cheapest.name} is the most cost-effective at {cheapest.estimated_hosting_cost}"
+        
+        return recommendations
     
     def get_learning_resources(self, stack_id: str) -> Dict[str, Any]:
-        \"\"\"Get learning resources for a specific stack\"\"\"
+        """Get learning resources for a specific stack"""
         stack = self.get_stack_by_id(stack_id)
-        \n        if not stack:\n            return {\"error\": \"Stack not found\"}\n        \n        return {\n            \"name\": stack.name,\n            \"documentation\": stack.documentation_url,\n            \"tutorials\": stack.tutorial_links,\n            \"learning_curve\": stack.learning_curve,\n            \"recommended_prerequisites\": self._get_prerequisites(stack)\n        }\n    \n    def _get_prerequisites(self, stack: TechnologyStack) -> List[str]:\n        \"\"\"Get prerequisite knowledge for a stack\"\"\"\n        prerequisites = []\n        \n        if stack.frontend_framework:\n            if \"react\" in stack.frontend_framework.lower():\n                prerequisites.extend([\"JavaScript\", \"HTML\", \"CSS\", \"React Basics\"])\n            elif \"vue\" in stack.frontend_framework.lower():\n                prerequisites.extend([\"JavaScript\", \"HTML\", \"CSS\", \"Vue Basics\"])\n            elif \"angular\" in stack.frontend_framework.lower():\n                prerequisites.extend([\"TypeScript\", \"HTML\", \"CSS\", \"Angular Basics\"])\n            elif \"flutter\" in stack.frontend_framework.lower():\n                prerequisites.extend([\"Dart\", \"Mobile Development Concepts\"])\n        \n        if stack.backend_framework:\n            if \"express\" in stack.backend_framework.lower() or \"node\" in stack.backend_framework.lower():\n                prerequisites.extend([\"JavaScript\", \"Node.js\", \"npm/yarn\"])\n            elif \"django\" in stack.backend_framework.lower():\n                prerequisites.extend([\"Python\", \"OOP Concepts\", \"MVC Pattern\"])\n            elif \"fastapi\" in stack.backend_framework.lower():\n                prerequisites.extend([\"Python\", \"Async/Await\", \"Type Hints\"])\n        \n        if stack.database:\n            if \"mongo\" in stack.database.lower():\n                prerequisites.append(\"NoSQL Concepts\")\n            elif \"postgres\" in stack.database.lower() or \"mysql\" in stack.database.lower():\n                prerequisites.extend([\"SQL\", \"Relational Databases\"])\n            elif \"firebase\" in stack.database.lower():\n                prerequisites.append(\"NoSQL Concepts\")\n        \n        return list(set(prerequisites))  # Remove duplicates\n\n\n# Export singleton instance\ntechnology_stack_service = TechnologyStackService()
+        
+        if not stack:
+            return {"error": "Stack not found"}
+        
+        return {
+            "name": stack.name,
+            "documentation": stack.documentation_url,
+            "tutorials": stack.tutorial_links,
+            "learning_curve": stack.learning_curve,
+            "recommended_prerequisites": self._get_prerequisites(stack)
+        }
+    
+    def _get_prerequisites(self, stack: TechnologyStack) -> List[str]:
+        """Get prerequisite knowledge for a stack"""
+        prerequisites = []
+        
+        if stack.frontend_framework:
+            if "react" in stack.frontend_framework.lower():
+                prerequisites.extend(["JavaScript", "HTML", "CSS", "React Basics"])
+            elif "vue" in stack.frontend_framework.lower():
+                prerequisites.extend(["JavaScript", "HTML", "CSS", "Vue Basics"])
+            elif "angular" in stack.frontend_framework.lower():
+                prerequisites.extend(["TypeScript", "HTML", "CSS", "Angular Basics"])
+            elif "flutter" in stack.frontend_framework.lower():
+                prerequisites.extend(["Dart", "Mobile Development Concepts"])
+        
+        if stack.backend_framework:
+            if "express" in stack.backend_framework.lower() or "node" in stack.backend_framework.lower():
+                prerequisites.extend(["JavaScript", "Node.js", "npm/yarn"])
+            elif "django" in stack.backend_framework.lower():
+                prerequisites.extend(["Python", "OOP Concepts", "MVC Pattern"])
+            elif "fastapi" in stack.backend_framework.lower():
+                prerequisites.extend(["Python", "Async/Await", "Type Hints"])
+        
+        if stack.database:
+            if "mongo" in stack.database.lower():
+                prerequisites.append("NoSQL Concepts")
+            elif "postgres" in stack.database.lower() or "mysql" in stack.database.lower():
+                prerequisites.extend(["SQL", "Relational Databases"])
+            elif "firebase" in stack.database.lower():
+                prerequisites.append("NoSQL Concepts")
+        
+        return list(set(prerequisites))  # Remove duplicates\n\n\n# Export singleton instance\ntechnology_stack_service = TechnologyStackService()
