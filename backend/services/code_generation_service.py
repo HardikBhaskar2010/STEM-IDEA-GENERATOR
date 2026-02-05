@@ -744,7 +744,7 @@ class VeronicaAIService:
                 "platform": params.platform.value,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": {
-                    "model": self.model,
+                    "model": self.models.get("code_generation", "arcee-ai/trinity-large-preview:free"),
                     "max_tokens": self.max_tokens,
                     "temperature": self.temperature
                 }
