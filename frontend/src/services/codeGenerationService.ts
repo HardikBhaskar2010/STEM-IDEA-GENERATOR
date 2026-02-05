@@ -414,6 +414,23 @@ class CodeGenerationService {
   }
 
   /**
+   * Delete a generation
+   */
+  async deleteGeneration(generationId: string): Promise<void> {
+    try {
+      await api.delete(`/generated-code/${generationId}`);
+      
+      // Close any active WebSocket connection for this generation
+      this.disconnectFromStream(generationId);
+      
+      console.log(`Deleted generation ${generationId}`);
+    } catch (error) {
+      console.error('Error deleting generation:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Download individual file
    */
   async downloadFile(generationId: string, fileId: string): Promise<void> {
