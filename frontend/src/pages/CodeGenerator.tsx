@@ -33,6 +33,12 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 import Layout from '@/components/layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCodeGenerationContext } from '@/contexts/CodeGenerationContext';
@@ -334,48 +340,85 @@ const CodeGenerator: React.FC = () => {
 
         <div className="flex items-center gap-2">
           {/* Layout selector */}
-          <Select value={workspaceLayout} onValueChange={(value: any) => setWorkspaceLayout(value)}>
-            <SelectTrigger className="w-40 bg-black/40 border-white/10 text-white text-sm">
-              <LayoutIcon className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10">
-              <SelectItem value="standard">Standard</SelectItem>
-              <SelectItem value="editor-focus">Editor Focus</SelectItem>
-              <SelectItem value="preview-focus">Preview Focus</SelectItem>
-            </SelectContent>
-          </Select>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Select value={workspaceLayout} onValueChange={(value: any) => setWorkspaceLayout(value)}>
+                    <SelectTrigger className="w-40 bg-black/40 border-white/10 text-white text-sm">
+                      <LayoutIcon className="w-4 h-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/90 backdrop-blur-xl border-white/10">
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="editor-focus">Editor Focus</SelectItem>
+                      <SelectItem value="preview-focus">Preview Focus</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Change workspace layout</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Terminal toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowTerminal(!showTerminal)}
-            className="text-white/60 hover:text-white hover:bg-white/10"
-            title="Toggle Terminal"
-          >
-            <TerminalIcon className="w-4 h-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTerminal(!showTerminal)}
+                  className="text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  <TerminalIcon className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{showTerminal ? 'Hide' : 'Show'} Terminal</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {currentGeneration && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => downloadProject(currentGeneration.id, selectedProject?.title)}
-              className="text-white/60 hover:text-white hover:bg-white/10"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download ZIP
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadProject(currentGeneration.id, selectedProject?.title)}
+                    className="text-white/60 hover:text-white hover:bg-white/10"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download ZIP
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Download entire project as ZIP file</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="text-white/60 hover:text-white hover:bg-white/10"
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isFullscreen ? 'Exit' : 'Enter'} Fullscreen</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
