@@ -78,6 +78,8 @@ const CodeGenerator: React.FC = () => {
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [activeTab, setActiveTab] = useState<'projects' | 'files' | 'editor' | 'preview'>('projects');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(true);
+  const [workspaceLayout, setWorkspaceLayout] = useState<'standard' | 'editor-focus' | 'preview-focus'>('standard');
 
   // Load projects on mount
   useEffect(() => {
