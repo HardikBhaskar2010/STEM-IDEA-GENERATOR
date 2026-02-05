@@ -641,14 +641,56 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
           {platform === 'web' ? (
             <div className="flex-1 flex items-center justify-center p-4 bg-gray-900">
               {previewError ? (
-                <Card className="bg-red-500/10 border-red-500/30 p-8">
-                  <div className="flex flex-col items-center text-center">
-                    <AlertTriangle className="w-12 h-12 text-red-400 mb-4" />
-                    <h3 className="text-lg font-medium text-red-400 mb-2">Preview Error</h3>
-                    <p className="text-red-300 text-sm mb-4">{previewError}</p>
-                    <Button onClick={handleRefresh} variant="outline" className="border-red-400 text-red-400">
-                      Try Again
-                    </Button>
+                <Card className="bg-red-500/10 border-red-500/30 p-6 max-w-3xl mx-auto">
+                  <div className="flex flex-col items-start text-left space-y-4">
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-red-500/20 rounded-lg">
+                        <AlertTriangle className="w-6 h-6 text-red-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-red-400">Preview Error</h3>
+                        <p className="text-xs text-red-300/60">Fix the error below to see your preview</p>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full bg-red-500/5 rounded-lg p-4 border border-red-500/20">
+                      <pre className="text-sm text-red-300 font-mono whitespace-pre-wrap break-all">
+                        {previewError}
+                      </pre>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 w-full">
+                      <Button 
+                        onClick={handleRefresh} 
+                        size="sm"
+                        className="bg-red-500/20 hover:bg-red-500/30 text-red-300 border-red-500/30"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Retry Build
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setPreviewError(null);
+                          setConsoleMessages([]);
+                        }} 
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-300 hover:bg-red-500/10"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Clear Error
+                      </Button>
+                    </div>
+                    
+                    <div className="text-xs text-red-300/60 space-y-1">
+                      <p>💡 <strong>Tips:</strong></p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Check the Console tab for detailed error messages</li>
+                        <li>Verify all imports and dependencies are correct</li>
+                        <li>Ensure JSX syntax is valid (proper closing tags, etc.)</li>
+                        <li>Check for typos in variable and function names</li>
+                      </ul>
+                    </div>
                   </div>
                 </Card>
               ) : (
