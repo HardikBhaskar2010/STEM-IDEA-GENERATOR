@@ -536,4 +536,8 @@ class TechnologyStackService:
             elif "firebase" in stack.database.lower():
                 prerequisites.append("NoSQL Concepts")
         
-        return list(set(prerequisites))  # Remove duplicates\n\n\n# Export singleton instance\ntechnology_stack_service = TechnologyStackService()
+        return list(set(prerequisites))  # Remove duplicates
+
+
+# Export singleton instance
+technology_stack_service = TechnologyStackService()
