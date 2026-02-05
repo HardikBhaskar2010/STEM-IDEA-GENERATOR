@@ -26,14 +26,32 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, planning: 0 });
   
-  // Mock data for Daily Activity chart
+  // Mock data for Daily Activity chart - Shows hourly activity throughout the day
   const dailyActivityData = [
     { time: '00:00', activity: 2 },
+    { time: '01:00', activity: 1 },
+    { time: '02:00', activity: 1 },
+    { time: '03:00', activity: 0 },
     { time: '04:00', activity: 1 },
+    { time: '05:00', activity: 2 },
+    { time: '06:00', activity: 3 },
+    { time: '07:00', activity: 5 },
     { time: '08:00', activity: 8 },
-    { time: '12:00', activity: 15 },
+    { time: '09:00', activity: 12 },
+    { time: '10:00', activity: 15 },
+    { time: '11:00', activity: 14 },
+    { time: '12:00', activity: 18 },
+    { time: '13:00', activity: 16 },
+    { time: '14:00', activity: 14 },
+    { time: '15:00', activity: 13 },
     { time: '16:00', activity: 12 },
-    { time: '20:00', activity: 6 },
+    { time: '17:00', activity: 10 },
+    { time: '18:00', activity: 8 },
+    { time: '19:00', activity: 6 },
+    { time: '20:00', activity: 5 },
+    { time: '21:00', activity: 4 },
+    { time: '22:00', activity: 3 },
+    { time: '23:00', activity: 2 },
   ];
 
   useEffect(() => {
