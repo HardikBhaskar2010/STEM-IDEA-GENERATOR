@@ -1049,7 +1049,7 @@ class OpenRouterClient:
         
         # Build the base request body with validated parameters
         request_body = {
-            "model": self.config.model,
+            "model": kwargs.get("model", self.config.model),  # Allow model override via kwargs
             "messages": messages,
             "temperature": self._validate_temperature(kwargs.get("temperature", 0.7)),
             "max_tokens": self._validate_max_tokens(kwargs.get("max_tokens", 8000)),
