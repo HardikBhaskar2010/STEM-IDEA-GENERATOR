@@ -496,7 +496,7 @@ const CodeGenerator: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </SplitPane>
+                </ResizablePanels>
               </div>
 
               {/* Bottom - Terminal */}
