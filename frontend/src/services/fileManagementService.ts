@@ -15,7 +15,8 @@ import {
 // Real API functions
 const api = {
   async get(endpoint: string): Promise<any> {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -30,7 +31,8 @@ const api = {
   },
   
   async post(endpoint: string, data?: any): Promise<any> {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}${endpoint}`, {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
