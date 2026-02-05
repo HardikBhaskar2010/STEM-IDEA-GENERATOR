@@ -2,7 +2,7 @@
 
 # 🚀 STEM Idea Adventure 
 
-### *Embark on a journey to discover, create, and innovate with AI-powered project ideas* 
+### *Embark on a journey to discover, create, and innovate with AI-powered project ideas*  
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live-Demo-6366f1?style=for-the-badge)](https://perfection-v4.vercel.app)
 [![License: MIT](https://img.shields.io/badge/📄_License-MIT-10b981?style=for-the-badge)](LICENSE)
