@@ -399,6 +399,13 @@ class StreamingService {
   }
 
   /**
+   * Get streaming URL for a project generation
+   */
+  getStreamingUrl(projectId: string, generationId: string): string {
+    return `${this.baseWsUrl}/projects/${projectId}/code-generation/${generationId}/stream`;
+  }
+
+  /**
    * Get connection statistics
    */
   getConnectionStats(): {
