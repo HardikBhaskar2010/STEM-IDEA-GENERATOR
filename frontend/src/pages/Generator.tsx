@@ -17,8 +17,6 @@ import { useNavigate } from 'react-router-dom';
 import { CapsuleAnimation } from '@/components/ui/capsule-animation';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
 import { NeuralNetworkVisualizer } from '@/components/NeuralNetworkVisualizer';
-import { StreamingResponse } from '@/components/StreamingResponse';
-import { streamingService } from '@/services/streamingService';
 import { HolographicCard } from '@/components/HolographicCard';
 
 const Generator: React.FC = () => {
@@ -28,9 +26,6 @@ const Generator: React.FC = () => {
   const [isSynthesized, setIsSynthesized] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
-  const [useStreaming, setUseStreaming] = useState(true); // Toggle for streaming mode
-  const [streamContent, setStreamContent] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
   const [generatedProject, setGeneratedProject] = useState<{
     title: string;
     description: string;
@@ -118,80 +113,17 @@ const Generator: React.FC = () => {
 
     setIsGenerating(true);
     setIsSynthesized(false);
-    setStreamContent('');
     
     try {
-      if (useStreaming) {
-        // Use streaming mode
-        setIsStreaming(true);
-        
-        await streamingService.streamProjectGeneration(formData, {
-          onChunk: (chunk) => {
-            setStreamContent(chunk.content);
-          },
-          onComplete: (fullContent) => {
-            setIsStreaming(false);
-            setIsSynthesized(true);
-            
-            // Try to parse the response
-            try {
-              let jsonData = null;
-              
-              // Try to extract JSON from markdown code blocks
-              if (fullContent.includes('```json')) {
-                const start = fullContent.indexOf('```json') + 7;
-                const end = fullContent.indexOf('```', start);
-                if (end !== -1) {
-                  const jsonText = fullContent.slice(start, end).trim();
-                  jsonData = JSON.parse(jsonText);
-                }
-              }
-              
-              // If no markdown, try to find JSON object
-              if (!jsonData) {
-                const start = fullContent.indexOf('{');
-                const end = fullContent.lastIndexOf('}');
-                if (start !== -1 && end !== -1) {
-                  const jsonText = fullContent.slice(start, end + 1);
-                  jsonData = JSON.parse(jsonText);
-                }
-              }
-              
-              if (jsonData) {
-                setGeneratedProject(jsonData);
-                toast({
-                  title: "Project Generated!",
-                  description: "Your personalized STEM project is ready.",
-                });
-              }
-            } catch (parseError) {
-              console.error('Failed to parse streaming response:', parseError);
-            }
-          },
-          onError: (error) => {
-            setIsStreaming(false);
-            console.error('Streaming error:', error);
-            toast({
-              title: "Streaming Failed",
-              description: "Falling back to standard generation...",
-              variant: "destructive",
-            });
-            // Fallback to standard generation
-            setUseStreaming(false);
-            handleGenerate();
-          }
-        });
-      } else {
-        // Use standard generation
-        const project = await generateProject(formData);
-        
-        setGeneratedProject(project);
-        setIsSynthesized(true);
-        toast({
-          title: "Project Generated!",
-          description: "Your personalized STEM project is ready.",
-        });
-      }
+      // Use standard generation (streaming not implemented for project generation)
+      const project = await generateProject(formData);
+      
+      setGeneratedProject(project);
+      setIsSynthesized(true);
+      toast({
+        title: "Project Generated!",
+        description: "Your personalized STEM project is ready.",
+      });
     } catch (error) {
       console.error('Generation failed:', error);
       toast({
@@ -202,7 +134,7 @@ const Generator: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [formData, useStreaming]);
+  }, [formData]);
 
   const handleSaveProject = useCallback(async () => {
     if (!generatedProject) {
@@ -412,21 +344,10 @@ const Generator: React.FC = () => {
                 <div ref={resultCardRef.ref} className="pb-8 space-y-6">
                   {/* Neural Network Visualizer - Shows when AI is thinking */}
                   <NeuralNetworkVisualizer 
-                    isActive={isGenerating || isStreaming}
-                    message={isStreaming ? "Streaming AI Response..." : "AI Generating Project..."}
+                    isActive={isGenerating}
+                    message="AI Generating Project..."
                     className="mb-6"
                   />
-                  
-                  {/* Streaming Response - Shows during streaming */}
-                  {useStreaming && (isStreaming || (streamContent && !generatedProject)) && (
-                    <HolographicCard intensity="low" enableParticles={true}>
-                      <StreamingResponse 
-                        content={streamContent}
-                        isStreaming={isStreaming}
-                        title="Project Generation in Progress"
-                      />
-                    </HolographicCard>
-                  )}
                   
                   {/* Traditional Project Display */}
                   <CapsuleAnimation isOpen={isSynthesized && generatedProject !== null}>

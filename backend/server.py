@@ -3098,48 +3098,15 @@ Return ONLY a valid JSON object, no markdown formatting, no explanations.
             logger.warning("AI response does not contain valid JSON, falling back to local generator")
             
     except RuntimeError as e:
-        # Handle OpenRouter API errors with proper error mapping
+        # Handle OpenRouter API errors by falling back to local generator
         error_str = str(e)
-        logger.warning(f"AI generation failed with mapped error: {error_str}")
-        
-        # Check if this is a mapped error that should be returned to frontend
-        if "OpenRouter API failed:" in error_str:
-            # Extract the user-friendly message
-            message = error_str.replace("OpenRouter API failed: ", "")
-            
-            # Determine appropriate HTTP status based on error type
-            if any(keyword in message.lower() for keyword in ['api key', 'authentication', 'invalid']):
-                status_code = 401
-            elif any(keyword in message.lower() for keyword in ['quota', 'limit', 'rate']):
-                status_code = 429
-            elif any(keyword in message.lower() for keyword in ['unavailable', 'overloaded', 'timeout']):
-                status_code = 503
-            elif any(keyword in message.lower() for keyword in ['validation', 'format', 'parameter']):
-                status_code = 400
-            else:
-                status_code = 500
-            
-            # Return proper error response to frontend
-            return JSONResponse(
-                status_code=status_code,
-                content={
-                    'error': {
-                        'message': message,
-                        'code': 'ai_generation_failed',
-                        'retryable': status_code in [429, 500, 502, 503, 504]
-                    },
-                    'timestamp': datetime.utcnow().isoformat(),
-                    'status': 'error'
-                }
-            )
-        
-        # For other runtime errors, fall back to local generator
-        logger.warning(f"AI generation failed: {e}, falling back to local generator")
+        logger.warning(f"AI generation failed with error: {error_str}, falling back to local generator")
     except Exception as e:
-        # Handle unexpected errors
+        # Handle unexpected errors by falling back to local generator
         logger.warning(f"Unexpected error during AI generation: {e}, falling back to local generator")
 
     # Fallback to local generator for any errors
+    logger.info("Using local fallback generator for project creation")
     return local_generator(params)
 
 # ───────────────── AI GUIDANCE ENDPOINTS ─────────────────
