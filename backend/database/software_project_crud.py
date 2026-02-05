@@ -1,5 +1,5 @@
-# Software Project CRUD Operations
-# Phase 1: Backend Foundation - Database Operations
+# Software Project CRUD Operations  
+# Phase 1: Backend Foundation - Supabase Database Operations
 
 import logging
 from typing import List, Optional, Dict, Any
@@ -14,6 +14,21 @@ from models.software_project import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Helper function to convert Supabase response to model
+def dict_to_model(data: Dict[str, Any], model_class):
+    """Convert dictionary from Supabase to Pydantic model"""
+    try:
+        # Convert timestamp strings to datetime if needed
+        if 'created_at' in data and isinstance(data['created_at'], str):
+            data['created_at'] = datetime.fromisoformat(data['created_at'].replace('Z', '+00:00'))
+        if 'updated_at' in data and isinstance(data['updated_at'], str):
+            data['updated_at'] = datetime.fromisoformat(data['updated_at'].replace('Z', '+00:00'))
+        
+        return model_class(**data)
+    except Exception as e:
+        logger.error(f\"Error converting dict to model: {e}\")\n        logger.error(f\"Data: {data}\")\n        raise
 
 
 class SoftwareProjectCRUD:
