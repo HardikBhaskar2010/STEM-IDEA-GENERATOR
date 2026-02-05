@@ -189,6 +189,63 @@ const Generator: React.FC = () => {
     }
   }, [generatedProject, formData, navigate]);
 
+  const handleGenerateWithVeronica = useCallback(async () => {
+    if (!generatedProject) {
+      toast({
+        title: "Error",
+        description: "No project to generate code for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // First, save the project if not already saved
+    if (!savedProjectId) {
+      setIsSaving(true);
+      try {
+        const savedProject = await projectService.saveProject({
+          title: generatedProject.title,
+          description: generatedProject.description,
+          project_type: formData.projectType,
+          difficulty: generatedProject.difficulty,
+          estimated_time: generatedProject.estimatedTime,
+          estimated_cost: generatedProject.estimatedCost,
+          components: generatedProject.components,
+          skills: generatedProject.skills,
+          steps: generatedProject.steps,
+          generated_from_params: formData as unknown as Record<string, string>,
+        });
+
+        if (savedProject) {
+          setSavedProjectId(savedProject.id);
+          toast({
+            title: "✨ Project Saved!",
+            description: "Opening Veronica AI workspace...",
+          });
+          
+          // Small delay to show the toast
+          setTimeout(() => {
+            navigate(`/code-generator?project=${savedProject.id}`);
+          }, 1000);
+        } else {
+          throw new Error('Failed to save project');
+        }
+      } catch (error) {
+        console.error('Error saving project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save project. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      // Project already saved, just navigate
+      navigate(`/code-generator?project=${savedProjectId}`);
+    }
+  }, [generatedProject, savedProjectId, formData, navigate]);
+
   return (
     <Layout>
       <div className="relative bg-gradient-to-b from-primary/5 via-background to-background pt-16">
