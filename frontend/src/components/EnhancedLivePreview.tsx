@@ -136,17 +136,24 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
   // Transpile JSX/TSX using Babel
   const transpileCode = (code: string, filename: string): string => {
     try {
-      if (filename.endsWith('.jsx') || filename.endsWith('.tsx')) {
+      if (filename.endsWith('.jsx') || filename.endsWith('.tsx') || filename.endsWith('.js') || filename.endsWith('.ts')) {
         const result = Babel.transform(code, {
-          presets: ['react', 'typescript'],
+          presets: [
+            ['react', { runtime: 'automatic' }],
+            'typescript'
+          ],
+          plugins: [],
           filename
         });
         return result.code || code;
       }
       return code;
     } catch (error) {
-      addConsoleMessage('error', `Transpilation error in ${filename}: ${error}`);
-      return code;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      addConsoleMessage('error', `Transpilation error in ${filename}: ${errorMsg}`);
+      setPreviewError(`Transpilation failed in ${filename}: ${errorMsg}`);
+      setDevServerStatus({ status: 'error', message: 'Build failed' });
+      return `// Error transpiling ${filename}\nconsole.error("Transpilation error: ${errorMsg.replace(/"/g, '\\"')}");`;
     }
   };
 
@@ -228,70 +235,130 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
       // Add error handling and console capture
       const errorHandlingScript = `
       <script>
-        // Capture console messages
-        const originalConsole = {
-          log: console.log,
-          error: console.error,
-          warn: console.warn,
-          info: console.info
-        };
+        (function() {
+          // Capture console messages
+          const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+          };
 
-        console.log = function(...args) {
-          window.parent.postMessage({type: 'console-log', message: args.join(' ')}, '*');
-          originalConsole.log.apply(console, args);
-        };
+          function formatArgs(args) {
+            return Array.from(args).map(arg => {
+              if (typeof arg === 'object') {
+                try {
+                  return JSON.stringify(arg, null, 2);
+                } catch (e) {
+                  return String(arg);
+                }
+              }
+              return String(arg);
+            }).join(' ');
+          }
 
-        console.error = function(...args) {
-          window.parent.postMessage({type: 'console-error', message: args.join(' ')}, '*');
-          originalConsole.error.apply(console, args);
-        };
+          console.log = function(...args) {
+            window.parent.postMessage({type: 'console-log', message: formatArgs(args)}, '*');
+            originalConsole.log.apply(console, args);
+          };
 
-        console.warn = function(...args) {
-          window.parent.postMessage({type: 'console-warn', message: args.join(' ')}, '*');
-          originalConsole.warn.apply(console, args);
-        };
+          console.error = function(...args) {
+            window.parent.postMessage({type: 'console-error', message: formatArgs(args)}, '*');
+            originalConsole.error.apply(console, args);
+          };
 
-        console.info = function(...args) {
-          window.parent.postMessage({type: 'console-info', message: args.join(' ')}, '*');
-          originalConsole.info.apply(console, args);
-        };
+          console.warn = function(...args) {
+            window.parent.postMessage({type: 'console-warn', message: formatArgs(args)}, '*');
+            originalConsole.warn.apply(console, args);
+          };
 
-        // Capture errors
-        window.addEventListener('error', (event) => {
-          window.parent.postMessage({
-            type: 'runtime-error',
-            error: event.error?.message || event.message,
-            filename: event.filename,
-            lineno: event.lineno,
-            colno: event.colno
-          }, '*');
-        });
+          console.info = function(...args) {
+            window.parent.postMessage({type: 'console-info', message: formatArgs(args)}, '*');
+            originalConsole.info.apply(console, args);
+          };
 
-        // Capture unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
-          window.parent.postMessage({
-            type: 'unhandled-rejection',
-            error: event.reason
-          }, '*');
-        });
-
-        // Network request monitoring
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-          const startTime = Date.now();
-          return originalFetch.apply(this, args).then(response => {
-            const endTime = Date.now();
-            window.parent.postMessage({
-              type: 'network-request',
-              url: args[0],
-              status: response.status,
-              time: endTime - startTime
-            }, '*');
-            return response;
+          // Capture errors with stack traces
+          window.addEventListener('error', (event) => {
+            const errorInfo = {
+              type: 'runtime-error',
+              error: event.error?.message || event.message,
+              stack: event.error?.stack || '',
+              filename: event.filename || 'unknown',
+              lineno: event.lineno || 0,
+              colno: event.colno || 0
+            };
+            window.parent.postMessage(errorInfo, '*');
+            return false; // Prevent default error handling
           });
-        };
 
-        window.parent.postMessage({type: 'preview-ready'}, '*');
+          // Capture unhandled promise rejections
+          window.addEventListener('unhandledrejection', (event) => {
+            const error = event.reason;
+            window.parent.postMessage({
+              type: 'unhandled-rejection',
+              error: error?.message || String(error),
+              stack: error?.stack || ''
+            }, '*');
+            event.preventDefault();
+          });
+
+          // Network request monitoring
+          const originalFetch = window.fetch;
+          window.fetch = function(...args) {
+            const startTime = Date.now();
+            const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || 'unknown';
+            return originalFetch.apply(this, args)
+              .then(response => {
+                const endTime = Date.now();
+                window.parent.postMessage({
+                  type: 'network-request',
+                  url: url,
+                  status: response.status,
+                  time: endTime - startTime,
+                  ok: response.ok
+                }, '*');
+                return response;
+              })
+              .catch(error => {
+                window.parent.postMessage({
+                  type: 'network-error',
+                  url: url,
+                  error: error.message
+                }, '*');
+                throw error;
+              });
+          };
+
+          // XMLHttpRequest monitoring
+          const originalXHROpen = XMLHttpRequest.prototype.open;
+          const originalXHRSend = XMLHttpRequest.prototype.send;
+          
+          XMLHttpRequest.prototype.open = function(method, url) {
+            this._url = url;
+            this._method = method;
+            this._startTime = Date.now();
+            return originalXHROpen.apply(this, arguments);
+          };
+          
+          XMLHttpRequest.prototype.send = function() {
+            this.addEventListener('load', function() {
+              window.parent.postMessage({
+                type: 'network-request',
+                url: this._url,
+                status: this.status,
+                time: Date.now() - this._startTime,
+                ok: this.status >= 200 && this.status < 300
+              }, '*');
+            });
+            return originalXHRSend.apply(this, arguments);
+          };
+
+          // Signal preview is ready
+          window.parent.postMessage({type: 'preview-ready'}, '*');
+          
+          // Send initial log message
+          console.log('🚀 Preview loaded successfully');
+        })();
       </script>
       `;
 
