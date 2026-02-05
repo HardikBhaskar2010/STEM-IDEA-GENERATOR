@@ -381,15 +381,14 @@ const CodeGenerator: React.FC = () => {
 
       {/* Main workspace with resizable panels */}
       <div className="flex-1 overflow-hidden">
-        <SplitPane
-          split="vertical"
+        <ResizablePanels
+          direction="vertical"
           minSize={250}
           defaultSize={
             workspaceLayout === 'editor-focus' ? '20%' : 
             workspaceLayout === 'preview-focus' ? '40%' : 
             '30%'
           }
-          style={{ position: 'relative' }}
         >
           {/* Left Sidebar - File Tree */}
           <div className="h-full border-r border-white/10 bg-black/30 overflow-hidden">
