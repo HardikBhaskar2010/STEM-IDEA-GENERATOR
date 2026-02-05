@@ -398,7 +398,33 @@ class TechnologyStackService:
         Returns:
             List of recommended technology stacks
         """
-        self.logger.info(f\"Recommending stacks for {project_type}, platforms: {platforms}\")\n        \n        recommendations = []\n        \n        # Filter by platform\n        if \"mobile\" in platforms or \"ios\" in platforms or \"android\" in platforms:\n            recommendations.extend([self.stacks[\"react_native\"], self.stacks[\"flutter\"]])\n        elif \"desktop\" in platforms:\n            recommendations.append(self.stacks[\"electron\"])\n        elif \"web\" in platforms:\n            # Recommend based on complexity and expertise\n            if complexity in [\"simple\", \"moderate\"] and team_expertise in [\"beginner\", \"intermediate\"]:\n                recommendations.extend([self.stacks[\"mern\"], self.stacks[\"nextjs\"]])\n            else:\n                recommendations.extend([self.stacks[\"fastapi_react\"], self.stacks[\"django_react\"], self.stacks[\"nextjs\"]])\n        else:\n            # Default web recommendations\n            recommendations.extend([self.stacks[\"mern\"], self.stacks[\"fastapi_react\"], self.stacks[\"nextjs\"]])\n        \n        # Filter by budget if needed\n        if budget_conscious:\n            recommendations = [s for s in recommendations if not s.requires_paid_services]\n        \n        # Sort by popularity\n        recommendations.sort(key=lambda x: x.popularity_score, reverse=True)\n        \n        return recommendations[:5]  # Return top 5
+        self.logger.info(f"Recommending stacks for {project_type}, platforms: {platforms}")
+        
+        recommendations = []
+        
+        # Filter by platform
+        if "mobile" in platforms or "ios" in platforms or "android" in platforms:
+            recommendations.extend([self.stacks["react_native"], self.stacks["flutter"]])
+        elif "desktop" in platforms:
+            recommendations.append(self.stacks["electron"])
+        elif "web" in platforms:
+            # Recommend based on complexity and expertise
+            if complexity in ["simple", "moderate"] and team_expertise in ["beginner", "intermediate"]:
+                recommendations.extend([self.stacks["mern"], self.stacks["nextjs"]])
+            else:
+                recommendations.extend([self.stacks["fastapi_react"], self.stacks["django_react"], self.stacks["nextjs"]])
+        else:
+            # Default web recommendations
+            recommendations.extend([self.stacks["mern"], self.stacks["fastapi_react"], self.stacks["nextjs"]])
+        
+        # Filter by budget if needed
+        if budget_conscious:
+            recommendations = [s for s in recommendations if not s.requires_paid_services]
+        
+        # Sort by popularity
+        recommendations.sort(key=lambda x: x.popularity_score, reverse=True)
+        
+        return recommendations[:5]  # Return top 5
     
     def compare_stacks(self, stack_ids: List[str]) -> Dict[str, Any]:
         \"\"\"\n        Compare multiple technology stacks side by side.\n        \n        Args:\n            stack_ids: List of stack IDs to compare\n            \n        Returns:\n            Comparison data structure\n        \"\"\"\n        stacks = [self.stacks[sid] for sid in stack_ids if sid in self.stacks]\n        \n        if not stacks:\n            return {\"error\": \"No valid stacks found\"}\n        \n        comparison = {\n            \"stacks\": [s.name for s in stacks],\n            \"comparison_table\": {\n                \"frontend\": [s.frontend_framework or \"N/A\" for s in stacks],\n                \"backend\": [s.backend_framework or \"N/A\" for s in stacks],\n                \"database\": [s.database for s in stacks],\n                \"popularity\": [s.popularity_score for s in stacks],\n                \"learning_curve\": [s.learning_curve for s in stacks],\n                \"community_size\": [s.community_size for s in stacks],\n                \"maturity\": [s.maturity for s in stacks],\n                \"hosting_cost\": [s.estimated_hosting_cost for s in stacks]\n            },\n            \"pros_cons\": [\n                {\n                    \"name\": s.name,\n                    \"pros\": s.pros,\n                    \"cons\": s.cons,\n                    \"best_for\": s.best_for\n                }\n                for s in stacks\n            ],\n            \"recommendations\": self._generate_comparison_recommendations(stacks)\n        }\n        \n        return comparison\n    \n    def _generate_comparison_recommendations(self, stacks: List[TechnologyStack]) -> Dict[str, str]:\n        \"\"\"Generate recommendations based on stack comparison\"\"\"\n        \n        # Find stack with highest popularity\n        most_popular = max(stacks, key=lambda x: x.popularity_score)\n        \n        # Find easiest to learn\n        learning_order = {\"easy\": 1, \"moderate\": 2, \"steep\": 3}\n        easiest = min(stacks, key=lambda x: learning_order.get(x.learning_curve, 2))\n        \n        # Find most cost-effective\n        cost_effective = [s for s in stacks if not s.requires_paid_services]\n        \n        recommendations = {\n            \"most_popular\": f\"{most_popular.name} is the most popular choice with a score of {most_popular.popularity_score}/100\",\n            \"easiest_to_learn\": f\"{easiest.name} has the easiest learning curve ({easiest.learning_curve})\",\n        }\n        \n        if cost_effective:\n            cheapest = min(cost_effective, key=lambda x: int(x.estimated_hosting_cost.split(\"-\")[0].replace(\"$\", \"\").replace(\"/month\", \"\")))\n            recommendations[\"most_cost_effective\"] = f\"{cheapest.name} is the most cost-effective at {cheapest.estimated_hosting_cost}\"\n        \n        return recommendations
