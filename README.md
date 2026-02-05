@@ -349,6 +349,8 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 |----------|--------------|
 | **Framework** | ![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=flat-square&logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5.6.2-3178C6?style=flat-square&logo=typescript) |
 | **3D Graphics** | ![Three.js](https://img.shields.io/badge/Three.js-0.160.1-000000?style=flat-square&logo=three.js) ![React Three Fiber](https://img.shields.io/badge/R3F-8.18.0-000000?style=flat-square) |
+| **Code Editor** | ![Monaco Editor](https://img.shields.io/badge/Monaco_Editor-latest-2C2C32?style=flat-square) ![xterm.js](https://img.shields.io/badge/xterm.js-latest-000000?style=flat-square) |
+| **Transpiler** | ![Babel](https://img.shields.io/badge/Babel-7.23-F9DC3E?style=flat-square&logo=babel) |
 | **Styling** | ![Tailwind](https://img.shields.io/badge/Tailwind-3.4.15-38B2AC?style=flat-square&logo=tailwind-css) ![shadcn/ui](https://img.shields.io/badge/shadcn/ui-latest-000000?style=flat-square) |
 | **Build Tool** | ![Vite](https://img.shields.io/badge/Vite-5.4.11-646CFF?style=flat-square&logo=vite) |
 | **State** | ![React Context](https://img.shields.io/badge/Context_API-latest-61DAFB?style=flat-square) |
@@ -358,16 +360,18 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 | Category | Technologies |
 |----------|--------------|
 | **Framework** | ![FastAPI](https://img.shields.io/badge/FastAPI-0.110.1-009688?style=flat-square&logo=fastapi) ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python) |
-| **AI/ML** | ![OpenRouter](https://img.shields.io/badge/OpenRouter-Solar_Pro_3-FF6B6B?style=flat-square) |
+| **AI/ML** | ![OpenRouter](https://img.shields.io/badge/OpenRouter-Trinity_Large-FF6B6B?style=flat-square) |
 | **Database** | ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase) |
 | **Server** | ![Uvicorn](https://img.shields.io/badge/Uvicorn-latest-499848?style=flat-square) |
 
-### Development Tools
+### Development Tools & IDE Features
 
 ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=flat-square&logo=eslint)
 ![Yarn](https://img.shields.io/badge/Yarn-2C8EBB?style=flat-square&logo=yarn&logoColor=white)
 ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat-square&logo=visual-studio-code)
+![Monaco](https://img.shields.io/badge/Monaco_Editor-2C2C32?style=flat-square)
+![xterm](https://img.shields.io/badge/xterm.js-Terminal-000000?style=flat-square)
 
 </div>
 
