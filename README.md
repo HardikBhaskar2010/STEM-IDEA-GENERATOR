@@ -858,6 +858,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - Vite team for blazing-fast build tool
 - FastAPI for high-performance Python framework
 - Tailwind CSS for utility-first styling
+- Monaco Editor team for professional code editing
+- xterm.js team for terminal emulation
+- Babel team for JSX/TSX transpilation
 - The open-source community ❤️
 
 ---
