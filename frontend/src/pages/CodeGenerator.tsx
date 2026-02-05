@@ -427,8 +427,8 @@ const CodeGenerator: React.FC = () => {
 
           {/* Right Content Area - Editor & Preview */}
           <div className="h-full">
-            <SplitPane
-              split={showTerminal ? "horizontal" : "vertical"}
+            <ResizablePanels
+              direction={showTerminal ? "horizontal" : "vertical"}
               minSize={showTerminal ? 300 : 400}
               defaultSize={
                 showTerminal ? '65%' : 
@@ -436,19 +436,17 @@ const CodeGenerator: React.FC = () => {
                 workspaceLayout === 'preview-focus' ? '40%' : 
                 '50%'
               }
-              style={{ position: 'relative' }}
             >
               {/* Top/Left - Editor & Preview Split */}
               <div className="h-full">
-                <SplitPane
-                  split="vertical"
+                <ResizablePanels
+                  direction="vertical"
                   minSize={400}
                   defaultSize={
                     workspaceLayout === 'editor-focus' ? '70%' : 
                     workspaceLayout === 'preview-focus' ? '30%' : 
                     '50%'
                   }
-                  style={{ position: 'relative' }}
                 >
                   {/* Editor */}
                   <div className="h-full border-r border-white/10">
