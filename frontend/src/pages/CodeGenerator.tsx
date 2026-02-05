@@ -44,6 +44,7 @@ import EnhancedCodeEditor from '@/components/EnhancedCodeEditor';
 import EnhancedLivePreview from '@/components/EnhancedLivePreview';
 import Terminal from '@/components/Terminal';
 import StreamingCodeView from '@/components/StreamingCodeView';
+import ResizablePanels from '@/components/ResizablePanels';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
 
 const CodeGenerator: React.FC = () => {
