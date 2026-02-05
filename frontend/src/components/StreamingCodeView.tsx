@@ -144,32 +144,6 @@ const StreamingCodeView: React.FC<StreamingCodeViewProps> = ({
     };
   }, [isVisible, generationId, onComplete, onError]);
 
-              is_main_file: false
-            },
-            {
-              id: 'file_3',
-              file_name: 'script.js',
-              file_path: 'js/script.js',
-              file_type: 'js',
-              content: '// Generated JavaScript\nconsole.log("🚀 Generated project loaded successfully!");\n\n// Wait for DOM to be ready\ndocument.addEventListener("DOMContentLoaded", function() {\n    console.log("✅ DOM Content Loaded");\n    \n    // Get the button element\n    const button = document.getElementById("clickMe");\n    const container = document.querySelector(".container");\n    \n    if (button) {\n        let clickCount = 0;\n        \n        button.addEventListener("click", function() {\n            clickCount++;\n            \n            // Update button text\n            button.textContent = `Clicked ${clickCount} time${clickCount !== 1 ? "s" : ""}!`;\n            \n            // Add some visual feedback\n            button.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;\n            \n            // Create a celebration effect\n            if (clickCount % 5 === 0) {\n                createConfetti();\n            }\n            \n            console.log(`🎉 Button clicked ${clickCount} times!`);\n        });\n    }\n    \n    // Simple confetti effect\n    function createConfetti() {\n        for (let i = 0; i < 20; i++) {\n            const confetti = document.createElement("div");\n            confetti.style.position = "fixed";\n            confetti.style.width = "10px";\n            confetti.style.height = "10px";\n            confetti.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;\n            confetti.style.left = Math.random() * window.innerWidth + "px";\n            confetti.style.top = "-10px";\n            confetti.style.borderRadius = "50%";\n            confetti.style.pointerEvents = "none";\n            confetti.style.zIndex = "1000";\n            \n            document.body.appendChild(confetti);\n            \n            // Animate the confetti\n            const animation = confetti.animate([\n                { transform: "translateY(0px) rotate(0deg)", opacity: 1 },\n                { transform: `translateY(${window.innerHeight + 20}px) rotate(360deg)`, opacity: 0 }\n            ], {\n                duration: 2000 + Math.random() * 1000,\n                easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)"\n            });\n            \n            animation.onfinish = () => {\n                confetti.remove();\n            };\n        }\n    }\n});',
-              description: 'Interactive JavaScript with click counter and confetti effect',
-              size_bytes: 2100,
-              is_main_file: false
-            }
-          ];
-          
-          setGeneratedFiles(mockFiles);
-          onComplete?.(mockFiles);
-        }
-      }, 1500);
-
-      return () => clearInterval(interval);
-    };
-
-    const cleanup = simulateStreaming();
-    return cleanup;
-  }, [isVisible, onComplete]);
-
   // Scroll to bottom of events
   const scrollToBottom = () => {
     eventsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
