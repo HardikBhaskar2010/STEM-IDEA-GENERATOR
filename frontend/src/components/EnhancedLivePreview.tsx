@@ -404,15 +404,29 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
           addConsoleMessage('error', `${file}: ${error}`);
           break;
         case 'runtime-error':
-          setPreviewError(error);
-          addConsoleMessage('error', `Runtime error: ${error}`);
+          const errorLocation = event.data.filename ? ` at ${event.data.filename}:${event.data.lineno}:${event.data.colno}` : '';
+          const fullError = `${error}${errorLocation}`;
+          setPreviewError(fullError);
+          addConsoleMessage('error', `❌ Runtime error: ${fullError}`);
+          if (event.data.stack) {
+            addConsoleMessage('error', `Stack trace:\n${event.data.stack}`);
+          }
+          setDevServerStatus({ status: 'error', message: 'Runtime error' });
           break;
         case 'unhandled-rejection':
-          addConsoleMessage('error', `Unhandled promise rejection: ${error}`);
+          addConsoleMessage('error', `❌ Unhandled promise rejection: ${error}`);
+          if (event.data.stack) {
+            addConsoleMessage('error', `Stack trace:\n${event.data.stack}`);
+          }
+          setPreviewError(`Promise rejection: ${error}`);
+          break;
+        case 'network-error':
+          addConsoleMessage('error', `❌ Network error for ${event.data.url}: ${event.data.error}`);
           break;
         case 'network-request':
           setNetworkRequests(prev => [...prev.slice(-19), { url, status, time }]);
-          addConsoleMessage('info', `${status} ${url} (${time}ms)`);
+          const emoji = event.data.ok ? '✅' : '❌';
+          addConsoleMessage('info', `${emoji} ${status} ${url} (${time}ms)`);
           break;
         case 'preview-ready':
           setIsLoading(false);
