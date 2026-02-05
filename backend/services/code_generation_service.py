@@ -1,6 +1,6 @@
-# Code Generation Service
+# Veronica AI Code Generation Service
 # Requirements: 1.1, 1.2, 1.3
-# Task: 2.1 Implement CodeGenerationService class with Anthropic Claude integration
+# Task: 2.1 Implement VeronicaAIService class with OpenRouter integration
 
 import logging
 import json
@@ -10,9 +10,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any, AsyncGenerator, Tuple
 from enum import Enum
 
-import anthropic
-from anthropic import AsyncAnthropic
-
+# Remove anthropic import and use OpenRouter instead
 from database.connection import get_db_client
 from models.ai_guidance import ProjectContext
 
@@ -103,30 +101,43 @@ class GeneratedCode:
         self.completed_at = None
 
 
-class CodeGenerationService:
+class VeronicaAIService:
     """
-    Service for generating code using Anthropic Claude API
-    Handles streaming code generation, project analysis, and file management
+    Veronica AI Service for generating code using OpenRouter free models
+    Uses different specialized models for different tasks
     """
     
     def __init__(self):
-        """Initialize the code generation service"""
-        self.anthropic_client = None
-        self.api_key = os.getenv("ANTHROPIC_API_KEY")
+        """Initialize the Veronica AI service"""
+        self.openrouter_client = None
+        self.openrouter_config = None
         
-        if not self.api_key:
-            logger.warning("ANTHROPIC_API_KEY not found - code generation will be disabled")
-        else:
-            try:
-                self.anthropic_client = AsyncAnthropic(api_key=self.api_key)
-                logger.info("Anthropic client initialized successfully")
-            except Exception as e:
-                logger.error(f"Failed to initialize Anthropic client: {e}")
+        # Import OpenRouter client from server
+        try:
+            from server import openrouter_client, openrouter_config
+            self.openrouter_client = openrouter_client
+            self.openrouter_config = openrouter_config
+            
+            if self.openrouter_client:
+                logger.info("Veronica AI initialized with OpenRouter - multi-model code generation enabled")
+            else:
+                logger.warning("OpenRouter client not available - code generation will be disabled")
+        except ImportError as e:
+            logger.error(f"Failed to import OpenRouter client: {e}")
+            logger.warning("Code generation will be disabled")
+        
+        # Multi-model configuration for different tasks
+        self.models = {
+            "code_generation": "arcee-ai/trinity-large-preview:free",  # Best for code generation
+            "idea_generation": "upstage/solar-pro-3:free",             # Best for ideas and planning
+            "project_analysis": "upstage/solar-pro-3:free",            # Good for understanding requirements
+            "documentation": "upstage/solar-pro-3:free",               # Good for writing docs
+            "debugging": "arcee-ai/trinity-large-preview:free",        # Technical problem solving
+        }
         
         # Generation configuration
         self.max_tokens = 4000
         self.temperature = 0.3  # Lower temperature for more consistent code
-        self.model = "claude-3-5-sonnet-20241022"
         
         # Platform-specific configurations
         self.platform_configs = {
@@ -152,6 +163,47 @@ class CodeGenerationService:
             }
         }
     
+    def _get_model_for_task(self, task_type: str) -> str:
+        """
+        Get the best model for a specific task
+        
+        Args:
+            task_type: Type of task (code_generation, idea_generation, etc.)
+            
+        Returns:
+            Model name for the task
+        """
+        return self.models.get(task_type, self.models["code_generation"])
+    
+    async def _generate_with_model(self, messages: List[Dict], task_type: str, temperature: float = None) -> str:
+        """
+        Generate response using the appropriate model for the task
+        
+        Args:
+            messages: Messages to send to the model
+            task_type: Type of task to determine which model to use
+            temperature: Optional temperature override
+            
+        Returns:
+            Generated response text
+        """
+        if not self.openrouter_client:
+            raise Exception("OpenRouter client not available")
+        
+        model = self._get_model_for_task(task_type)
+        temp = temperature if temperature is not None else self.temperature
+        
+        logger.info(f"Using model {model} for task: {task_type}")
+        
+        response = await self.openrouter_client.generate_completion(
+            messages=messages,
+            max_tokens=self.max_tokens,
+            temperature=temp,
+            model=model
+        )
+        
+        return response
+    
     async def generate_code(
         self,
         project_context: ProjectContext,
@@ -159,7 +211,7 @@ class CodeGenerationService:
         user_id: str
     ) -> AsyncGenerator[Tuple[str, Optional[CodeFile]], None]:
         """
-        Generate code for a project using Anthropic Claude API
+        Generate code for a project using OpenRouter free models
         Yields streaming responses for real-time updates
         
         Args:
@@ -174,8 +226,8 @@ class CodeGenerationService:
             ValueError: If parameters are invalid
             Exception: If generation fails
         """
-        if not self.anthropic_client:
-            raise Exception("Anthropic client not available - check API key configuration")
+        if not self.openrouter_client:
+            raise Exception("OpenRouter client not available - check configuration")
         
         if not project_context:
             raise ValueError("Project context is required for code generation")
@@ -186,99 +238,53 @@ class CodeGenerationService:
                 project_context.project_id, user_id, params
             )
             
-            yield ("Starting code generation...", None)
+            yield ("Starting Veronica AI code generation...", None)
             
             # Build the generation prompt
             prompt = self._build_generation_prompt(project_context, params)
             
             yield ("Analyzing project requirements...", None)
             
-            # Stream code generation from Anthropic
-            generated_files = []
-            current_file = None
-            current_content = ""
+            # Generate code using OpenRouter with specialized code generation model
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are Veronica AI, an expert code generator specialized in creating complete, working projects. Generate clean, well-structured code with proper documentation and best practices. Always provide multiple files with proper project structure."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ]
             
-            async with self.anthropic_client.messages.stream(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                temperature=self.temperature,
-                messages=[{"role": "user", "content": prompt}]
-            ) as stream:
-                async for chunk in stream:
-                    if chunk.type == "content_block_delta":
-                        content_delta = chunk.delta.text
-                        
-                        # Parse file boundaries and content
-                        file_info = self._parse_streaming_content(
-                            content_delta, current_file, current_content
-                        )
-                        
-                        if file_info["new_file"]:
-                            # Save previous file if exists
-                            if current_file and current_content.strip():
-                                code_file = CodeFile(
-                                    file_path=current_file["path"],
-                                    file_name=current_file["name"],
-                                    file_type=current_file["type"],
-                                    content=current_content.strip(),
-                                    description=current_file.get("description"),
-                                    is_main_file=current_file.get("is_main", False)
-                                )
-                                generated_files.append(code_file)
-                                yield (f"Generated {current_file['name']}", code_file)
-                            
-                            # Start new file
-                            current_file = file_info["file_info"]
-                            current_content = ""
-                            yield (f"Generating {current_file['name']}...", None)
-                        
-                        elif file_info["content"]:
-                            current_content += file_info["content"]
-                            
-                            # Yield progress updates periodically
-                            if len(current_content) % 500 == 0:  # Every 500 characters
-                                yield (f"Writing {current_file['name']}... ({len(current_content)} chars)", None)
+            yield ("Generating code with Veronica AI (Trinity Large model)...", None)
             
-            # Save final file
-            if current_file and current_content.strip():
-                code_file = CodeFile(
-                    file_path=current_file["path"],
-                    file_name=current_file["name"],
-                    file_type=current_file["type"],
-                    content=current_content.strip(),
-                    description=current_file.get("description"),
-                    is_main_file=current_file.get("is_main", False)
-                )
-                generated_files.append(code_file)
-                yield (f"Generated {current_file['name']}", code_file)
+            # Use specialized code generation model
+            response = await self._generate_with_model(messages, "code_generation")
             
-            # Validate and enhance generated files
-            yield ("Validating generated code...", None)
-            validated_files = await self._validate_and_enhance_files(
-                generated_files, params, project_context
-            )
+            yield ("Processing generated code...", None)
+            
+            # Parse the generated code into files
+            generated_files = self._parse_generated_code(response, params.platform)
+            
+            yield ("Saving generated files...", None)
             
             # Save files to database
-            yield ("Saving generated files...", None)
-            await self._save_generated_files(generation_id, validated_files)
+            await self._save_generated_files(generation_id, generated_files)
             
-            # Update generation status
-            await self._update_generation_status(
-                generation_id, GenerationStatus.COMPLETED
-            )
+            # Yield each generated file
+            for file in generated_files:
+                yield (f"Generated {file.file_name}", file)
             
-            yield (f"Code generation completed! Generated {len(validated_files)} files.", None)
+            # Mark generation as completed
+            await self._update_generation_status(generation_id, GenerationStatus.COMPLETED)
+            
+            yield ("Code generation completed successfully!", None)
             
         except Exception as e:
             logger.error(f"Code generation failed: {e}")
-            
-            # Update generation status to failed
             if 'generation_id' in locals():
-                await self._update_generation_status(
-                    generation_id, GenerationStatus.FAILED, str(e)
-                )
-            
-            yield (f"Code generation failed: {str(e)}", None)
+                await self._update_generation_status(generation_id, GenerationStatus.FAILED, str(e))
             raise
     
     def _build_generation_prompt(
@@ -287,7 +293,7 @@ class CodeGenerationService:
         params: GenerationParams
     ) -> str:
         """
-        Build the generation prompt for Anthropic Claude
+        Build the generation prompt for OpenRouter models
         
         Args:
             project_context: Project context with requirements
@@ -449,6 +455,91 @@ class CodeGenerationService:
             result["content"] = result["content"].replace("```", "")
         
         return result
+    
+    def _parse_generated_code(self, response: str, platform: Platform) -> List[CodeFile]:
+        """
+        Parse generated code response into individual files
+        
+        Args:
+            response: Generated code response from OpenRouter
+            platform: Target platform for code generation
+            
+        Returns:
+            List of CodeFile objects
+        """
+        files = []
+        
+        # Split response by file markers
+        file_sections = response.split("```")
+        current_file_info = None
+        
+        for i, section in enumerate(file_sections):
+            section = section.strip()
+            if not section:
+                continue
+                
+            # Check if this section starts with a filename
+            lines = section.split('\n')
+            first_line = lines[0].strip()
+            
+            # Look for filename patterns
+            if any(ext in first_line for ext in ['.py', '.js', '.html', '.css', '.ino', '.cpp', '.h', '.dart', '.json', '.yaml', '.txt', '.md']):
+                # This is a filename
+                file_path = first_line
+                file_name = file_path.split('/')[-1]
+                file_type = file_name.split('.')[-1] if '.' in file_name else 'txt'
+                
+                # Get the content (rest of the lines)
+                content = '\n'.join(lines[1:]) if len(lines) > 1 else ""
+                
+                # Determine if this is the main file
+                is_main_file = (
+                    file_name.startswith("main.") or 
+                    file_name.startswith("index.") or
+                    file_name == self.platform_configs[platform]["main_file"]
+                )
+                
+                # Create CodeFile object
+                code_file = CodeFile(
+                    file_path=file_path,
+                    file_name=file_name,
+                    file_type=file_type,
+                    content=content.strip(),
+                    description=f"Generated {file_type} file for {platform.value} project",
+                    is_main_file=is_main_file
+                )
+                
+                files.append(code_file)
+        
+        # If no files were parsed, create a single main file with all content
+        if not files:
+            main_file_name = self.platform_configs[platform]["main_file"]
+            file_type = main_file_name.split('.')[-1]
+            
+            code_file = CodeFile(
+                file_path=main_file_name,
+                file_name=main_file_name,
+                file_type=file_type,
+                content=response.strip(),
+                description=f"Generated {file_type} file for {platform.value} project",
+                is_main_file=True
+            )
+            files.append(code_file)
+        
+        # Add README file if not present
+        if not any(f.file_name.lower().startswith('readme') for f in files):
+            readme_content = self._generate_readme_file(files, platform)
+            readme_file = CodeFile(
+                file_path="README.md",
+                file_name="README.md", 
+                file_type="md",
+                content=readme_content,
+                description="Project documentation and setup instructions",
+                is_main_file=False
+            )
+            files.append(readme_file)
+        
+        return files
     
     async def _validate_and_enhance_files(
         self, 

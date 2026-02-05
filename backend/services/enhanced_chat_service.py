@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any, Tuple
 
 from services.chat_service import ChatService
 from services.code_generation_service import (
-    CodeGenerationService, GenerationParams, Platform, ComplexityLevel
+    VeronicaAIService, GenerationParams, Platform, ComplexityLevel
 )
 from services.project_context_service import ProjectContextService
 from models.ai_guidance import ChatMessage, MessageSender
@@ -42,7 +42,7 @@ class EnhancedChatService(ChatService):
     
     def __init__(self):
         super().__init__()
-        self.code_generation_service = CodeGenerationService()
+        self.code_generation_service = VeronicaAIService()
         self.project_context_service = ProjectContextService()
         
         # Code generation intent patterns

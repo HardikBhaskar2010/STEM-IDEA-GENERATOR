@@ -432,12 +432,13 @@ Focus on learning and practical steps. Avoid jargon unless necessary."""
             
             logger.info(f"Sending {len(messages)} messages to OpenRouter (including {len(conversation_history[-10:])} history messages)")
             
-            # Generate response using OpenRouter
+            # Generate response using OpenRouter with Solar Pro 3 (best for ideas and guidance)
             response = await self.openrouter_client.generate_completion(
                 messages=messages,
                 max_tokens=2000,
                 temperature=0.7,
-                top_p=0.9
+                top_p=0.9,
+                model="upstage/solar-pro-3:free"  # Specialized for idea generation and guidance
             )
             
             # Extract response content

@@ -677,7 +677,11 @@ class OpenRouterErrorMapper:
             Dictionary containing mapped HTTP status code and user-friendly error message
         """
         # Normalize error code to lowercase for consistent mapping
-        normalized_code = error_code.lower() if error_code else 'unknown_error'
+        # Handle case where error_code might be an integer (HTTP status code)
+        if isinstance(error_code, int):
+            normalized_code = str(error_code)
+        else:
+            normalized_code = error_code.lower() if error_code else 'unknown_error'
         
         # Get mapped HTTP status code
         mapped_status = cls.ERROR_CODE_MAPPING.get(normalized_code)
@@ -1989,16 +1993,16 @@ async def perform_startup_health_validation():
 # Flag to track if startup validation has been performed
 _startup_validation_performed = False
 
-async def call_openrouter(prompt: str, **kwargs) -> str:
+async def call_openrouter(prompt: str, model: str = None, **kwargs) -> str:
     """
-    Call OpenRouter API for AI text generation with ResponseAdapter integration.
+    Call OpenRouter API for AI text generation with multi-model support.
     
-    This function provides AI text generation using OpenRouter API with the same
-    function signature and behavior as the previous implementation. It uses the 
-    ResponseAdapter to ensure response compatibility.
+    This function provides AI text generation using OpenRouter API with support for
+    different models for different tasks. Uses the ResponseAdapter to ensure response compatibility.
     
     Args:
         prompt: The text prompt to send to the AI model
+        model: Optional model to use (defaults to Solar Pro 3 for idea generation)
         **kwargs: Additional parameters for the API request (temperature, max_tokens, etc.)
         
     Returns:
@@ -2020,18 +2024,22 @@ async def call_openrouter(prompt: str, **kwargs) -> str:
         with openrouter_structured_logger.log_api_request(
             "call_openrouter",
             prompt_length=len(prompt),
+            model=model,
             parameters=list(kwargs.keys())
         ) as log_context:
-            return await _execute_call_openrouter_with_logging(prompt, log_context, **kwargs)
+            return await _execute_call_openrouter_with_logging(prompt, log_context, model=model, **kwargs)
     else:
         # Fallback to basic logging if structured logger not available
-        return await _execute_call_openrouter_basic(prompt, **kwargs)
+        return await _execute_call_openrouter_basic(prompt, model=model, **kwargs)
 
-async def _execute_call_openrouter_with_logging(prompt: str, log_context: Dict[str, Any], **kwargs) -> str:
-    """Execute call_openrouter with structured logging context"""
+async def _execute_call_openrouter_with_logging(prompt: str, log_context: Dict[str, Any], model: str = None, **kwargs) -> str:
+    """Execute call_openrouter with structured logging context and multi-model support"""
     request_id = log_context['request_id']
     start_time = log_context['start_time']
     structured_logger = log_context['logger']
+    
+    # Use Solar Pro 3 as default for idea generation if no model specified
+    selected_model = model or "upstage/solar-pro-3:free"
     
     try:
         messages = [{"role": "user", "content": prompt}]
@@ -2041,12 +2049,14 @@ async def _execute_call_openrouter_with_logging(prompt: str, log_context: Dict[s
             'request_id': request_id,
             'prompt_length': len(prompt),
             'message_count': len(messages),
+            'model': selected_model,
             'parameters': list(kwargs.keys())
         })
         
-        # Generate completion with enhanced serialization, passing through all kwargs
-        # This preserves all existing input parameter handling
-        openrouter_response = await openrouter_client.generate_completion(messages, **kwargs)
+        # Generate completion with enhanced serialization, passing through all kwargs and model
+        openrouter_response = await openrouter_client.generate_completion(
+            messages, model=selected_model, **kwargs
+        )
         
         # Use ResponseAdapter to convert OpenRouter response to compatible format
         adapted_response = ResponseAdapter.adapt_openrouter_response(openrouter_response)
@@ -2136,22 +2146,26 @@ async def _execute_call_openrouter_with_logging(prompt: str, log_context: Dict[s
         error_info = OpenRouterErrorMapper.map_error_response('unknown_error', sanitized_error)
         raise RuntimeError(f"OpenRouter API failed: {error_info['message']}") from e
 
-async def _execute_call_openrouter_basic(prompt: str, **kwargs) -> str:
+async def _execute_call_openrouter_basic(prompt: str, model: str = None, **kwargs) -> str:
     """Fallback method with basic logging when structured logger is not available"""
     # Create secure logger for this function
     secure_logger = APIKeySecurityValidator.create_secure_logger(
         "call-openrouter", openrouter_config.api_key
     )
 
+    # Use Solar Pro 3 as default for idea generation if no model specified
+    selected_model = model or "upstage/solar-pro-3:free"
+
     try:
         messages = [{"role": "user", "content": prompt}]
         
         # Log function call without exposing sensitive information
-        secure_logger.info(f"Calling OpenRouter API with {len(messages)} messages")
+        secure_logger.info(f"Calling OpenRouter API with {len(messages)} messages using model: {selected_model}")
         
-        # Generate completion with enhanced serialization, passing through all kwargs
-        # This preserves all existing input parameter handling
-        openrouter_response = await openrouter_client.generate_completion(messages, **kwargs)
+        # Generate completion with enhanced serialization, passing through all kwargs and model
+        openrouter_response = await openrouter_client.generate_completion(
+            messages, model=selected_model, **kwargs
+        )
         
         # Use ResponseAdapter to convert OpenRouter response to compatible format
         adapted_response = ResponseAdapter.adapt_openrouter_response(openrouter_response)
@@ -2927,7 +2941,8 @@ Return ONLY a valid JSON object, no markdown formatting, no explanations.
 """
 
     try:
-        ai_text = await call_openrouter(prompt)
+        # Use Solar Pro 3 model specifically for project idea generation
+        ai_text = await call_openrouter(prompt, model="upstage/solar-pro-3:free")
         
         # Enhanced JSON parsing to handle various response formats
         json_data = None
@@ -3171,7 +3186,8 @@ Return ONLY a valid JSON object, no markdown formatting, no explanations.
             
             # For now, we'll use the non-streaming API and simulate streaming
             # In a full implementation, you'd use OpenRouter's streaming API
-            ai_text = await call_openrouter(prompt)
+            # Use Solar Pro 3 model specifically for project idea generation
+            ai_text = await call_openrouter(prompt, model="upstage/solar-pro-3:free")
             
             # Simulate streaming by sending chunks of the response
             chunk_size = 50  # Characters per chunk
@@ -4174,7 +4190,7 @@ app.add_middleware(
 # ───────────────── CODE GENERATION ENDPOINTS ─────────────────
 
 from services.code_generation_service import (
-    CodeGenerationService, GenerationParams, Platform, ComplexityLevel
+    VeronicaAIService, GenerationParams, Platform, ComplexityLevel
 )
 from services.file_management_service import FileManagementService
 from services.streaming_service import get_streaming_service
@@ -4225,7 +4241,7 @@ class SelectedFilesDownloadRequest(BaseModel):
     total_files: int
 
 # Initialize services
-code_generation_service = CodeGenerationService()
+veronica_ai_service = VeronicaAIService()
 file_management_service = FileManagementService()
 
 @api.post("/projects/{project_id}/generate-code", response_model=CodeGenerationResponse)
@@ -4280,7 +4296,7 @@ async def start_code_generation(project_id: str, request: CodeGenerationRequest)
             )
         
         # Start code generation (this will create a database record)
-        generation_id = await code_generation_service._create_generation_record(
+        generation_id = await veronica_ai_service._create_generation_record(
             project_id, "user_id_placeholder", params  # TODO: Get actual user_id from auth
         )
         
@@ -4321,7 +4337,7 @@ async def get_generation_status(project_id: str, generation_id: str):
     """
     try:
         # Get generation status from service
-        generation_data = await code_generation_service.get_generation_status(generation_id)
+        generation_data = await veronica_ai_service.get_generation_status(generation_id)
         
         if not generation_data:
             raise HTTPException(
@@ -4337,7 +4353,7 @@ async def get_generation_status(project_id: str, generation_id: str):
             )
         
         # Get file count
-        files = await code_generation_service.get_generated_files(generation_id)
+        files = await veronica_ai_service.get_generated_files(generation_id)
         
         return GenerationStatusResponse(
             generation_id=generation_id,

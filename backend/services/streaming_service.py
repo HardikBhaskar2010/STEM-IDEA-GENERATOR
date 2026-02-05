@@ -13,7 +13,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosed
 
 from services.code_generation_service import (
-    CodeGenerationService, GenerationParams, Platform, ComplexityLevel
+    VeronicaAIService, GenerationParams, Platform, ComplexityLevel
 )
 from services.project_context_service import ProjectContextService
 from database.connection import get_db_client
@@ -124,7 +124,7 @@ class StreamingService:
         self.user_connections: Dict[str, Set[str]] = {}  # user_id -> set of connection_ids
         self.generation_connections: Dict[str, str] = {}  # generation_id -> connection_id
         
-        self.code_generation_service = CodeGenerationService()
+        self.code_generation_service = VeronicaAIService()
         self.project_context_service = ProjectContextService()
         
         # Configuration
