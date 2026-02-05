@@ -142,8 +142,11 @@ const Terminal: React.FC<TerminalProps> = ({
 
     // Write welcome message
     if (terminal.buffer.active.length === 0) {
-      terminal.writeln('\x1b[1;35mVeronica AI Terminal Emulator\x1b[0m');
-      terminal.writeln('Type "help" for available commands\n');
+      terminal.writeln('\x1b[1;35m╔═══════════════════════════════════════════╗');
+      terminal.writeln('║     Veronica AI Terminal Emulator        ║');
+      terminal.writeln('║  Your Intelligent Coding Companion       ║');
+      terminal.writeln('╚═══════════════════════════════════════════╝\x1b[0m');
+      terminal.writeln('\x1b[2mType "help" for available commands\x1b[0m\n');
       terminal.write(prompt);
     }
 
@@ -236,17 +239,22 @@ const Terminal: React.FC<TerminalProps> = ({
     // Built-in commands
     switch (cmd.toLowerCase()) {
       case 'help':
-        terminal.writeln('\x1b[1;36mAvailable Commands:\x1b[0m');
-        terminal.writeln('  help          - Show this help message');
-        terminal.writeln('  clear         - Clear the terminal');
-        terminal.writeln('  echo [text]   - Print text to terminal');
-        terminal.writeln('  date          - Show current date and time');
-        terminal.writeln('  pwd           - Print working directory');
-        terminal.writeln('  ls            - List files (simulated)');
-        terminal.writeln('  npm [cmd]     - Simulate npm commands');
-        terminal.writeln('  node [file]   - Simulate node execution');
-        terminal.writeln('  git [cmd]     - Simulate git commands');
-        terminal.writeln('  veronica      - Show Veronica AI info');
+        terminal.writeln('\x1b[1;36m╔═══════════════════════════════════════════╗');
+        terminal.writeln('║         Available Commands                ║');
+        terminal.writeln('╚═══════════════════════════════════════════╝\x1b[0m');
+        terminal.writeln('');
+        terminal.writeln('  \x1b[1;32mhelp\x1b[0m          - Show this help message');
+        terminal.writeln('  \x1b[1;32mclear\x1b[0m         - Clear the terminal screen');
+        terminal.writeln('  \x1b[1;32mecho\x1b[0m [text]   - Print text to terminal');
+        terminal.writeln('  \x1b[1;32mdate\x1b[0m          - Show current date and time');
+        terminal.writeln('  \x1b[1;32mpwd\x1b[0m           - Print working directory');
+        terminal.writeln('  \x1b[1;32mls\x1b[0m            - List files (simulated)');
+        terminal.writeln('  \x1b[1;32mnpm\x1b[0m [cmd]     - Simulate npm commands');
+        terminal.writeln('  \x1b[1;32mnode\x1b[0m [file]   - Simulate node execution');
+        terminal.writeln('  \x1b[1;32mgit\x1b[0m [cmd]     - Simulate git commands');
+        terminal.writeln('  \x1b[1;32mveronica\x1b[0m      - Show Veronica AI info');
+        terminal.writeln('');
+        terminal.writeln('\x1b[2mTip: Use ↑/↓ arrow keys for command history\x1b[0m');
         break;
 
       case 'clear':
