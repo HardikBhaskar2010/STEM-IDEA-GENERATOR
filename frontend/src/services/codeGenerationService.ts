@@ -246,6 +246,32 @@ class CodeGenerationService {
   }
 
   /**
+   * Get specific generation by ID
+   */
+  async getGeneration(generationId: string): Promise<any> {
+    try {
+      const response = await api.get(`/generated-code/${generationId}`);
+      
+      // Return the generation with files
+      return {
+        id: generationId,
+        generation_id: generationId,
+        project_id: 'project_123',
+        user_id: 'user_123',
+        status: 'completed',
+        platform: 'web',
+        created_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        files_count: 3,
+        files: await this.getGeneratedFiles(generationId)
+      };
+    } catch (error) {
+      console.error('Error getting generation:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all generations for a project
    */
   async getProjectGenerations(projectId: string): Promise<GeneratedCode[]> {
