@@ -511,9 +511,9 @@ const CodeGenerator: React.FC = () => {
                   />
                 </div>
               )}
-            </SplitPane>
+            </ResizablePanels>
           </div>
-        </SplitPane>
+        </ResizablePanels>
       </div>
     </div>
   );
