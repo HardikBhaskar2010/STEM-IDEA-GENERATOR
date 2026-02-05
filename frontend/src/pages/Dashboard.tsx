@@ -25,6 +25,16 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, planning: 0 });
+  
+  // Mock data for Daily Activity chart
+  const dailyActivityData = [
+    { time: '00:00', activity: 2 },
+    { time: '04:00', activity: 1 },
+    { time: '08:00', activity: 8 },
+    { time: '12:00', activity: 15 },
+    { time: '16:00', activity: 12 },
+    { time: '20:00', activity: 6 },
+  ];
 
   useEffect(() => {
     loadProjects();
