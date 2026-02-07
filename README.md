@@ -12,7 +12,7 @@
 <img src="./screenshots/01-home-page.jpeg" alt="STEM Idea Adventure Hero" width="800"/>
  
 **An immersive 3D platform combining AI intelligence with stunning visuals to revolutionize STEM education**
-
+ 
 [✨ Features](#-features) • [🎬 Screenshots](#-screenshots) • [🚀 Quick Start](#-quick-start) • [📚 Documentation](#-api-documentation) • [🤝 Contributing](#-contributing)
 
 </div>
