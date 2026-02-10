@@ -295,7 +295,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                     id="line-numbers"
                     checked={showLineNumbers}
                     onCheckedChange={setShowLineNumbers}
-                    size="sm"
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -304,7 +303,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                     id="word-wrap"
                     checked={wordWrap}
                     onCheckedChange={setWordWrap}
-                    size="sm"
                   />
                 </div>
                 <div className="flex items-center gap-2">
