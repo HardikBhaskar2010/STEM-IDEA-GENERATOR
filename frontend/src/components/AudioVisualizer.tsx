@@ -70,7 +70,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     const analyser = analyserRef.current;
     const dataArray = dataArrayRef.current;
     
-    analyser.getByteFrequencyData(dataArray);
+    analyser.getByteFrequencyData(dataArray as Uint8Array);
     
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
