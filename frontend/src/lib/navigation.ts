@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useRouter as useNextRouter, usePathname, useSearchParams, useParams as useNextParams } from 'next/navigation';
+import { useRouter as useNextRouter, usePathname, useSearchParams as useNextSearchParams, useParams as useNextParams } from 'next/navigation';
 import { useCallback } from 'react';
 
 /**
@@ -40,7 +40,7 @@ export function useNavigate() {
  */
 export function useLocation() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const searchParams = useNextSearchParams();
   
   return {
     pathname,
@@ -56,6 +56,11 @@ export function useLocation() {
 export function useParams<T = Record<string, string>>(): Partial<T> {
   return useNextParams() as Partial<T>;
 }
+
+/**
+ * Re-export useSearchParams from Next.js for compatibility
+ */
+export { useSearchParams } from 'next/navigation';
 
 /**
  * Link component wrapper for migration compatibility
