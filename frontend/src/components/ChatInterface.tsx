@@ -153,13 +153,11 @@ I am providing you with complete details about my project. Please analyze this i
 
 **Current Status:** ${projectData.status} (${projectData.progress}% complete)
 
-**Project Type:** ${projectData.project_type || 'Not specified'}
-
 **Difficulty Level:** ${projectData.difficulty}
 
-**Estimated Time:** ${projectData.estimated_time}
+**Estimated Time:** ${projectData.estimatedTime}
 
-**Estimated Cost:** ${projectData.estimated_cost}
+**Estimated Cost:** ${projectData.estimatedCost}
 
 **Components/Materials Needed:**
 ${projectData.components?.map((comp, i) => `${i + 1}. ${comp}`).join('\n') || 'None specified'}
