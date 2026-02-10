@@ -61,9 +61,11 @@ class StreamingService {
     this.baseWsUrl = wsBaseUrl;
     
     // Clean up connections when page unloads
-    window.addEventListener('beforeunload', () => {
-      this.disconnectAll();
-    });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        this.disconnectAll();
+      });
+    }
   }
 
   /**

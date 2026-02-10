@@ -530,7 +530,7 @@ const Profile: React.FC = () => {
             {Object.entries(COLOR_THEMES).map(([key, theme]) => {
               const isSelected = colorTheme === key;
               // Convert HSL string to proper format for style
-              const hslColor = `hsl(${theme.primary})`;
+              const hslColor = `hsl(${theme.colors.primary})`;
               
               return (
                 <button

@@ -24,7 +24,7 @@ export const useHoverAnimation = <T extends HTMLElement = HTMLElement>(options: 
   } = options;
 
   const { config } = useAnimation();
-  const ref = useRef<T>(null);
+  const ref = useRef<T | null>(null);
 
   useEffect(() => {
     const element = ref.current;

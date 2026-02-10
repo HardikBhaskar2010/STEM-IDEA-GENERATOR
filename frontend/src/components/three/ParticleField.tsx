@@ -15,6 +15,13 @@ interface ParticleFieldProps {
 
 // Create circular particle texture
 const createCircleTexture = () => {
+  if (typeof document === 'undefined') {
+    const data = new Uint8Array([255, 255, 255, 255]);
+    const fallbackTexture = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
+    fallbackTexture.needsUpdate = true;
+    return fallbackTexture;
+  }
+
   const canvas = document.createElement('canvas');
   canvas.width = 64;
   canvas.height = 64;

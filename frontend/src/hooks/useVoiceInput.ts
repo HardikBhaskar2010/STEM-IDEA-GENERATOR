@@ -34,7 +34,7 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   // Check if speech recognition is supported
@@ -45,7 +45,7 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
   useEffect(() => {
     if (!isSupported) return;
 
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
     recognition.continuous = continuous;
@@ -58,7 +58,7 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
       setError(null);
     };
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: any) => {
       let finalTranscript = '';
       let interimTranscript = '';
 
@@ -81,7 +81,7 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
       console.log('🎯 Voice transcript:', currentTranscript, finalTranscript ? '(final)' : '(interim)');
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    recognition.onerror = (event: any) => {
       console.error('🚨 Voice recognition error:', event.error);
       const errorMessage = getErrorMessage(event.error);
       setError(errorMessage);

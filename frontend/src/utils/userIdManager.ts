@@ -30,6 +30,9 @@ export class UserIdManager {
 
     // Try to get from localStorage
     try {
+      if (typeof window === 'undefined') {
+        return this.guestId || this.generateGuestId();
+      }
       const storedId = localStorage.getItem(STORAGE_KEY);
       if (storedId) {
         this.guestId = storedId;
@@ -53,7 +56,9 @@ export class UserIdManager {
   static setGuestId(id: string): void {
     this.guestId = id;
     try {
-      localStorage.setItem(STORAGE_KEY, id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, id);
+      }
     } catch (error) {
       console.error('Error saving guest ID to localStorage:', error);
     }
@@ -65,7 +70,9 @@ export class UserIdManager {
   static clearGuestId(): void {
     this.guestId = null;
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       console.log('🗑️ Guest ID cleared');
     } catch (error) {
       console.error('Error clearing guest ID:', error);
@@ -95,4 +102,4 @@ export class UserIdManager {
 }
 
 // Initialize on first import
-export const guestId = UserIdManager.getGuestId();
+export const guestId = typeof window === 'undefined' ? null : UserIdManager.getGuestId();

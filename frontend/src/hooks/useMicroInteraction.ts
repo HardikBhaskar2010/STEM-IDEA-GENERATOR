@@ -13,7 +13,7 @@ interface MicroInteractionOptions {
 export const useMicroInteraction = <T extends HTMLElement = HTMLElement>(options: MicroInteractionOptions = {}) => {
   const { type = 'click', intensity = 'normal', ripple = false } = options;
   const { config } = useAnimation();
-  const ref = useRef<T>(null);
+  const ref = useRef<T | null>(null);
 
   const trigger = useCallback(() => {
     const element = ref.current;

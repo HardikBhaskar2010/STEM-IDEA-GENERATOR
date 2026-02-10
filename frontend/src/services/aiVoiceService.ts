@@ -33,6 +33,9 @@ class AIVoiceService {
   private conversationContext: Record<string, any> = {};
 
   constructor() {
+    if (typeof window === "undefined") {
+      return;
+    }
     this.initializeSpeechRecognition();
     this.initializeSpeechSynthesis();
   }
@@ -41,6 +44,7 @@ class AIVoiceService {
    * Initialize Web Speech Recognition API
    */
   private initializeSpeechRecognition(): void {
+    if (typeof window === "undefined") return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (SpeechRecognition) {
@@ -58,6 +62,7 @@ class AIVoiceService {
    * Initialize Text-to-Speech API
    */
   private initializeSpeechSynthesis(): void {
+    if (typeof window === 'undefined') return;
     if ('speechSynthesis' in window) {
       this.synthesis = window.speechSynthesis;
     } else {
