@@ -14,7 +14,7 @@ interface ProjectProgressChartProps {
 export const ProjectProgressChart: React.FC<ProjectProgressChartProps> = ({ projects }) => {
   // Group projects by date (last 30 days)
   const getLast30Days = () => {
-    const days = [];
+    const days: string[] = [];
     for (let i = 29; i >= 0; i--) {
       days.push(format(subDays(new Date(), i), 'MMM dd'));
     }
