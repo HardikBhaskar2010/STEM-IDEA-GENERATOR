@@ -3,12 +3,10 @@ const nextConfig = {
   // Enable React strict mode for better development warnings
   reactStrictMode: true,
   
-  // Optimize production builds
-  swcMinify: true,
-  
   // Configure app directory (Next.js 15 App Router)
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    typedRoutes: false,
   },
 
   // Image optimization configuration
