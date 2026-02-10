@@ -23,7 +23,7 @@ const FooterAbout: React.FC = () => {
             </p>
           </div>
           <div className="flex md:justify-end">
-            <Link to="/about">
+            <Link href="/about">
               <Button size="lg" className="bg-gradient-primary text-white shadow-glow" ripple>
                 <Sparkles className="mr-2 w-4 h-4" /> Learn more
               </Button>
