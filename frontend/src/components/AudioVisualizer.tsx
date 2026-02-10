@@ -23,7 +23,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const analyserRef = useRef<AnalyserNode>();
-  const dataArrayRef = useRef<Uint8Array>();
+  const dataArrayRef = useRef<Uint8Array>(new Uint8Array());
   const [isActive, setIsActive] = useState(false);
 
   // Initialize audio analysis
