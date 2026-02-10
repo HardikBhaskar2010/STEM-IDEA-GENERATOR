@@ -113,13 +113,15 @@ export const VoiceCommand: React.FC<VoiceCommandProps> = ({ onCommand }) => {
       // Execute action if specified
       if (aiResponse.action === 'navigate' && aiResponse.parameters?.path) {
         // Check if form data needs to be pre-filled
-        if (aiResponse.parameters.formData) {
+        if (aiResponse.parameters?.formData) {
           // Store form data in sessionStorage for the Generator page
           sessionStorage.setItem('generatorFormData', JSON.stringify(aiResponse.parameters.formData));
         }
         
         setTimeout(() => {
-          navigate(aiResponse.parameters.path);
+          if (aiResponse.parameters?.path) {
+            navigate(aiResponse.parameters.path);
+          }
         }, 500);
       }
 
