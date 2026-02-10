@@ -417,7 +417,7 @@ const Home: React.FC = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Link to={feature.link} className="block">
+                <Link href={feature.link} className="block">
                   <Card
                     key={index}
                     className="group border-border/50 glass-effect cursor-pointer"
