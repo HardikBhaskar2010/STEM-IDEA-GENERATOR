@@ -10,7 +10,7 @@ interface ProjectsOverTimeChartProps {
 const generateMockData = () => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentMonth = new Date().getMonth();
-  const data = [];
+  const data: Array<{ date: string; projects: number }> = [];
   
   for (let i = 11; i >= 0; i--) {
     const monthIndex = (currentMonth - i + 12) % 12;
