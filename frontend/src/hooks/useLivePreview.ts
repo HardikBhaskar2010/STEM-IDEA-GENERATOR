@@ -2,15 +2,8 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { previewService } from '@/services/previewService';
+import type { CodeFile } from '@/services/codeGenerationService';
 
-export interface CodeFile {
-  id: string;
-  file_name: string;
-  file_path: string;
-  file_type: string;
-  content: string;
-  is_main_file: boolean;
-}
 
 interface UseLivePreviewReturn {
   previewHtml: string;
@@ -33,7 +26,7 @@ export const useLivePreview = (files: CodeFile[], platform: string): UseLivePrev
     }
 
     try {
-      return previewService.generatePreviewHtml(files);
+      return previewService.generatePreview(files, platform).html;
     } catch (error) {
       setPreviewError(error instanceof Error ? error.message : 'Failed to generate preview');
       return '';

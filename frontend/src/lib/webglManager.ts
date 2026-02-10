@@ -37,7 +37,7 @@ class WebGLManager {
   private detectWebGLSupport(): void {
     try {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const gl = (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | WebGL2RenderingContext | null;
       
       if (!gl) {
         this.contextInfo = {
@@ -257,7 +257,7 @@ class WebGLManager {
       maxParticles: contextUtilization > 0.8 ? 100 : contextUtilization > 0.5 ? 500 : 1000,
       enableShadows: contextUtilization < 0.5,
       enablePostProcessing: contextUtilization < 0.3,
-      pixelRatio: contextUtilization > 0.7 ? 1 : Math.min(window.devicePixelRatio || 1, 2)
+      pixelRatio: contextUtilization > 0.7 ? 1 : Math.min(typeof window === 'undefined' ? 1 : (window.devicePixelRatio || 1), 2)
     };
   }
 }

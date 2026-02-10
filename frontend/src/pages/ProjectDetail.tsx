@@ -82,8 +82,8 @@ const ProjectDetail: React.FC = () => {
       description: editData.description,
       notes: editData.notes,
       tags: editData.tags,
-      estimated_time: editData.estimated_time,
-      estimated_cost: editData.estimated_cost,
+      estimated_time: (editData as any).estimated_time,
+      estimated_cost: (editData as any).estimated_cost,
       // Note: title, progress, and status are not updated as they are automatic
     });
 

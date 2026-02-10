@@ -144,6 +144,28 @@ class FileManagementService {
     }
   }
 
+
+  /**
+   * Update file content
+   */
+  async updateFileContent(fileId: string, content: string): Promise<CodeFile> {
+    return api.post(`/files/${fileId}/update-content`, { content });
+  }
+
+  /**
+   * Delete a file
+   */
+  async deleteFile(fileId: string): Promise<void> {
+    await api.post(`/files/${fileId}/delete`);
+  }
+
+  /**
+   * Move a file to a new path
+   */
+  async moveFile(fileId: string, targetPath: string): Promise<CodeFile> {
+    return api.post(`/files/${fileId}/move`, { target_path: targetPath });
+  }
+
   /**
    * Copy file content to clipboard
    */
@@ -251,6 +273,22 @@ class FileManagementService {
     }
   }
 
+
+  /**
+   * Download project ZIP blob for a generation
+   */
+  async downloadProjectZip(generationId: string): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/code-generation/${generationId}/download-zip`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to download project ZIP: ${response.status} ${response.statusText}`);
+    }
+
+    return response.blob();
+  }
   /**
    * Create and download ZIP archive from files
    */

@@ -209,7 +209,7 @@ export const preloadAnimations = (): void => {
   document.body.appendChild(preloadTargets);
 
   // Run quick animations to warm up the engine
-  const warmupAnimation = anime({
+  anime({
     targets: preloadTargets,
     translateX: [0, 1, 0],
     scale: [1, 1.01, 1],
@@ -221,5 +221,4 @@ export const preloadAnimations = (): void => {
     }
   });
 
-  return warmupAnimation;
 };
