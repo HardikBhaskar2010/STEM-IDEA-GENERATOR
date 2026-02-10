@@ -131,7 +131,13 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
     }
   }, [isOpen]);
 
-  const addMessage = useCallback(async (role: 'user' | 'assistant', content: string, messageType: string = 'text', actionType?: string, actionParameters?: Record<string, any>) => {
+  const addMessage = useCallback(async (
+    role: 'user' | 'assistant', 
+    content: string, 
+    messageType: 'text' | 'voice' | 'action' | 'navigation' | 'project_created' = 'text', 
+    actionType?: string, 
+    actionParameters?: Record<string, any>
+  ) => {
     const newMessage: Message = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       role,
