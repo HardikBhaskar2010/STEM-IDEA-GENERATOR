@@ -52,7 +52,7 @@ export const CommandPalette: React.FC = () => {
         const projects = await projectService.getProjects();
         // Get the 5 most recent projects
         const recent = projects
-          .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+          .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
           .slice(0, 5);
         setRecentProjects(recent);
       } catch (error) {
