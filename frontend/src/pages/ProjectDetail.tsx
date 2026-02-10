@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from '@/lib/navigation';
 import { ArrowLeft, Edit2, Trash2, Star, CheckCircle2, Loader2, AlertCircle, Check } from 'lucide-react';

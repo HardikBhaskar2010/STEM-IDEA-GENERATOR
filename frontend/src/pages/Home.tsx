@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from '@/lib/navigation';
 import { Zap, Cpu, BookOpen, ArrowRight, Sparkles, Rocket, Brain, LogOut, Plus, Eye, Trash2 } from 'lucide-react';

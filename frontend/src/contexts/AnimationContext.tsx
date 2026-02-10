@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { type AnimationConfig, DEFAULT_ANIMATION_CONFIG, prefersReducedMotion } from '@/lib/animation';
 

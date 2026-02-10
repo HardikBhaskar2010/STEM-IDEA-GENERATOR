@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@/lib/navigation';
 import { Sparkles, Zap, Rocket } from 'lucide-react';

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from '@/lib/navigation';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';

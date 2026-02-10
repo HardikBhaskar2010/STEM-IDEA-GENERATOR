@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useNavigate } from '@/lib/navigation';
 import { ArrowLeft, Plus, X, Download } from 'lucide-react';

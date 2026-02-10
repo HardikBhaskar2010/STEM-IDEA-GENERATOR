@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Home } from 'lucide-react';
 import { useNavigate } from '@/lib/navigation';

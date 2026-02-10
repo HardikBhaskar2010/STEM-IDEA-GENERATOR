@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Search, Filter, Cpu, Zap, Activity, Wifi, Battery, CircuitBoard, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

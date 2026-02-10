@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from '@/lib/navigation';
 import { LogIn, Mail, Lock, AlertCircle, Chrome, UserCircle } from 'lucide-react';

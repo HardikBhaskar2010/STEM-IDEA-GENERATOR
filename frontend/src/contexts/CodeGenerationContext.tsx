@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
 import { useCodeGeneration, GenerationParams, CodeFile, GeneratedCode, GenerationProgress } from '@/hooks/useCodeGeneration';
 import { useFileOperations } from '@/hooks/useFileOperations';

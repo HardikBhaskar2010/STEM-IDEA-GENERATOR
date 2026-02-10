@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@/lib/navigation';
 import { Zap, BookOpen, TrendingUp, Plus, Eye, Trash2, BarChart3, CheckCircle, Clock, Lightbulb, Activity, RefreshCw } from 'lucide-react';

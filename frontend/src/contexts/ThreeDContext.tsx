@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { deviceCapability, DeviceCapability } from '@/lib/deviceCapability';
 import { webglManager } from '@/lib/webglManager';

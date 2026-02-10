@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Zap, Loader2, Save, Target, Clock, ChevronDown, ChevronUp, Sparkles, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -1,3 +1,5 @@
+'use client';
+
 // src/context/PreferencesContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
