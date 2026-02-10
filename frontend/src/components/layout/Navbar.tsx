@@ -233,7 +233,7 @@ const Navbar: React.FC = () => {
                 return (
                   <Link
                     key={item.path}
-                    to={item.path}
+                    href={item.path}
                     onClick={() => setIsMenuOpen(false)}
                     className={`
                       relative px-4 py-3 rounded-lg flex items-center space-x-3 
