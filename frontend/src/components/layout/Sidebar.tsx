@@ -109,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Logo & Close Button Section */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <Link 
-            to="/" 
+            href="/" 
             className="flex items-center gap-3"
             onClick={() => isMobile && onClose()}
           >
