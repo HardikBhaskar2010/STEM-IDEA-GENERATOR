@@ -57,7 +57,7 @@ import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
 
 const CodeGenerator: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const {
     currentGeneration,
@@ -96,7 +96,7 @@ const CodeGenerator: React.FC = () => {
 
   // Check for project ID in URL params
   useEffect(() => {
-    const projectId = searchParams.get('project');
+    const projectId = searchParams?.get('project');
     if (projectId && projects.length > 0) {
       const project = projects.find(p => p.id === projectId);
       if (project) {
@@ -440,6 +440,9 @@ const CodeGenerator: React.FC = () => {
             {isGenerating ? (
               <StreamingCodeView
                 generationId={currentGeneration?.id || ''}
+                projectId={selectedProject?.id || ''}
+                isVisible={true}
+                onClose={() => {}}
                 onComplete={() => {}}
                 onError={() => {}}
               />
@@ -590,7 +593,7 @@ const CodeGenerator: React.FC = () => {
         {/* Code Generation Modal */}
         {selectedProject && (
           <CodeGenerationModal
-            project={selectedProject}
+            project={selectedProject as any}
             isOpen={showModal}
             onClose={closeModal}
             onGenerationStart={(params) => startGeneration(selectedProject.id, params)}

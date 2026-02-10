@@ -1,7 +1,11 @@
 'use client';
 
-import Welcome from '@/pages/Welcome';
+import dynamic from 'next/dynamic';
 
-export default function HomePage() {
+const Welcome = dynamic(() => import('@/pages/Welcome'), {
+  ssr: false,
+});
+
+export default function WelcomePage() {
   return <Welcome />;
 }

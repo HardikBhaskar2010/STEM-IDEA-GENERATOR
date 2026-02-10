@@ -1,6 +1,10 @@
 'use client';
 
-import CodeGenerator from '@/pages/CodeGenerator';
+import dynamic from 'next/dynamic';
+
+const CodeGenerator = dynamic(() => import('@/pages/CodeGenerator'), {
+  ssr: false,
+});
 
 export default function CodeGeneratorPage() {
   return <CodeGenerator />;

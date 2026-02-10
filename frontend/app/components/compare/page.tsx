@@ -1,6 +1,10 @@
 'use client';
 
-import ComponentComparison from '@/pages/ComponentComparison';
+import dynamic from 'next/dynamic';
+
+const ComponentComparison = dynamic(() => import('@/pages/ComponentComparison'), {
+  ssr: false,
+});
 
 export default function ComponentComparisonPage() {
   return <ComponentComparison />;

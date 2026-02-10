@@ -34,6 +34,27 @@ export const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = (
   const [nodes, setNodes] = useState<Node[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const styleId = 'neural-network-visualizer-scan-style';
+    if (document.getElementById(styleId)) return;
+
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      @keyframes scan {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+      }
+      .animate-scan {
+        animation: scan 3s ease-in-out infinite;
+      }
+    `;
+
+    document.head.appendChild(style);
+  }, []);
+
   // Initialize neural network structure
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -234,16 +255,3 @@ export const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = (
     </div>
   );
 };
-
-// Add scanning animation to global CSS
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes scan {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-  }
-  .animate-scan {
-    animation: scan 3s ease-in-out infinite;
-  }
-`;
-document.head.appendChild(style);

@@ -21,6 +21,18 @@ class WebGLManager {
   private isContextLost = false;
 
   private constructor() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      this.contextInfo = {
+        isSupported: false,
+        maxContexts: 0,
+        currentContexts: 0,
+        vendor: 'Server',
+        renderer: 'Server',
+        version: 'Server'
+      };
+      return;
+    }
+
     this.detectWebGLSupport();
   }
 
@@ -37,7 +49,7 @@ class WebGLManager {
   private detectWebGLSupport(): void {
     try {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const gl = (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | WebGL2RenderingContext | null;
       
       if (!gl) {
         this.contextInfo = {
@@ -162,6 +174,10 @@ class WebGLManager {
    * Attempt to recover WebGL context
    */
   private attemptContextRecovery(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       // Re-detect WebGL support
       this.detectWebGLSupport();
@@ -184,7 +200,7 @@ class WebGLManager {
    * Force cleanup of oldest context
    */
   private cleanupOldestContext(): void {
-    const oldestContext = this.activeContexts.values().next().value;
+    const oldestContext = this.activeContexts.values().next().value as WebGLRenderingContext | undefined;
     if (oldestContext) {
       const loseContext = oldestContext.getExtension('WEBGL_lose_context');
       if (loseContext) {
@@ -257,7 +273,7 @@ class WebGLManager {
       maxParticles: contextUtilization > 0.8 ? 100 : contextUtilization > 0.5 ? 500 : 1000,
       enableShadows: contextUtilization < 0.5,
       enablePostProcessing: contextUtilization < 0.3,
-      pixelRatio: contextUtilization > 0.7 ? 1 : Math.min(window.devicePixelRatio || 1, 2)
+      pixelRatio: contextUtilization > 0.7 ? 1 : Math.min(typeof window === 'undefined' ? 1 : (window.devicePixelRatio || 1), 2)
     };
   }
 }

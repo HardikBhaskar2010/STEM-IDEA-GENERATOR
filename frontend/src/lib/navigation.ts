@@ -54,7 +54,8 @@ export function useLocation() {
  * Hook to get URL parameters
  */
 export function useParams<T = Record<string, string>>(): Partial<T> {
-  return useNextParams() as Partial<T>;
+  const params = useNextParams();
+  return (params ?? {}) as Partial<T>;
 }
 
 /**

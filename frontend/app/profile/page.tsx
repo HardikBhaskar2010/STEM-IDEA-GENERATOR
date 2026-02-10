@@ -1,6 +1,10 @@
 'use client';
 
-import Profile from '@/pages/Profile';
+import dynamic from 'next/dynamic';
+
+const Profile = dynamic(() => import('@/pages/Profile'), {
+  ssr: false,
+});
 
 export default function ProfilePage() {
   return <Profile />;

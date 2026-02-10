@@ -25,7 +25,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
   className,
   showHome = true,
 }) => {
-  const breadcrumbRef = useScrollAnimation<HTMLNavElement>({ 
+  const breadcrumbRef = useScrollAnimation<HTMLElement>({ 
     animation: 'fadeIn', 
     delay: 100 
   });
@@ -84,7 +84,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
                 </span>
               ) : (
                 <Link
-                  to={item.path}
+                  href={item.path}
                   className={cn(
                     "flex items-center space-x-1 px-2 py-1 rounded-md",
                     "hover:text-foreground hover:bg-muted/50 transition-colors",

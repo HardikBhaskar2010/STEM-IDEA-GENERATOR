@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/navigation';
 import { Home, Zap, Cpu, BookOpen, User } from 'lucide-react';
 import { type BreadcrumbItem } from '@/components/ui/breadcrumb';
 
@@ -16,13 +16,14 @@ const routeConfig: Record<string, { title: string; icon?: React.ComponentType<{ 
 
 export const useBreadcrumbs = (): BreadcrumbItem[] => {
   const location = useLocation();
+  const pathname = location.pathname || '/';
 
   return useMemo(() => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const pathSegments = pathname.split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [];
 
     // Always start with home if not on home page
-    if (location.pathname !== '/') {
+    if (pathname !== '/') {
       breadcrumbs.push({
         label: 'Home',
         path: '/',
@@ -32,9 +33,9 @@ export const useBreadcrumbs = (): BreadcrumbItem[] => {
 
     // Build breadcrumbs from path segments
     let currentPath = '';
-    pathSegments.forEach((segment, _index) => {
+    pathSegments.forEach((segment) => {
       currentPath += `/${segment}`;
-      
+
       const config = routeConfig[currentPath];
       if (config) {
         breadcrumbs.push({
@@ -48,7 +49,7 @@ export const useBreadcrumbs = (): BreadcrumbItem[] => {
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
-        
+
         breadcrumbs.push({
           label: formattedLabel,
           path: currentPath,
@@ -57,7 +58,7 @@ export const useBreadcrumbs = (): BreadcrumbItem[] => {
     });
 
     return breadcrumbs;
-  }, [location.pathname]);
+  }, [pathname]);
 };
 
 // Hook to get page title from breadcrumbs

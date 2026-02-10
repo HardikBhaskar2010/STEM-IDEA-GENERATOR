@@ -44,6 +44,17 @@ export class DeviceCapabilityDetector {
       return this.capability;
     }
 
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      this.metrics = {
+        hardwareConcurrency: 2,
+        isMobile: false,
+        touchPoints: 0,
+        screenSize: { width: 1024, height: 768 }
+      };
+      this.capability = 'minimal';
+      return this.capability;
+    }
+
     this.metrics = await this.collectMetrics();
     this.capability = this.calculateCapability(this.metrics);
     
@@ -55,6 +66,15 @@ export class DeviceCapabilityDetector {
    * Collect device metrics
    */
   private async collectMetrics(): Promise<CapabilityMetrics> {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return {
+        hardwareConcurrency: 2,
+        isMobile: false,
+        touchPoints: 0,
+        screenSize: { width: 1024, height: 768 }
+      };
+    }
+
     const metrics: CapabilityMetrics = {
       hardwareConcurrency: navigator.hardwareConcurrency || 2,
       isMobile: this.detectMobile(),
@@ -82,7 +102,7 @@ export class DeviceCapabilityDetector {
     // WebGL GPU Info
     try {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
       if (gl) {
         const debugInfo = (gl as any).getExtension('WEBGL_debug_renderer_info');
         if (debugInfo) {
@@ -185,6 +205,10 @@ export class DeviceCapabilityDetector {
    * Detect if device is mobile
    */
   private detectMobile(): boolean {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return false;
+    }
+
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     ) || window.innerWidth < 768;
@@ -261,6 +285,10 @@ export class DeviceCapabilityDetector {
    * Get pixel ratio (for retina displays)
    */
   getPixelRatio(): number {
+    if (typeof window === 'undefined') {
+      return 1;
+    }
+
     const dpr = window.devicePixelRatio || 1;
     
     switch (this.capability) {
