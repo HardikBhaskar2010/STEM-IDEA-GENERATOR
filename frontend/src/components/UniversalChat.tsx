@@ -279,7 +279,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
       } else if (aiResponse.action === 'suggest_navigation' && aiResponse.parameters?.path) {
         // Add follow-up message with navigation option
         setTimeout(async () => {
-          await addMessage('assistant', `Would you like me to take you to the Project Lab to create a ${aiResponse.parameters.type || 'new'} project? Just say "yes" or "take me there"!`, 'text', 'suggest_navigation', aiResponse.parameters);
+          await addMessage('assistant', `Would you like me to take you to the Project Lab to create a ${aiResponse.parameters?.type || 'new'} project? Just say "yes" or "take me there"!`, 'text', 'suggest_navigation', aiResponse.parameters);
         }, 1000);
       } else if (aiResponse.action === 'suggest_options') {
         // Add follow-up with options
