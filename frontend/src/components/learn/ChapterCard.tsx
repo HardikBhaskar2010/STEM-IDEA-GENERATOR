@@ -10,7 +10,7 @@ interface ChapterCardProps {
 const ChapterCard: React.FC<ChapterCardProps> = ({ block }) => {
   switch (block.type) {
     case 'heading':
-      const HeadingTag = `h${block.level || 3}` as keyof JSX.IntrinsicElements;
+      const HeadingTag = `h${block.level || 3}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
       return (
         <HeadingTag className={`
           font-bold text-foreground
