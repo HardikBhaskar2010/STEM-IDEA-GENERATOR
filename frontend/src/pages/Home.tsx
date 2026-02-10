@@ -377,7 +377,7 @@ const Home: React.FC = () => {
             </p>
 
             <div ref={heroButtonsRef.ref} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/generator">
+              <Link href="/generator">
                 <Button
                   size="lg"
                   className="bg-gradient-primary text-white shadow-glow"
@@ -388,7 +388,7 @@ const Home: React.FC = () => {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/components">
+              <Link href="/components">
                 <Button size="lg" variant="outline">
                   Browse Components
                 </Button>
