@@ -14,7 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const showFooter = !pathname.startsWith('/about');
+  const showFooter = !pathname?.startsWith('/about');
 
   // Check if mobile on mount and window resize
   useEffect(() => {
