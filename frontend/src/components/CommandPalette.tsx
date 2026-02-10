@@ -49,7 +49,7 @@ export const CommandPalette: React.FC = () => {
   useEffect(() => {
     const loadRecentProjects = async () => {
       try {
-        const projects = await projectService.getUserProjects();
+        const projects = await projectService.getProjects();
         // Get the 5 most recent projects
         const recent = projects
           .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
