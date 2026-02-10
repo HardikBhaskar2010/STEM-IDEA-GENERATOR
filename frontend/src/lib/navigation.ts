@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useRouter as useNextRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter as useNextRouter, usePathname, useSearchParams, useParams as useNextParams } from 'next/navigation';
 import { useCallback } from 'react';
 
 /**
@@ -48,6 +48,13 @@ export function useLocation() {
     hash: typeof window !== 'undefined' ? window.location.hash : '',
     state: null, // Next.js doesn't support location state by default
   };
+}
+
+/**
+ * Hook to get URL parameters
+ */
+export function useParams<T = Record<string, string>>(): Partial<T> {
+  return useNextParams() as Partial<T>;
 }
 
 /**
