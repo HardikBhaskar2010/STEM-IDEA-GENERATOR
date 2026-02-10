@@ -21,7 +21,7 @@ class AIGuidanceService {
   private timeout: number;
 
   constructor() {
-    let baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://perfection-v2.onrender.com/api';
+    let baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://perfection-v2.onrender.com/api';
     
     // Ensure baseUrl ends with /api for production
     if (baseUrl && !baseUrl.endsWith('/api')) {
@@ -33,7 +33,7 @@ class AIGuidanceService {
     
     // Debug log
     console.log(`🔍 AI Guidance Service initialized with baseUrl: ${this.baseUrl}`);
-    console.log(`🔍 Environment VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL}`);
+    console.log(`🔍 Environment VITE_API_BASE_URL: ${process.env.NEXT_PUBLIC_API_BASE_URL}`);
   }
 
   /**

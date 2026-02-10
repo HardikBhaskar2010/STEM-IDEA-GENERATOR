@@ -375,7 +375,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* WebGL Debug Info - Development Only */}
-          {import.meta.env.DEV && (
+          {process.env.NODE_ENV === "development" && (
             <div className="mt-8">
               <WebGLDebug />
             </div>

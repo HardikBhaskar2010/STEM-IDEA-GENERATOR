@@ -4,7 +4,7 @@
 
 // Get the API base URL from environment variables
 const getApiBaseUrl = () => {
-  let baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://perfection-v2.onrender.com/api';
+  let baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://perfection-v2.onrender.com/api';
   
   // Ensure baseUrl ends with /api for production
   if (baseUrl && !baseUrl.endsWith('/api')) {

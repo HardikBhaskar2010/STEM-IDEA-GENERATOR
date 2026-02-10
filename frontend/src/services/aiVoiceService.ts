@@ -6,11 +6,11 @@
 import { projectService } from './projectServiceSupabase';
 import { elevenLabsTTS } from './elevenLabsTTS';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
 
 // Debug logging to verify the URL is correct
 console.log('🔍 AI Voice Service - API_BASE_URL:', API_BASE_URL);
-console.log('🔍 Environment Variable VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+console.log('🔍 Environment Variable VITE_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
 export interface VoiceTranscription {
   text: string;

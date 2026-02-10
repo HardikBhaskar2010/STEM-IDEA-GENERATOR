@@ -15,7 +15,7 @@ import {
 // Real API functions
 const api = {
   async get(endpoint: string): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
     const response = await fetch(`${baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -31,7 +31,7 @@ const api = {
   },
   
   async post(endpoint: string, data?: any): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
     const response = await fetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -103,7 +103,7 @@ class FileManagementService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
   }
 
   /**

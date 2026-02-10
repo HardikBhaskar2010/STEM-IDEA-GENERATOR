@@ -45,7 +45,7 @@ interface GeneratedCode {
 // Real API functions
 const api = {
   async post(endpoint: string, data: any): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
     const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -58,7 +58,7 @@ const api = {
   },
   
   async get(endpoint: string): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
     const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -70,7 +70,7 @@ const api = {
   },
   
   async delete(endpoint: string): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
     const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'DELETE',
       headers: {
@@ -151,7 +151,7 @@ class CodeGenerationService {
   private wsConnections: Map<string, WebSocket> = new Map();
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
   }
 
   /**
@@ -556,8 +556,8 @@ class CodeGenerationService {
     onClose?: (event: CloseEvent) => void
   ): WebSocket {
     // Get the WebSocket base URL from environment or derive from API URL
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
-    const wsBaseUrl = import.meta.env.VITE_WS_BASE_URL || apiBaseUrl.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '');
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
+    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_BASE_URL || apiBaseUrl.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '');
     const wsUrl = `${wsBaseUrl}/api/projects/${projectId}/code-generation/${generationId}/stream`;
     const ws = new WebSocket(wsUrl);
     

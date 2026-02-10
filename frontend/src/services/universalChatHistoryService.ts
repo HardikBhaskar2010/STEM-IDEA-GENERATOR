@@ -5,7 +5,7 @@
 
 import { UserIdManager } from '@/utils/userIdManager';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
 
 export interface UniversalChatMessage {
   id?: string;

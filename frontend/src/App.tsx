@@ -48,7 +48,7 @@ const App = () => {
   useEffect(() => {
     debugApiCalls();
     console.log('🔍 Environment Variables:', {
-      VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+      VITE_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
       NODE_ENV: import.meta.env.NODE_ENV,
       MODE: import.meta.env.MODE
     });
