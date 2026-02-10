@@ -244,7 +244,7 @@ ${projectData.steps?.map((step, i) => `${i + 1}. ${step}`).join('\n') || 'None s
 
     try {
       // Get project data for context (optional - the comprehensive message above provides the details)
-      let projectData = null;
+      let projectData: any = null;
       try {
         const { projectService } = await import('@/services/projectService');
         projectData = await projectService.getProjectById(projectId);
