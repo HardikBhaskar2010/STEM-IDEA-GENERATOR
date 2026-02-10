@@ -140,7 +140,7 @@ const Navbar: React.FC = () => {
           {/* Logo */}
           <Link 
             ref={logoHoverRef}
-            to="/" 
+            href="/" 
             className="flex items-center space-x-2 relative"
           >
             <div className={`w-10 h-10 ${getLogoClasses()} rounded-lg flex items-center justify-center`}>
