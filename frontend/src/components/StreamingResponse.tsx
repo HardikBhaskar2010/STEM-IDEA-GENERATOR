@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';

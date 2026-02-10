@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useCallback } from 'react';
 import { fileManagementService } from '@/services/fileManagementService';
 import { toast } from '@/hooks/use-toast';

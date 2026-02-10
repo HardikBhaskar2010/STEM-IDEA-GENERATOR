@@ -1,3 +1,5 @@
+'use client';
+
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Home, Zap, Cpu, BookOpen, User } from 'lucide-react';

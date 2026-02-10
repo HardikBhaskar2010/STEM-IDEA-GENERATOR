@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Settings2, Sun, Moon, Monitor, Globe, Bell } from 'lucide-react';
 import {

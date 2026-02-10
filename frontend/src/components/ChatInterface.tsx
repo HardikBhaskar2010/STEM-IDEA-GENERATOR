@@ -1,3 +1,5 @@
+'use client';
+
 // ChatInterface Component
 // Requirements: 2.1, 2.2, 2.5, 8.3
 

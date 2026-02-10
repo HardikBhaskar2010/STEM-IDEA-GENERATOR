@@ -1,3 +1,5 @@
+'use client';
+
 // Custom hook for managing chat interface state
 // Requirements: 2.1, 2.2, 2.3
 // Updated to use localStorage instead of backend database

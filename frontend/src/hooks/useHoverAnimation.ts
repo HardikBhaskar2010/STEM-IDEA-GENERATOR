@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef, useEffect } from 'react';
 import { ANIMATION_PRESETS, createAnimation } from '@/lib/animation';
 import { useAnimation } from '@/contexts/AnimationContext';

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Shield, Eye, Database, Brain } from 'lucide-react';
 import {
