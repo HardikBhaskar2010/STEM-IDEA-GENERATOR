@@ -463,7 +463,7 @@ const Home: React.FC = () => {
               <p className="text-xl text-muted-foreground mb-8">
                 Join thousands of makers and innovators creating the future
               </p>
-              <Link to="/generator">
+              <Link href="/generator">
                 <Button
                   size="lg"
                   className="bg-gradient-primary text-white shadow-glow"
