@@ -144,7 +144,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               return (
                 <Link
                   key={item.path}
-                  to={item.path}
+                  href={item.path}
                   onClick={() => isMobile && onClose()}
                   data-testid={`sidebar-link-${item.label.toLowerCase()}`}
                   className={cn(
