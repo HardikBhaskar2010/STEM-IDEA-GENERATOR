@@ -263,10 +263,7 @@ const FileOperations: React.FC<FileOperationsProps> = ({
     const status = operationStatus[operation] || 'idle';
     return {
       disabled: status === 'loading',
-      className: cn(
-        status === 'success' && "text-green-400 border-green-400",
-        status === 'error' && "text-red-400 border-red-400"
-      )
+      'data-status': status
     };
   };
 
