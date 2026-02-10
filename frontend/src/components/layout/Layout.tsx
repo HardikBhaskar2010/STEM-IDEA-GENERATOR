@@ -1,5 +1,5 @@
 import React, { useState, useEffect, type ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/navigation';
 import { Menu, Zap } from 'lucide-react';
 import Sidebar from './Sidebar';
 import FooterAbout from './FooterAbout';

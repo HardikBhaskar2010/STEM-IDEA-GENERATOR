@@ -3,7 +3,7 @@ import { Mic, MicOff, Volume2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/navigation';
 import { aiVoiceService } from '@/services/aiVoiceService';
 
 interface VoiceCommandProps {

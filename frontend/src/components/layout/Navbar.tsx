@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from '@/lib/navigation';
 import { Menu, X, Zap, Cpu, BookOpen, Home, Info, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHoverAnimation } from '@/hooks/useHoverAnimation';

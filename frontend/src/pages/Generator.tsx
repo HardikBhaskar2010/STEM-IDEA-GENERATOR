@@ -13,7 +13,7 @@ import { HelpTooltip } from '@/components/ui/enhanced-tooltip';
 import { toast } from '@/hooks/use-toast';
 import { generateProject, healthCheck, type ProjectParams } from '@/services/apiService';
 import { projectService } from '@/services/projectService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/navigation';
 import { CapsuleAnimation } from '@/components/ui/capsule-animation';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
 import { NeuralNetworkVisualizer } from '@/components/NeuralNetworkVisualizer';
