@@ -252,7 +252,9 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
         
         // Navigate after a delay (no additional message needed since it's in the main response)
         setTimeout(() => {
-          window.location.href = aiResponse.parameters.path;
+          if (aiResponse.parameters?.path) {
+            window.location.href = aiResponse.parameters.path;
+          }
         }, 2000); // Increased delay to let user read the full response
       } else if (aiResponse.action === 'project_created' && aiResponse.parameters?.project) {
         // Handle successful project creation
