@@ -70,7 +70,8 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     const analyser = analyserRef.current;
     const dataArray = dataArrayRef.current;
     
-    analyser.getByteFrequencyData(dataArray as Uint8Array);
+    // @ts-ignore - TypeScript ArrayBufferLike type compatibility issue
+    analyser.getByteFrequencyData(dataArray);
     
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
