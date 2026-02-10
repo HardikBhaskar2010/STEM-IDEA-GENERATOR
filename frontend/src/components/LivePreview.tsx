@@ -200,7 +200,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     // Set up console message capture
     if (iframeRef.current?.contentWindow) {
       try {
-        const iframeWindow = iframeRef.current.contentWindow;
+        const iframeWindow = iframeRef.current.contentWindow as any;
         const originalConsoleLog = iframeWindow.console.log;
         const originalConsoleError = iframeWindow.console.error;
         const originalConsoleWarn = iframeWindow.console.warn;
@@ -221,7 +221,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
         };
 
         // Listen for errors
-        iframeWindow.addEventListener('error', (event) => {
+        iframeWindow.addEventListener('error', (event: any) => {
           setPreviewError(`JavaScript Error: ${event.error?.message || 'Unknown error'}`);
           setConsoleMessages(prev => [...prev, `ERROR: ${event.error?.message || 'Unknown error'}`]);
         });
