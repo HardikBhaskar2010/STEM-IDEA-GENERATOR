@@ -62,7 +62,7 @@ const Terminal: React.FC<TerminalProps> = ({
         foreground: '#ffffff',
         cursor: '#a855f7',
         cursorAccent: '#000000',
-        selection: 'rgba(168, 85, 247, 0.3)',
+        selectionBackground: 'rgba(168, 85, 247, 0.3)',
         black: '#000000',
         red: '#ef4444',
         green: '#10b981',
