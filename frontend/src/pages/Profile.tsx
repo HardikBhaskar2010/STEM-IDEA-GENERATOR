@@ -68,6 +68,7 @@ const Profile: React.FC = () => {
   const { userMode, setUserMode, colorTheme, setColorTheme } = usePreferences();
   const { user } = useAuth();
   const { lowPerf, setLowPerf, suggested } = usePerf();
+  const { isCompetitionMode, teamInfo, userProgress } = useCompetition();
   const [projects, setProjects] = useState<Project[]>([]);
   const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
