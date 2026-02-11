@@ -64,57 +64,97 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     );
   }
 
+  // Animation variants for staggered row appearance
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const rowVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }
+    }
+  };
+
   return (
-    <Card data-testid="leaderboard-table">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5" />
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">Rank</TableHead>
-              {type === 'teams' ? (
-                <>
-                  <TableHead>Team Name</TableHead>
-                  <TableHead>School</TableHead>
-                  <TableHead className="text-right">Members</TableHead>
-                  <TableHead className="text-right">Submissions</TableHead>
-                  <TableHead className="text-right">Total Points</TableHead>
-                  <TableHead className="text-right">Avg/Member</TableHead>
-                </>
-              ) : type === 'consistency' ? (
-                <>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Team</TableHead>
-                  <TableHead className="text-right">Streak</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
-                </>
-              ) : (
-                <>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Team</TableHead>
-                  <TableHead className="text-right">Submissions</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
-                </>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((entry: any) => {
-              const isTopThree = entry.rank <= 3;
-              return (
-                <TableRow
-                  key={entry.user_id || entry.team_id}
-                  className={isTopThree ? 'bg-muted/50 font-medium' : ''}
-                  data-testid={`leaderboard-row-${entry.rank}`}
-                >
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <Card data-testid="leaderboard-table">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <motion.div
+              animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
+            >
+              <Trophy className="h-5 w-5" />
+            </motion.div>
+            {title}
+          </CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">Rank</TableHead>
+                {type === 'teams' ? (
+                  <>
+                    <TableHead>Team Name</TableHead>
+                    <TableHead>School</TableHead>
+                    <TableHead className="text-right">Members</TableHead>
+                    <TableHead className="text-right">Submissions</TableHead>
+                    <TableHead className="text-right">Total Points</TableHead>
+                    <TableHead className="text-right">Avg/Member</TableHead>
+                  </>
+                ) : type === 'consistency' ? (
+                  <>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead className="text-right">Streak</TableHead>
+                    <TableHead className="text-right">Points</TableHead>
+                  </>
+                ) : (
+                  <>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead className="text-right">Submissions</TableHead>
+                    <TableHead className="text-right">Points</TableHead>
+                  </>
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((entry: any) => {
+                const isTopThree = entry.rank <= 3;
+                return (
+                  <motion.tr
+                    key={entry.user_id || entry.team_id}
+                    variants={rowVariants}
+                    className={isTopThree ? 'bg-muted/50 font-medium' : ''}
+                    data-testid={`leaderboard-row-${entry.rank}`}
+                    whileHover={{ 
+                      scale: 1.01, 
+                      backgroundColor: isTopThree ? 'rgba(var(--muted), 0.7)' : 'rgba(var(--muted), 0.3)',
+                      transition: { duration: 0.2 }
+                    }}
+                  >
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getRankIcon(entry.rank)}
