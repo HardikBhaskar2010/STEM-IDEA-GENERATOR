@@ -155,14 +155,20 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       transition: { duration: 0.2 }
                     }}
                   >
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getRankIcon(entry.rank)}
-                      <span className={getRankBadge(entry.rank)}>
-                        #{entry.rank}
-                      </span>
-                    </div>
-                  </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: entry.rank * 0.05, type: "spring" }}
+                        >
+                          {getRankIcon(entry.rank)}
+                        </motion.div>
+                        <span className={getRankBadge(entry.rank)}>
+                          #{entry.rank}
+                        </span>
+                      </div>
+                    </TableCell>
 
                   {type === 'teams' ? (
                     <>
