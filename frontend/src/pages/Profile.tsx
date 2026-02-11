@@ -264,6 +264,48 @@ const Profile: React.FC = () => {
                         <span className="font-bold text-gradient">{projectsInProgress}</span>
                       </div>
                     </div>
+
+                    {/* Competition Stats */}
+                    {isCompetitionMode && userProgress && (
+                      <div className="w-full mt-6 pt-6 border-t space-y-3">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-semibold flex items-center gap-1.5">
+                            <Trophy className="h-4 w-4 text-yellow-500" />
+                            Competition
+                          </span>
+                          <LevelBadge level={userProgress.current_level} size="sm" />
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                          <span className="text-sm">Total Points</span>
+                          <span className="font-bold text-blue-600">{userProgress.total_points}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                          <span className="text-sm">Total XP</span>
+                          <span className="font-bold text-purple-600">{userProgress.total_xp}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                          <span className="text-sm flex items-center gap-1">
+                            <Flame className="h-3.5 w-3.5 text-orange-500" />
+                            Streak
+                          </span>
+                          <span className="font-bold text-orange-600">{userProgress.streak_days} days</span>
+                        </div>
+                        {teamInfo && (
+                          <div className="flex justify-between items-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                            <span className="text-sm">Team</span>
+                            <span className="font-bold text-green-600 text-xs">{teamInfo.team_name}</span>
+                          </div>
+                        )}
+                        <Button
+                          onClick={() => navigate('/competition')}
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-2"
+                        >
+                          View Leaderboard
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
