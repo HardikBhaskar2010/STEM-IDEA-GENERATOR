@@ -87,6 +87,7 @@ const App = () => {
                             <Route path="/project/:id" element={<ProjectDetail />} />
                             <Route path="/generator" element={<Generator />} />
                             <Route path="/code-generator" element={<CodeGenerator />} />
+                            <Route path="/competition" element={<Competition />} />
                             <Route path="/components" element={<Components />} />
                             <Route path="/components/compare" element={<ComponentComparison />} />
                             <Route path="/library" element={<Library />} />
