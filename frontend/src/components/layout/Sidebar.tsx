@@ -141,6 +141,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Navigation Items */}
         <nav className="flex-1 overflow-y-auto py-4 px-2 custom-scrollbar">
+          {/* Competition Indicator */}
+          {isCompetitionMode && userProgress && (
+            <div className="mx-2 mb-3 p-2 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30">
+              <Badge 
+                variant="outline" 
+                className="w-full justify-center bg-transparent border-none text-blue-700 dark:text-blue-400 text-xs font-semibold"
+                data-testid="sidebar-competition-indicator"
+              >
+                {userProgress.current_level} • {userProgress.total_xp} XP
+              </Badge>
+            </div>
+          )}
+          
           <div className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
