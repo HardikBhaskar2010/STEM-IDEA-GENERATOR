@@ -740,6 +740,7 @@ STEM-IDEA-GENERATOR/
 │   │   ├── 🎯 contexts/            # React contexts
 │   │   │   ├── ThreeDContext.tsx  # 3D capability
 │   │   │   ├── AuthContext.tsx    # Authentication
+│   │   │   ├── CompetitionContext.tsx  # Competition state
 │   │   │   └── PreferencesContext.tsx  # User settings
 │   │   │
 │   │   ├── 🪝 hooks/               # Custom hooks
