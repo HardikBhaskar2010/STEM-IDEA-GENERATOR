@@ -495,8 +495,10 @@ VITE_API_BASE_URL=http://localhost:8001/api
 EOF
 
 # 4️⃣ Set up database
-# Copy and run master_supabase_schema.sql in your Supabase SQL Editor
-# This creates all tables, indexes, RLS policies, and sample data
+# Copy and run these SQL files in your Supabase SQL Editor:
+# 1. master_supabase_schema.sql - Main schema with projects and components
+# 2. competition_platform_schema.sql - Competition system tables and triggers
+# This creates all tables, indexes, RLS policies, triggers, and sample data
 
 # 5️⃣ Start development servers
 # Terminal 1 - Backend
