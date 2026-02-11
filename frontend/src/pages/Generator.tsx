@@ -255,6 +255,30 @@ const Generator: React.FC = () => {
     }
   }, [generatedProject, savedProjectId, formData, navigate]);
 
+  const handleSubmissionSuccess = useCallback((pointsAwarded: number, newLevel?: string) => {
+    setSuccessPoints(pointsAwarded);
+    
+    if (newLevel) {
+      // Level up!
+      setSuccessNewLevel(newLevel);
+      setSuccessAnimationType('levelup');
+    } else {
+      // Just points
+      setSuccessAnimationType('submission');
+    }
+    
+    setShowSuccessAnimation(true);
+    
+    toast({
+      title: "🎉 Submitted Successfully!",
+      description: `You earned ${pointsAwarded} points!${newLevel ? ` Level up: ${newLevel}` : ''}`,
+    });
+  }, [toast]);
+
+  const handleAnimationComplete = useCallback(() => {
+    setShowSuccessAnimation(false);
+  }, []);
+
   return (
     <Layout>
       <div className="relative bg-gradient-to-b from-primary/5 via-background to-background pt-16">
