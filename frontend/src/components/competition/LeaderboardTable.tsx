@@ -197,6 +197,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         {entry.team_name || '-'}
                       </TableCell>
                       {type === 'consistency' ? (
+                        <>
                           <TableCell className="text-right">
                             <motion.span 
                               className="flex items-center justify-end gap-1"
@@ -217,6 +218,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                               {entry.total_points}
                             </motion.span>
                           </TableCell>
+                        </>
                       ) : (
                         <>
                           <TableCell className="text-right">
