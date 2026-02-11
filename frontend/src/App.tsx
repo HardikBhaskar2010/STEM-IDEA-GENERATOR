@@ -66,7 +66,8 @@ const App = () => {
                 <AnimationProvider>
                   <TTSProvider>
                     <CodeGenerationProvider>
-                      <TooltipProvider>
+                      <CompetitionProvider>
+                        <TooltipProvider>
                       {/* 🔥 Vercel magic */}
                       <SpeedInsights />
                       <Analytics />
