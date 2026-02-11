@@ -88,6 +88,60 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 </tr>
 </table>
 
+### 🏆 **Competition Platform**
+
+<table>
+<tr>
+<td width="50%">
+
+#### 👥 Team Management
+- **Create Teams**: Teachers generate unique 6-character codes
+- **Join Teams**: Students enter code to join competition
+- **Team Dashboard**: View team info and member count
+- **Leave Teams**: Easy opt-out from competitions
+- **Role System**: Teacher and student roles
+
+</td>
+<td width="50%">
+
+#### 🎯 Points & Levels System
+- **5 Level Tiers**: Explorer → Builder → Innovator → Inventor → Visionary
+- **XP Tracking**: Earn experience points for submissions
+- **Daily Streaks**: Build consistency with submission streaks
+- **Upvoting System**: Peers can upvote ideas for bonus points
+- **Progress Bars**: Visual level advancement tracking
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+#### 📊 Leaderboards
+- **Top Scorers**: Students with most points
+- **Consistency Leaders**: Longest submission streaks
+- **Team Rankings**: Combined team scores
+- **Real-Time Updates**: Live leaderboard changes
+- **Category Filters**: Filter by project category
+
+</td>
+<td width="50%">
+
+#### 📝 Submission System
+- **AI Integration**: Submit generated ideas directly
+- **Manual Submissions**: Add custom project ideas
+- **Category Selection**: 7 STEM categories (Robotics, IoT, AI, etc.)
+- **Submission History**: Track all your submissions
+- **Point Awards**: Instant points for each submission
+
+</td>
+</tr>
+</table>
+
+**Competition Flow:**
+```
+Teacher Creates Team → Shares Code → Students Join → Generate Ideas → Submit to Competition → Earn Points & Level Up → Compete on Leaderboards
+```
+
 ### 🎨 **Immersive 3D Experience**
 
 <table>
