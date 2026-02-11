@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Zap, Loader2, Save, Target, Clock, ChevronDown, ChevronUp, Sparkles, Code } from 'lucide-react';
+import { Zap, Loader2, Save, Target, Clock, ChevronDown, ChevronUp, Sparkles, Code, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,9 @@ import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
 import { NeuralNetworkVisualizer } from '@/components/NeuralNetworkVisualizer';
 import { HolographicCard } from '@/components/HolographicCard';
 import CodeGenerationModal from '@/components/CodeGenerationModal';
+import { useCompetition } from '@/contexts/CompetitionContext';
+import { CompetitionSubmissionModal } from '@/components/competition/CompetitionSubmissionModal';
+import { SuccessAnimation } from '@/components/competition/SuccessAnimation';
 
 const Generator: React.FC = () => {
   const navigate = useNavigate();
