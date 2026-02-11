@@ -5784,6 +5784,15 @@ async def get_technology_stack(stack_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ───────────────── COMPETITION PLATFORM ─────────────────
+# Import competition routes
+try:
+    from competition_routes import competition_router
+    app.include_router(competition_router)
+    logger.info("Competition platform routes registered successfully")
+except Exception as e:
+    logger.warning(f"Competition routes not loaded: {e}")
+
 # ───────────────── REGISTER ROUTER ─────────────────
 app.include_router(api)
 
