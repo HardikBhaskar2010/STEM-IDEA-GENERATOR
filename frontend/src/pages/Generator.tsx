@@ -648,6 +648,29 @@ const Generator: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Competition Submission Modal */}
+      {isCompetitionMode && generatedProject && (
+        <CompetitionSubmissionModal
+          open={showSubmissionModal}
+          onClose={() => setShowSubmissionModal(false)}
+          onSuccess={handleSubmissionSuccess}
+          project={{
+            title: generatedProject.title,
+            description: generatedProject.description,
+            projectType: formData.projectType,
+          }}
+        />
+      )}
+
+      {/* Success Animations */}
+      <SuccessAnimation
+        show={showSuccessAnimation}
+        type={successAnimationType}
+        points={successPoints}
+        newLevel={successNewLevel}
+        onComplete={handleAnimationComplete}
+      />
     </Layout>
   );
 };
