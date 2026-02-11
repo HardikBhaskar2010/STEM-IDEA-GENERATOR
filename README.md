@@ -702,6 +702,7 @@ STEM-IDEA-GENERATOR/
 │
 ├── 🔧 backend/                      # FastAPI Backend
 │   ├── server.py                   # Main server with all endpoints
+│   ├── competition_routes.py       # Competition API endpoints
 │   ├── services/                   # Business logic services
 │   │   ├── aiGuidanceService.py   # AI chat and voice processing
 │   │   └── projectService.py      # Project generation logic
