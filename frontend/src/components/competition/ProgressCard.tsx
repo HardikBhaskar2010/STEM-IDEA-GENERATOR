@@ -42,8 +42,19 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
   const levelProgress = getLevelProgress(progress.total_xp);
   const isMaxLevel = progress.level_number === 5;
 
+  // Animated counts
+  const animatedPoints = useCountUp(progress.total_points, 1500);
+  const animatedXP = useCountUp(progress.total_xp, 1500);
+  const animatedStreak = useCountUp(progress.streak_days, 1000);
+  const animatedSubmissions = useCountUp(progress.submissions_count, 1000);
+
   return (
-    <Card data-testid="progress-card">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card data-testid="progress-card">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
