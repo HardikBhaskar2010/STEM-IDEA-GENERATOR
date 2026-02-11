@@ -166,5 +166,6 @@ export const TeamInfoCard: React.FC<TeamInfoCardProps> = ({ teamInfo, onLeave })
         </AlertDialog>
       </CardContent>
     </Card>
+    </motion.div>
   );
 };
