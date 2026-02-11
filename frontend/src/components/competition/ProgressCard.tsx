@@ -1,5 +1,6 @@
 // Progress Card Component - Show user level and XP
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { UserProgress, getLevelProgress, LEVELS } from '@/services/competitionService';
@@ -9,6 +10,33 @@ import { Trophy, Flame, Star, TrendingUp } from 'lucide-react';
 interface ProgressCardProps {
   progress: UserProgress;
 }
+
+// Hook for counting animation
+const useCountUp = (end: number, duration: number = 1000) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number;
+    let animationFrame: number;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      
+      setCount(Math.floor(progress * end));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+
+  return count;
+};
 
 export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
   const levelProgress = getLevelProgress(progress.total_xp);
