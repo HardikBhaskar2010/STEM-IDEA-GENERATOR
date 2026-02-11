@@ -25,6 +25,7 @@ import { SuccessAnimation } from '@/components/competition/SuccessAnimation';
 
 const Generator: React.FC = () => {
   const navigate = useNavigate();
+  const { isCompetitionMode } = useCompetition();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSynthesized, setIsSynthesized] = useState(false);
@@ -32,6 +33,11 @@ const Generator: React.FC = () => {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
   const [showCodeGenModal, setShowCodeGenModal] = useState(false);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successAnimationType, setSuccessAnimationType] = useState<'submission' | 'levelup'>('submission');
+  const [successPoints, setSuccessPoints] = useState(10);
+  const [successNewLevel, setSuccessNewLevel] = useState<string | undefined>(undefined);
   const [generatedProject, setGeneratedProject] = useState<{
     title: string;
     description: string;
