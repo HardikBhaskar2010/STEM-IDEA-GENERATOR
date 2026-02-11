@@ -734,3 +734,250 @@ async def award_daily_bonus(user_id: str):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to award daily bonus: {str(e)}")
+
+# =====================================================
+# ADDITIONAL ENDPOINTS FOR COMPLETE FUNCTIONALITY
+# =====================================================
+
+@competition_router.get("/submissions/all")
+async def get_all_submissions(limit: int = 50, skip: int = 0, category: Optional[str] = None):
+    """Get all submissions (global feed) with optional category filter"""
+    try:
+        query = supabase.table("idea_submissions").select("*").order("submitted_at", desc=True).range(skip, skip + limit - 1)
+        
+        if category:
+            query = query.eq("category", category)
+        
+        result = query.execute()
+        
+        # Get vote counts for each submission
+        submissions = []
+        for sub in result.data:
+            votes_result = supabase.table("idea_votes").select("id", count="exact").eq("submission_id", sub["id"]).execute()
+            sub["vote_count"] = votes_result.count
+            submissions.append(sub)
+        
+        return {"success": True, "submissions": submissions, "count": len(submissions)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get submissions: {str(e)}")
+
+@competition_router.get("/submissions/{submission_id}")
+async def get_submission_by_id(submission_id: str):
+    """Get a specific submission by ID with full details"""
+    try:
+        # Get submission
+        submission_result = supabase.table("idea_submissions").select("*").eq("id", submission_id).single().execute()
+        submission = submission_result.data
+        
+        # Get vote count
+        votes_result = supabase.table("idea_votes").select("id", count="exact").eq("submission_id", submission_id).execute()
+        submission["vote_count"] = votes_result.count
+        
+        # Get team info
+        team_result = supabase.table("teams").select("name, school_name").eq("id", submission["team_id"]).single().execute()
+        submission["team_info"] = team_result.data
+        
+        # Get user level info
+        level_result = supabase.table("user_levels").select("current_level, total_points").eq("user_id", submission["user_id"]).execute()
+        if level_result.data:
+            submission["user_level"] = level_result.data[0]
+        
+        return {"success": True, "submission": submission}
+        
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Submission not found: {str(e)}")
+
+@competition_router.delete("/submissions/{submission_id}")
+async def delete_submission(submission_id: str, user_id: str):
+    """Delete a submission (only by the author)"""
+    try:
+        # Verify ownership
+        submission_result = supabase.table("idea_submissions").select("user_id").eq("id", submission_id).single().execute()
+        
+        if submission_result.data["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="You can only delete your own submissions")
+        
+        # Delete the submission
+        supabase.table("idea_submissions").delete().eq("id", submission_id).execute()
+        
+        return {"success": True, "message": "Submission deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete submission: {str(e)}")
+
+@competition_router.post("/teams/leave")
+async def leave_team(user_id: str):
+    """User leaves their current team"""
+    try:
+        # Check if user is in a team
+        member_result = supabase.table("team_members").select("team_id, role").eq("user_id", user_id).execute()
+        
+        if not member_result.data:
+            raise HTTPException(status_code=404, detail="You are not part of any team")
+        
+        team_id = member_result.data[0]["team_id"]
+        role = member_result.data[0]["role"]
+        
+        # Teachers cannot leave their own teams
+        if role == "teacher":
+            team_result = supabase.table("teams").select("teacher_id").eq("id", team_id).single().execute()
+            if team_result.data["teacher_id"] == user_id:
+                raise HTTPException(status_code=400, detail="Team creators cannot leave their own team. Delete the team instead.")
+        
+        # Remove from team
+        supabase.table("team_members").delete().eq("user_id", user_id).eq("team_id", team_id).execute()
+        
+        return {"success": True, "message": "Successfully left the team"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to leave team: {str(e)}")
+
+@competition_router.delete("/teams/{team_id}")
+async def delete_team(team_id: str, user_id: str):
+    """Delete a team (only by the teacher who created it)"""
+    try:
+        # Verify ownership
+        team_result = supabase.table("teams").select("teacher_id").eq("id", team_id).single().execute()
+        
+        if team_result.data["teacher_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Only the team creator can delete the team")
+        
+        # Delete team (cascade will handle team_members and submissions)
+        supabase.table("teams").delete().eq("id", team_id).execute()
+        
+        return {"success": True, "message": "Team deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete team: {str(e)}")
+
+@competition_router.get("/teams/validate-code/{team_code}")
+async def validate_team_code(team_code: str):
+    """Check if a team code is valid"""
+    try:
+        result = supabase.table("teams").select("id, name, school_name").eq("code", team_code).execute()
+        
+        if not result.data:
+            return {"valid": False, "message": "Invalid team code"}
+        
+        team = result.data[0]
+        return {
+            "valid": True,
+            "team_id": team["id"],
+            "team_name": team["name"],
+            "school_name": team.get("school_name"),
+            "message": f"Valid code for team: {team['name']}"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to validate code: {str(e)}")
+
+@competition_router.get("/statistics/overview")
+async def get_platform_statistics():
+    """Get overall platform statistics for admin dashboard"""
+    try:
+        # Total teams
+        teams_result = supabase.table("teams").select("id", count="exact").execute()
+        total_teams = teams_result.count
+        
+        # Total users with levels
+        users_result = supabase.table("user_levels").select("user_id", count="exact").execute()
+        total_users = users_result.count
+        
+        # Total submissions
+        submissions_result = supabase.table("idea_submissions").select("id", count="exact").execute()
+        total_submissions = submissions_result.count
+        
+        # Total votes
+        votes_result = supabase.table("idea_votes").select("id", count="exact").execute()
+        total_votes = votes_result.count
+        
+        # Active users (submitted in last 7 days)
+        seven_days_ago = (date.today() - timedelta(days=7)).isoformat()
+        active_users_result = supabase.table("idea_submissions").select("user_id").gte("submitted_at", seven_days_ago).execute()
+        active_users = len(set(sub["user_id"] for sub in active_users_result.data))
+        
+        # Submissions by category
+        categories_result = supabase.table("idea_submissions").select("category").execute()
+        categories_count = {}
+        for sub in categories_result.data:
+            cat = sub["category"]
+            categories_count[cat] = categories_count.get(cat, 0) + 1
+        
+        return {
+            "success": True,
+            "statistics": {
+                "total_teams": total_teams,
+                "total_users": total_users,
+                "total_submissions": total_submissions,
+                "total_votes": total_votes,
+                "active_users_7d": active_users,
+                "submissions_by_category": categories_count
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}")
+
+@competition_router.get("/activities/recent/{user_id}")
+async def get_recent_activities(user_id: str, limit: int = 20):
+    """Get recent activities for a user"""
+    try:
+        result = supabase.table("user_activities").select("*").eq("user_id", user_id).order("timestamp", desc=True).limit(limit).execute()
+        
+        activities = []
+        for activity in result.data:
+            activity_info = {
+                "id": activity["id"],
+                "activity_type": activity["activity_type"],
+                "points_value": activity["points_value"],
+                "timestamp": activity["timestamp"]
+            }
+            
+            # Get related submission info if available
+            if activity.get("related_submission_id"):
+                submission_result = supabase.table("idea_submissions").select("title").eq("id", activity["related_submission_id"]).execute()
+                if submission_result.data:
+                    activity_info["submission_title"] = submission_result.data[0]["title"]
+            
+            activities.append(activity_info)
+        
+        return {"success": True, "activities": activities}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get activities: {str(e)}")
+
+@competition_router.get("/users/check-team/{user_id}")
+async def check_user_team_status(user_id: str):
+    """Check if a user is part of a team"""
+    try:
+        result = supabase.table("team_members").select("team_id, role").eq("user_id", user_id).execute()
+        
+        if not result.data:
+            return {
+                "has_team": False,
+                "message": "User is not part of any team"
+            }
+        
+        team_id = result.data[0]["team_id"]
+        role = result.data[0]["role"]
+        
+        # Get team info
+        team_result = supabase.table("teams").select("name, code").eq("id", team_id).single().execute()
+        
+        return {
+            "has_team": True,
+            "team_id": team_id,
+            "team_name": team_result.data["name"],
+            "team_code": team_result.data["code"],
+            "role": role
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to check team status: {str(e)}")
