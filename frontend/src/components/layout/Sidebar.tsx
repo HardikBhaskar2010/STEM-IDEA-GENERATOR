@@ -14,11 +14,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useCompetition } from '@/contexts/CompetitionContext';
 import { cn } from '@/lib/utils';
 import ThemeToggle from '@/components/ui/theme-toggle';
 import { VoiceCommand } from '@/components/VoiceCommand';
 import { TTSVisualizer } from '@/components/TTSVisualizer';
 import { useTTS } from '@/contexts/TTSContext';
+import { Badge } from '@/components/ui/badge';
 
 interface SidebarProps {
   isOpen: boolean;
