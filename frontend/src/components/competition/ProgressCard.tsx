@@ -58,10 +58,21 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Trophy className="h-5 w-5" />
+            <motion.div
+              animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Trophy className="h-5 w-5" />
+            </motion.div>
             Your Progress
           </span>
-          <LevelBadge level={progress.current_level} size="lg" />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, type: "spring" }}
+          >
+            <LevelBadge level={progress.current_level} size="lg" />
+          </motion.div>
         </CardTitle>
         <CardDescription>
           {isMaxLevel
