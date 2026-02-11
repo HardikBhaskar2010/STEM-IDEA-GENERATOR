@@ -40,6 +40,7 @@ const Navbar: React.FC = () => {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/generator', label: 'Generator', icon: Zap },
+    { path: '/competition', label: 'Competition', icon: Trophy },
     { path: '/components', label: 'Components', icon: Cpu },
     { path: '/library', label: 'Library', icon: BookOpen },
     { path: '/learn', label: 'Learn', icon: GraduationCap },
