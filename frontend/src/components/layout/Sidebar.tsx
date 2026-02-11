@@ -9,7 +9,8 @@ import {
   Info, 
   X,
   User,
-  Code
+  Code,
+  Trophy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
