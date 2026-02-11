@@ -606,6 +606,97 @@ GET /api/components/{component_id}/details
 
 Returns detailed component information including specs, reviews, and related projects.
 
+#### Competition APIs
+
+**Create Team (Teacher)**
+```http
+POST /api/competition/teams/create
+Content-Type: application/json
+
+{
+  "name": "Robotics Club 2026",
+  "school_name": "Lincoln High School",
+  "teacher_id": "uuid-here"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "team_id": "uuid",
+  "team_code": "ABC123",
+  "message": "Team created successfully"
+}
+```
+
+**Join Team (Student)**
+```http
+POST /api/competition/teams/join
+Content-Type: application/json
+
+{
+  "team_code": "ABC123",
+  "user_id": "uuid-here",
+  "role": "student"
+}
+```
+
+**Submit Project to Competition**
+```http
+POST /api/competition/submissions/create
+Content-Type: application/json
+
+{
+  "user_id": "uuid",
+  "team_id": "uuid",
+  "title": "Smart Plant Watering System",
+  "description": "IoT project using soil moisture sensors",
+  "category": "IoT",
+  "generated_project": { /* project data */ },
+  "is_manual": false
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "submission_id": "uuid",
+  "points_awarded": 10,
+  "xp_gained": 10,
+  "new_level": "Builder",
+  "message": "Submission successful! You earned 10 points."
+}
+```
+
+**Get Leaderboards**
+```http
+GET /api/competition/leaderboards/top-scorers?limit=20
+GET /api/competition/leaderboards/consistency?limit=20
+GET /api/competition/leaderboards/teams?limit=20
+```
+
+**Get User Progress**
+```http
+GET /api/competition/users/progress/{user_id}
+```
+
+**Response:**
+```json
+{
+  "user_id": "uuid",
+  "current_level": "Innovator",
+  "level_number": 3,
+  "total_xp": 350,
+  "total_points": 120,
+  "streak_days": 7,
+  "xp_to_next_level": 250,
+  "submissions_count": 12,
+  "votes_received": 8
+}
+```
+
 ### 🎤 Voice Commands
 
 The AI assistant understands natural language commands:
