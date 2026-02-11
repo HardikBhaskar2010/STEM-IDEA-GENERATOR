@@ -100,15 +100,16 @@ const App = () => {
                         </Suspense>
                       </BrowserRouter>
                     </TooltipProvider>
-                  </CodeGenerationProvider>
-                </TTSProvider>
-              </AnimationProvider>
-            </ThreeDProvider>
-          </PerfProvider>
-        </PreferencesProvider>
-      </AuthProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+                  </CompetitionProvider>
+                </CodeGenerationProvider>
+              </TTSProvider>
+            </AnimationProvider>
+          </ThreeDProvider>
+        </PerfProvider>
+      </PreferencesProvider>
+    </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 };
 
