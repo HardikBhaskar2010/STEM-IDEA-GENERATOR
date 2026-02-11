@@ -26,6 +26,7 @@ const Welcome = React.lazy(() => import("./pages/Welcome"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const Generator = React.lazy(() => import("./pages/Generator"));
 const CodeGenerator = React.lazy(() => import("./pages/CodeGenerator"));
+const Competition = React.lazy(() => import("./pages/Competition"));
 const Components = React.lazy(() => import("./pages/Components"));
 const Library = React.lazy(() => import("./pages/Library"));
 const Learn = React.lazy(() => import("./pages/Learn"));
