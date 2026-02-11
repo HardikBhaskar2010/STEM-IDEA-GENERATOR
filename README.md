@@ -1079,6 +1079,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### 🚀 Coming Soon (v3.0)
 
+- [ ] **Competition Enhancements** - Advanced competition features
+  - [ ] Category-specific leaderboards
+  - [ ] Monthly/weekly competitions
+  - [ ] Achievements and badges system
+  - [ ] Team vs Team challenges
+  - [ ] Prize system integration
 - [ ] **WebXR Support** - VR/AR experiences with Meta Quest & Apple Vision Pro
 - [ ] **Real-Time Collaboration** - Work on projects with friends in real-time
 - [ ] **Advanced Physics** - Realistic simulations for testing designs
