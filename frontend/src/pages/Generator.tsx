@@ -603,6 +603,39 @@ const Generator: React.FC = () => {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Competition Submission Button */}
+                            {isCompetitionMode && (
+                              <div className="pt-6">
+                                <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-2xl p-6 border-2 border-blue-500/30">
+                                  <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0 p-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600">
+                                      <Trophy className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+                                        Submit to Competition
+                                        <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30">
+                                          +10 XP
+                                        </Badge>
+                                      </h3>
+                                      <p className="text-sm text-muted-foreground mb-4">
+                                        Share your idea with your team and earn points! Your submission will appear on the leaderboard and peers can upvote it.
+                                      </p>
+                                      <Button
+                                        onClick={() => setShowSubmissionModal(true)}
+                                        size="lg"
+                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl h-12 px-8 shadow-lg hover:shadow-xl transition-all"
+                                        data-testid="submit-to-competition-button"
+                                      >
+                                        <Trophy className="h-5 w-5 mr-2" />
+                                        Submit to Competition
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </CardContent>
                         )}
                       </Card>
