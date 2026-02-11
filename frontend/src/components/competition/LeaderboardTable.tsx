@@ -197,17 +197,26 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         {entry.team_name || '-'}
                       </TableCell>
                       {type === 'consistency' ? (
-                        <>
                           <TableCell className="text-right">
-                            <span className="flex items-center justify-end gap-1">
+                            <motion.span 
+                              className="flex items-center justify-end gap-1"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: entry.rank * 0.05 + 0.2 }}
+                            >
                               <span className="text-lg">🔥</span>
                               <span className="font-semibold">{entry.streak_days}</span>
-                            </span>
+                            </motion.span>
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {entry.total_points}
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.5 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: entry.rank * 0.05 + 0.3 }}
+                            >
+                              {entry.total_points}
+                            </motion.span>
                           </TableCell>
-                        </>
                       ) : (
                         <>
                           <TableCell className="text-right">
