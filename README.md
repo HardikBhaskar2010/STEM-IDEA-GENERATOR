@@ -734,6 +734,7 @@ STEM-IDEA-GENERATOR/
 │   │   ├── 🔌 services/            # API services
 │   │   │   ├── apiService.ts      # API client
 │   │   │   ├── aiVoiceService.ts  # Voice processing
+│   │   │   ├── competitionService.ts  # Competition APIs
 │   │   │   └── supabaseClient.ts  # Database client
 │   │   │
 │   │   ├── 🎯 contexts/            # React contexts
