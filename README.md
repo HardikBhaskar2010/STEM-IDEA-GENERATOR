@@ -726,6 +726,7 @@ STEM-IDEA-GENERATOR/
 │   │   │   ├── Home.tsx           # Landing page
 │   │   │   ├── Dashboard.tsx      # User dashboard
 │   │   │   ├── Generator.tsx      # Project generator
+│   │   │   ├── Competition.tsx    # Competition hub
 │   │   │   ├── Components.tsx     # Component catalog
 │   │   │   ├── Library.tsx        # Project library
 │   │   │   └── Learn.tsx          # Learning hub
