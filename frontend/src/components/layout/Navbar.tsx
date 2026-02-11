@@ -7,6 +7,8 @@ import { useMicroInteraction } from '@/hooks/useMicroInteraction';
 import { createAnimation } from '@/lib/animation';
 import ThemeToggle from '@/components/ui/theme-toggle';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useCompetition } from '@/contexts/CompetitionContext';
+import { Badge } from '@/components/ui/badge';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
