@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Zap, Cpu, BookOpen, Home, Info, GraduationCap } from 'lucide-react';
+import { Menu, X, Zap, Cpu, BookOpen, Home, Info, GraduationCap, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHoverAnimation } from '@/hooks/useHoverAnimation';
 import { useMicroInteraction } from '@/hooks/useMicroInteraction';
