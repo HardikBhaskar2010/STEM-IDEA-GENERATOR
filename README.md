@@ -1103,6 +1103,55 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📝 Changelog
 
+### 🏆 Version 2.4 - Competition Platform (February 2026)
+
+#### 🎯 School-Ready Competition System
+- ✨ **Team Management**: Create and join teams with unique codes
+  - Teachers create teams and get 6-character join codes
+  - Students join teams using codes
+  - Team dashboard with member info and stats
+  - Easy leave team functionality
+- 🎖️ **5-Tier Level System**: Progressive leveling from Explorer to Visionary
+  - Explorer (0-99 XP) - Starting journey
+  - Builder (100-299 XP) - Building momentum
+  - Innovator (300-599 XP) - Creative thinking
+  - Inventor (600-999 XP) - Advanced maker
+  - Visionary (1000+ XP) - Master level
+- 📊 **Triple Leaderboards**: Comprehensive ranking systems
+  - Top Scorers: Students with most points
+  - Consistency Leaders: Longest submission streaks
+  - Team Rankings: Combined team performance
+- 📝 **Submission System**: Integrated with AI Generator
+  - Submit AI-generated ideas directly
+  - Manual submission support
+  - 7 STEM categories (Robotics, IoT, AI/Software, etc.)
+  - Instant point awards (10 base + bonuses)
+- 🔥 **Streak System**: Daily submission tracking for consistency
+- ⬆️ **Upvoting**: Peer recognition with point bonuses
+- 📈 **Progress Tracking**: Visual XP and level advancement
+- 🎨 **Competition UI**: Clean, school-friendly design
+  - Level badges in navbar and sidebar
+  - Competition indicator when active
+  - Team info in profile page
+  - Beautiful leaderboard cards
+
+#### 🗄️ Database & Backend
+- ✅ Comprehensive Supabase schema with competition tables
+  - teams, team_members, idea_submissions
+  - user_activities, user_levels, idea_votes
+- ✅ FastAPI competition routes module
+- ✅ RESTful API endpoints for all competition features
+- ✅ Real-time point and XP calculation
+- ✅ Automatic level progression triggers
+
+#### 🎯 User Experience
+- ✅ Seamless mode switching (Solo → Competition)
+- ✅ Navigation integration (Navbar + Sidebar)
+- ✅ Profile page competition stats
+- ✅ Submission history tracking
+- ✅ Team code validation
+- ✅ Role-based features (Teacher/Student)
+
 ### 🎉 Version 2.3 - Veronica AI Phase 4 Complete (January 2026)
 
 #### 💻 Enhanced Code Generator Workspace
