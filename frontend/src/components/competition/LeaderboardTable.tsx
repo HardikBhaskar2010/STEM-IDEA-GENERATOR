@@ -242,5 +242,6 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
         </Table>
       </CardContent>
     </Card>
+    </motion.div>
   );
 };
