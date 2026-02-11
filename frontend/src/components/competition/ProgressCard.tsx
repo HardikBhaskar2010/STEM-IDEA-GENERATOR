@@ -179,19 +179,30 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
         </div>
 
         {/* Level Journey */}
-        <div className="space-y-2">
+        <motion.div 
+          className="space-y-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.9 }}
+        >
           <p className="text-sm font-medium">Level Journey</p>
           <div className="flex items-center justify-between gap-2">
-            {LEVELS.map((level) => (
-              <div
+            {LEVELS.map((level, index) => (
+              <motion.div
                 key={level.number}
                 className={`flex-1 text-center space-y-1 ${
                   level.number <= progress.level_number
                     ? 'opacity-100'
                     : 'opacity-30'
                 }`}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ 
+                  opacity: level.number <= progress.level_number ? 1 : 0.3,
+                  scale: 1 
+                }}
+                transition={{ delay: 1 + index * 0.1 }}
               >
-                <div
+                <motion.div
                   className={`w-full h-2 rounded-full ${
                     level.number < progress.level_number
                       ? 'bg-green-500'
@@ -199,12 +210,16 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
                       ? 'bg-blue-500'
                       : 'bg-muted'
                   }`}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 1.1 + index * 0.1, duration: 0.3 }}
+                  style={{ transformOrigin: "left" }}
                 />
                 <p className="text-xs font-medium">{level.name}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Achievements */}
         <div className="bg-muted/50 p-4 rounded-lg space-y-2">
