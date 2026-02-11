@@ -656,6 +656,43 @@ The AI assistant understands natural language commands:
 4. View 3D model (rotate and zoom)
 5. Read specs, reviews, and related projects
 
+### 🏆 Using Competition Mode
+
+#### For Teachers:
+1. Navigate to **Competition** page
+2. Click **"Join Competition"** button
+3. Select **"Create Team"** tab
+4. Enter team name and school name
+5. Copy the generated **6-character team code**
+6. Share code with your students
+
+#### For Students:
+1. Navigate to **Competition** page
+2. Click **"Join Competition"** button
+3. Select **"Join Team"** tab
+4. Enter the team code from your teacher
+5. Start competing!
+
+#### Submitting Projects:
+1. Generate an idea on the **Generator** page
+2. Review your AI-generated project
+3. Click **"Submit to Competition"** button
+4. Select a category (Robotics, IoT, AI/Software, etc.)
+5. Earn points instantly! (10 base points + bonus)
+
+#### Tracking Progress:
+- View your **Level** badge in navbar (top right)
+- Check **Total XP** and **Points** on Profile page
+- Monitor your **Streak** days for consistency bonus
+- See your rank on **Leaderboards** (Top Scorers, Consistency, Teams)
+
+**Level System:**
+- 🌱 **Explorer** (0-99 XP) - Starting your journey
+- 🔨 **Builder** (100-299 XP) - Building momentum
+- 💡 **Innovator** (300-599 XP) - Creative thinker
+- 🔬 **Inventor** (600-999 XP) - Advanced maker
+- 🌟 **Visionary** (1000+ XP) - Master level
+
 ---
 
 ## 📁 Project Structure
