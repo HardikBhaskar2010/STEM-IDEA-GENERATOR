@@ -155,6 +155,16 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
+            {/* Competition Indicator */}
+            {isCompetitionMode && userProgress && (
+              <Badge 
+                variant="outline" 
+                className="mr-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400 px-3 py-1 text-xs font-semibold"
+                data-testid="competition-indicator"
+              >
+                {userProgress.current_level} • {userProgress.total_xp} XP
+              </Badge>
+            )}
             <ThemeToggle />
             {navItems.map((item, _index) => {
               const Icon = item.icon as React.ComponentType<{ className?: string }>;
