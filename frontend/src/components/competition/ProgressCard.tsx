@@ -1,0 +1,150 @@
+// Progress Card Component - Show user level and XP
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { UserProgress, getLevelProgress, LEVELS } from '@/services/competitionService';
+import { LevelBadge } from './LevelBadge';
+import { Trophy, Flame, Star, TrendingUp } from 'lucide-react';
+
+interface ProgressCardProps {
+  progress: UserProgress;
+}
+
+export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
+  const levelProgress = getLevelProgress(progress.total_xp);
+  const isMaxLevel = progress.level_number === 5;
+
+  return (
+    <Card data-testid="progress-card">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Your Progress
+          </span>
+          <LevelBadge level={progress.current_level} size="lg" />
+        </CardTitle>
+        <CardDescription>
+          {isMaxLevel
+            ? 'You\'ve reached the maximum level!'
+            : `${progress.xp_to_next_level} XP to next level`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* XP Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Level Progress</span>
+            <span className="font-semibold">{levelProgress}%</span>
+          </div>
+          <Progress value={levelProgress} className="h-3" data-testid="xp-progress-bar" />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{progress.total_xp} XP</span>
+            {!isMaxLevel && (
+              <span>
+                {LEVELS[progress.level_number]?.maxXP + 1} XP
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Star className="h-4 w-4" />
+              <span className="text-xs">Total Points</span>
+            </div>
+            <p className="text-2xl font-bold">{progress.total_points}</p>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-xs">Total XP</span>
+            </div>
+            <p className="text-2xl font-bold">{progress.total_xp}</p>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Flame className="h-4 w-4 text-orange-500" />
+              <span className="text-xs">Streak</span>
+            </div>
+            <p className="text-2xl font-bold">{progress.streak_days}</p>
+            <p className="text-xs text-muted-foreground">days</p>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Trophy className="h-4 w-4" />
+              <span className="text-xs">Submissions</span>
+            </div>
+            <p className="text-2xl font-bold">{progress.submissions_count}</p>
+          </div>
+        </div>
+
+        {/* Level Journey */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Level Journey</p>
+          <div className="flex items-center justify-between gap-2">
+            {LEVELS.map((level) => (
+              <div
+                key={level.number}
+                className={`flex-1 text-center space-y-1 ${
+                  level.number <= progress.level_number
+                    ? 'opacity-100'
+                    : 'opacity-30'
+                }`}
+              >
+                <div
+                  className={`w-full h-2 rounded-full ${
+                    level.number < progress.level_number
+                      ? 'bg-green-500'
+                      : level.number === progress.level_number
+                      ? 'bg-blue-500'
+                      : 'bg-muted'
+                  }`}
+                />
+                <p className="text-xs font-medium">{level.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Achievements */}
+        <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+          <p className="text-sm font-medium flex items-center gap-2">
+            🏆 Recent Achievements
+          </p>
+          <div className="space-y-1.5">
+            {progress.submissions_count > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span>Submitted {progress.submissions_count} ideas</span>
+              </div>
+            )}
+            {progress.votes_received > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <span>Received {progress.votes_received} upvotes</span>
+              </div>
+            )}
+            {progress.streak_days >= 3 && (
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <span>{progress.streak_days} day streak!</span>
+              </div>
+            )}
+            {progress.level_number >= 3 && (
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-2 h-2 rounded-full bg-purple-500" />
+                <span>Reached {progress.current_level} level</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
