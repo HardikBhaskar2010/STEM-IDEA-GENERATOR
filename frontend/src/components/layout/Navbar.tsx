@@ -19,6 +19,7 @@ const Navbar: React.FC = () => {
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { colorTheme } = usePreferences();
+  const { isCompetitionMode, userProgress } = useCompetition();
 
   // Animation hooks
   const logoHoverRef = useHoverAnimation<HTMLAnchorElement>({ 
