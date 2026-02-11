@@ -222,38 +222,64 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
         </motion.div>
 
         {/* Achievements */}
-        <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+        <motion.div 
+          className="bg-muted/50 p-4 rounded-lg space-y-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+        >
           <p className="text-sm font-medium flex items-center gap-2">
             🏆 Recent Achievements
           </p>
           <div className="space-y-1.5">
             {progress.submissions_count > 0 && (
-              <div className="flex items-center gap-2 text-sm">
+              <motion.div 
+                className="flex items-center gap-2 text-sm"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.6 }}
+              >
                 <div className="w-2 h-2 rounded-full bg-green-500" />
                 <span>Submitted {progress.submissions_count} ideas</span>
-              </div>
+              </motion.div>
             )}
             {progress.votes_received > 0 && (
-              <div className="flex items-center gap-2 text-sm">
+              <motion.div 
+                className="flex items-center gap-2 text-sm"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.7 }}
+              >
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
                 <span>Received {progress.votes_received} upvotes</span>
-              </div>
+              </motion.div>
             )}
             {progress.streak_days >= 3 && (
-              <div className="flex items-center gap-2 text-sm">
+              <motion.div 
+                className="flex items-center gap-2 text-sm"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.8 }}
+              >
                 <div className="w-2 h-2 rounded-full bg-orange-500" />
                 <span>{progress.streak_days} day streak!</span>
-              </div>
+              </motion.div>
             )}
             {progress.level_number >= 3 && (
-              <div className="flex items-center gap-2 text-sm">
+              <motion.div 
+                className="flex items-center gap-2 text-sm"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.9 }}
+              >
                 <div className="w-2 h-2 rounded-full bg-purple-500" />
                 <span>Reached {progress.current_level} level</span>
-              </div>
+              </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 };
