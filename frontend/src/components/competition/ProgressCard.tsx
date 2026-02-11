@@ -120,38 +120,62 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="space-y-1">
+          <motion.div 
+            className="space-y-1"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            whileHover={{ scale: 1.05 }}
+          >
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Star className="h-4 w-4" />
               <span className="text-xs">Total Points</span>
             </div>
-            <p className="text-2xl font-bold">{progress.total_points}</p>
-          </div>
+            <p className="text-2xl font-bold">{animatedPoints}</p>
+          </motion.div>
 
-          <div className="space-y-1">
+          <motion.div 
+            className="space-y-1"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.05 }}
+          >
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs">Total XP</span>
             </div>
-            <p className="text-2xl font-bold">{progress.total_xp}</p>
-          </div>
+            <p className="text-2xl font-bold">{animatedXP}</p>
+          </motion.div>
 
-          <div className="space-y-1">
+          <motion.div 
+            className="space-y-1"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            whileHover={{ scale: 1.05 }}
+          >
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Flame className="h-4 w-4 text-orange-500" />
               <span className="text-xs">Streak</span>
             </div>
-            <p className="text-2xl font-bold">{progress.streak_days}</p>
+            <p className="text-2xl font-bold">{animatedStreak}</p>
             <p className="text-xs text-muted-foreground">days</p>
-          </div>
+          </motion.div>
 
-          <div className="space-y-1">
+          <motion.div 
+            className="space-y-1"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            whileHover={{ scale: 1.05 }}
+          >
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Trophy className="h-4 w-4" />
               <span className="text-xs">Submissions</span>
             </div>
-            <p className="text-2xl font-bold">{progress.submissions_count}</p>
-          </div>
+            <p className="text-2xl font-bold">{animatedSubmissions}</p>
+          </motion.div>
         </div>
 
         {/* Level Journey */}
