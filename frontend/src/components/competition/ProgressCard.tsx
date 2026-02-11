@@ -82,12 +82,32 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* XP Progress Bar */}
-        <div className="space-y-2">
+        <motion.div 
+          className="space-y-2"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Level Progress</span>
-            <span className="font-semibold">{levelProgress}%</span>
+            <motion.span 
+              className="font-semibold"
+              key={levelProgress}
+              initial={{ scale: 1.5, color: "#3b82f6" }}
+              animate={{ scale: 1, color: "inherit" }}
+              transition={{ duration: 0.5 }}
+            >
+              {levelProgress}%
+            </motion.span>
           </div>
-          <Progress value={levelProgress} className="h-3" data-testid="xp-progress-bar" />
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            style={{ transformOrigin: "left" }}
+          >
+            <Progress value={levelProgress} className="h-3" data-testid="xp-progress-bar" />
+          </motion.div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{progress.total_xp} XP</span>
             {!isMaxLevel && (
@@ -96,7 +116,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ progress }) => {
               </span>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
