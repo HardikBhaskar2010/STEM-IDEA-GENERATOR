@@ -223,13 +223,19 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                             {entry.submission_count}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {entry.total_points}
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.5 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: entry.rank * 0.05 + 0.3 }}
+                            >
+                              {entry.total_points}
+                            </motion.span>
                           </TableCell>
                         </>
                       )}
                     </>
                   )}
-                </TableRow>
+                </motion.tr>
               );
             })}
           </TableBody>
