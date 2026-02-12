@@ -1111,6 +1111,59 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📝 Changelog
 
+### 🎨 Version 2.5 - Enhanced User Profiles (February 2026)
+
+#### 👤 Profile Customization System
+- ✨ **Avatar Management**: Complete avatar upload and display system
+  - Upload custom profile pictures (max 2MB, image validation)
+  - Automatic avatar generation from username/display name using DiceBear API
+  - Real-time preview updates after upload
+  - Stored in Supabase Storage with public URLs
+  - Loading indicators during upload
+- 🆔 **User ID Display**: Show unique user ID with copy functionality
+  - Displays first 8 characters with full ID copy on click
+  - Visual feedback with checkmark animation
+  - Toast notifications on successful copy
+  - Hidden for guest users
+- ✏️ **Profile Information Editing**: Complete profile customization
+  - Separate username and display name fields
+  - Username uniqueness validation
+  - Bio textarea with character-friendly UI
+  - Real-time editing with save/cancel options
+  - Persists to Supabase profiles table
+- 🎯 **Interests Management**: Interactive interests selection system
+  - Dialog interface with 25+ predefined STEM interests
+  - Categories: Arduino, Raspberry Pi, IoT, Robotics, AI/ML, Web Dev, Python, JavaScript, C++, etc.
+  - Custom interest input with keyboard support (Enter to add)
+  - Visual chips with remove buttons (X icon)
+  - Preview of current interests in dialog
+  - Checkmark feedback for added interests
+- 📊 **Enhanced Profile Display**: 
+  - Real data from Supabase profiles
+  - Join date display
+  - Guest user handling
+  - Competition stats integration
+  - Loading states for async operations
+
+#### 🔧 Technical Improvements
+- ✅ Fixed broken state management (userData → profile/editedProfile)
+- ✅ Proper avatar URL handling with fallbacks
+- ✅ File upload validation (size, type)
+- ✅ Error handling with user-friendly toast messages
+- ✅ Disabled states for guest users
+- ✅ Test IDs for all interactive elements
+- ✅ Keyboard accessibility (Enter key support)
+
+#### 🎨 UI/UX Enhancements
+- Avatar ring border with primary color accent
+- Upload progress spinner on camera button
+- User ID copy feedback animation
+- Interest chips with hover effects
+- Dialog with search-like experience
+- Proper spacing and typography
+- Loading spinners for profile fetch
+- Smooth transitions and animations
+
 ### 🏆 Version 2.4 - Competition Platform (February 2026)
 
 #### 🎯 School-Ready Competition System
