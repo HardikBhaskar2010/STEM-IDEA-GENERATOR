@@ -151,6 +151,185 @@ const Profile: React.FC = () => {
   const projectsInProgress = projects.filter(p => p.status === 'In Progress').length;
   const totalProjects = projects.length;
 
+  // Handler: Save profile changes
+  const handleSaveProfile = async () => {
+    if (!user || isGuest) {
+      toast({
+        title: 'Account Required',
+        description: 'Please create an account to save your profile',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate username
+    if (!editedProfile.username.trim()) {
+      toast({
+        title: 'Invalid Username',
+        description: 'Username cannot be empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Check username availability if changed
+    if (profile && editedProfile.username !== profile.username) {
+      const isAvailable = await profileService.isUsernameAvailable(
+        editedProfile.username,
+        user.id
+      );
+      if (!isAvailable) {
+        toast({
+          title: 'Username Taken',
+          description: 'This username is already in use',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedProfile = await profileService.updateProfile(user.id, {
+        username: editedProfile.username,
+        display_name: editedProfile.display_name || editedProfile.username,
+        bio: editedProfile.bio,
+        interests: editedProfile.interests,
+        skills: editedProfile.skills,
+      });
+
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+        setIsEditing(false);
+        toast({
+          title: 'Profile Updated',
+          description: 'Your profile has been successfully updated.',
+        });
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save profile. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handler: Upload avatar image
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || isGuest) return;
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: 'File Too Large',
+        description: 'Please select an image smaller than 2MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid File Type',
+        description: 'Please select an image file',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const avatarUrl = await profileService.uploadAvatar(user.id, file);
+      if (avatarUrl) {
+        // Update profile with new avatar URL
+        const updatedProfile = await profileService.updateProfile(user.id, {
+          avatar_url: avatarUrl,
+        });
+
+        if (updatedProfile) {
+          setProfile(updatedProfile);
+          setEditedProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
+          toast({
+            title: 'Avatar Updated',
+            description: 'Your profile picture has been updated',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to upload avatar. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  // Handler: Add interest
+  const handleAddInterest = (interest: string) => {
+    const trimmedInterest = interest.trim();
+    if (!trimmedInterest) return;
+
+    if (editedProfile.interests.includes(trimmedInterest)) {
+      toast({
+        title: 'Already Added',
+        description: 'This interest is already in your list',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setEditedProfile(prev => ({
+      ...prev,
+      interests: [...prev.interests, trimmedInterest],
+    }));
+    setNewInterest('');
+  };
+
+  // Handler: Remove interest
+  const handleRemoveInterest = (interest: string) => {
+    setEditedProfile(prev => ({
+      ...prev,
+      interests: prev.interests.filter(i => i !== interest),
+    }));
+  };
+
+  // Handler: Copy User ID
+  const handleCopyUserId = () => {
+    if (user && !isGuest) {
+      navigator.clipboard.writeText(user.id);
+      setUserIdCopied(true);
+      toast({
+        title: 'Copied!',
+        description: 'User ID copied to clipboard',
+      });
+      setTimeout(() => setUserIdCopied(false), 2000);
+    }
+  };
+
+  // Handler: Cancel editing
+  const handleCancelEdit = () => {
+    if (profile) {
+      setEditedProfile({
+        username: profile.username || '',
+        display_name: profile.display_name || '',
+        bio: profile.bio || '',
+        interests: profile.interests || [],
+        skills: profile.skills || [],
+        avatar_url: profile.avatar_url || '',
+      });
+    }
+    setIsEditing(false);
+  };
+
   // Define achievements with real conditions
   const achievementDefinitions: Achievement[] = [
     { 
