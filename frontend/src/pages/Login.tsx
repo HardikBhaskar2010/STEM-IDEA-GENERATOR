@@ -44,7 +44,7 @@ const Login: React.FC = () => {
         });
       } else {
         toast({
-          title: 'Welcome back!',
+          title: 'Welcome back! 👋',
           description: 'You have successfully logged in.',
         });
         navigate('/dashboard');
@@ -53,6 +53,28 @@ const Login: React.FC = () => {
       setError(err.message || 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const { error } = await authService.signInWithGoogle();
+      if (error) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to sign in with Google',
+          variant: 'destructive',
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign in with Google',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
