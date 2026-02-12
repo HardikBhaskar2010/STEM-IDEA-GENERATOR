@@ -441,24 +441,65 @@ const Profile: React.FC = () => {
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center">
                     <div className="relative mb-4">
-                      <Avatar className="w-32 h-32">
-                        <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-                        <AvatarFallback>JM</AvatarFallback>
+                      <Avatar className="w-32 h-32 ring-2 ring-primary/20">
+                        <AvatarImage 
+                          src={profile?.avatar_url || profileService.generateAvatarUrl(profile?.display_name || profile?.username || 'User')} 
+                        />
+                        <AvatarFallback className="text-2xl">
+                          {profile?.display_name?.[0]?.toUpperCase() || profile?.username?.[0]?.toUpperCase() || 'U'}
+                        </AvatarFallback>
                       </Avatar>
-                      {isEditing && (
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        size="icon"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isGuest || isUploadingAvatar}
+                        className="absolute bottom-0 right-0 rounded-full bg-gradient-primary text-white hover-lift click-spark"
+                        data-testid="avatar-upload-button"
+                      >
+                        {isUploadingAvatar ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Camera className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">
+                      {profile?.display_name || profile?.username || 'User'}
+                    </h2>
+                    <p className="text-muted-foreground mb-2">{user?.email || 'No email'}</p>
+                    
+                    {/* User ID Display */}
+                    {user && !isGuest && (
+                      <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-muted rounded-lg">
+                        <span className="text-xs text-muted-foreground font-mono">
+                          ID: {user.id.substring(0, 8)}...
+                        </span>
                         <Button
                           size="icon"
-                          className="absolute bottom-0 right-0 rounded-full bg-gradient-primary text-white hover-lift click-spark"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={handleCopyUserId}
+                          data-testid="copy-user-id-button"
                         >
-                          <Camera className="h-4 w-4" />
+                          {userIdCopied ? (
+                            <CheckCheck className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
                         </Button>
-                      )}
-                    </div>
-                    <h2 className="text-2xl font-bold mb-2">{userData.name}</h2>
-                    <p className="text-muted-foreground mb-4">{userData.email}</p>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center text-sm text-muted-foreground mb-6">
                       <Calendar className="w-4 h-4 mr-1" />
-                      Joined {userData.joinDate}
+                      Joined {new Date(profile?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                     </div>
                     {/* Current Mode Indicator */}
                     <Badge variant="outline" className="mb-4">
