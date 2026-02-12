@@ -84,6 +84,8 @@ const App = () => {
                         <Suspense fallback={<PageLoading />}>
                           <Routes>
                             <Route path="/" element={<Welcome />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<SignUp />} />
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/auth/callback" element={<AuthCallback />} />
                             <Route path="/project/:id" element={<ProjectDetail />} />
