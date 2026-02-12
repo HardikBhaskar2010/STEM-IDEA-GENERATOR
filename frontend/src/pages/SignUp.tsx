@@ -21,6 +21,8 @@ const SignUp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   // Redirect if already logged in
   useEffect(() => {
