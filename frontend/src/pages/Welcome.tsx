@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, Zap, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
   const { colorTheme } = usePreferences();
+  const { isAuthenticated, isLoading } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [particlesReady, setParticlesReady] = useState(false);
 
@@ -20,6 +22,22 @@ const Welcome: React.FC = () => {
       clearTimeout(timer2);
     };
   }, []);
+
+  // Check if user has visited before
+  useEffect(() => {
+    if (!isLoading) {
+      const hasVisited = localStorage.getItem('has_visited');
+      
+      if (!hasVisited && !isAuthenticated) {
+        // First-time visitor and not authenticated - show login/signup
+        localStorage.setItem('has_visited', 'true');
+        navigate('/login');
+      } else if (isAuthenticated) {
+        // Already authenticated, go to dashboard
+        navigate('/dashboard');
+      }
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
   const handleEnter = () => {
     navigate('/dashboard');
