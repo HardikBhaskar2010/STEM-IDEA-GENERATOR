@@ -581,6 +581,8 @@ const Profile: React.FC = () => {
                         onClick={() => setIsEditing(true)}
                         variant="outline"
                         className="click-spark"
+                        disabled={isGuest}
+                        data-testid="edit-profile-button"
                       >
                         Edit Profile
                       </Button>
@@ -588,15 +590,23 @@ const Profile: React.FC = () => {
                       <div className="flex gap-2">
                         <Button 
                           onClick={handleSaveProfile}
+                          disabled={isSaving}
                           className="bg-gradient-primary text-white hover-lift click-spark"
+                          data-testid="save-profile-button"
                         >
-                          <Save className="mr-2 h-4 w-4" />
+                          {isSaving ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="mr-2 h-4 w-4" />
+                          )}
                           Save
                         </Button>
                         <Button 
-                          onClick={() => setIsEditing(false)}
+                          onClick={handleCancelEdit}
                           variant="outline"
                           className="click-spark"
+                          disabled={isSaving}
+                          data-testid="cancel-edit-button"
                         >
                           Cancel
                         </Button>
@@ -605,63 +615,106 @@ const Profile: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={userData.name}
-                      onChange={(e) => setUserData({...userData, name: e.target.value})}
-                      disabled={!isEditing}
-                      className="click-spark"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={userData.email}
-                      onChange={(e) => setUserData({...userData, email: e.target.value})}
-                      disabled={!isEditing}
-                      className="click-spark"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">Bio</Label>
-                    <Textarea
-                      id="bio"
-                      value={userData.bio}
-                      onChange={(e) => setUserData({...userData, bio: e.target.value})}
-                      disabled={!isEditing}
-                      className="min-h-[100px] click-spark"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Skills & Interests</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {userData.skills.map((skill, index) => (
-                        <Badge 
-                          key={index}
-                          variant="outline"
-                          className="px-3 py-1"
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                      {isEditing && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 click-spark"
-                        >
-                          + Add Skill
-                        </Button>
-                      )}
+                  {isLoadingProfile ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                          id="username"
+                          value={editedProfile.username}
+                          onChange={(e) => setEditedProfile({...editedProfile, username: e.target.value})}
+                          disabled={!isEditing}
+                          className="click-spark"
+                          placeholder="your_username"
+                          data-testid="username-input"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Your unique username for the platform
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="display_name">Display Name</Label>
+                        <Input
+                          id="display_name"
+                          value={editedProfile.display_name}
+                          onChange={(e) => setEditedProfile({...editedProfile, display_name: e.target.value})}
+                          disabled={!isEditing}
+                          className="click-spark"
+                          placeholder="Your Name"
+                          data-testid="display-name-input"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          How you want to be called on the platform
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bio">Bio</Label>
+                        <Textarea
+                          id="bio"
+                          value={editedProfile.bio || ''}
+                          onChange={(e) => setEditedProfile({...editedProfile, bio: e.target.value})}
+                          disabled={!isEditing}
+                          className="min-h-[100px] click-spark"
+                          placeholder="Tell us about yourself..."
+                          data-testid="bio-input"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A short description about yourself and your interests
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label>Interests</Label>
+                          {isEditing && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 click-spark"
+                              onClick={() => setInterestDialogOpen(true)}
+                              data-testid="add-interest-button"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Add Interest
+                            </Button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {editedProfile.interests.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                              No interests added yet. {isEditing && 'Click "Add Interest" to get started!'}
+                            </p>
+                          ) : (
+                            editedProfile.interests.map((interest, index) => (
+                              <Badge 
+                                key={index}
+                                variant="outline"
+                                className="px-3 py-1 gap-1"
+                                data-testid={`interest-badge-${index}`}
+                              >
+                                {interest}
+                                {isEditing && (
+                                  <button
+                                    onClick={() => handleRemoveInterest(interest)}
+                                    className="ml-1 hover:text-destructive"
+                                    data-testid={`remove-interest-${index}`}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                )}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
