@@ -181,7 +181,8 @@ const SignUp: React.FC = () => {
         <form onSubmit={handleSignUp}>
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive" data-testid="error-alert">
+              <Alert variant="destructive" data-testid="error-alert" className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -189,69 +190,87 @@ const SignUp: React.FC = () => {
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="username"
                   type="text"
                   placeholder="your_username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10"
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setFieldErrors(prev => ({ ...prev, username: '' }));
+                  }}
+                  className={`pl-10 transition-all ${fieldErrors.username ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   required
                   disabled={isLoading}
                   data-testid="username-input"
                 />
+                {fieldErrors.username && (
+                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.username}</p>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="your@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setFieldErrors(prev => ({ ...prev, email: '' }));
+                  }}
+                  className={`pl-10 transition-all ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   required
                   disabled={isLoading}
                   data-testid="email-input"
                 />
+                {fieldErrors.email && (
+                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.email}</p>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setFieldErrors(prev => ({ ...prev, password: '' }));
+                  }}
+                  className={`pl-10 transition-all ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   required
                   disabled={isLoading}
                   data-testid="password-input"
                 />
+                {fieldErrors.password && (
+                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.password}</p>
+                )}
               </div>
               {password && (
-                <div className="space-y-2">
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex gap-1">
                     {[...Array(4)].map((_, i) => (
                       <div
                         key={i}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
+                        className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
                           i < passwordStrength ? getStrengthColor() : 'bg-muted'
                         }`}
                       />
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Password strength: <span className="font-medium">{getStrengthText()}</span>
+                    Password strength: <span className={`font-semibold ${passwordStrength >= 3 ? 'text-green-500' : passwordStrength === 2 ? 'text-yellow-500' : 'text-red-500'}`}>{getStrengthText()}</span>
                   </p>
                 </div>
               )}
@@ -260,34 +279,43 @@ const SignUp: React.FC = () => {
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setFieldErrors(prev => ({ ...prev, confirmPassword: '' }));
+                  }}
+                  className={`pl-10 transition-all ${fieldErrors.confirmPassword ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   required
                   disabled={isLoading}
                   data-testid="confirm-password-input"
                 />
                 {confirmPassword && password === confirmPassword && (
-                  <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                  <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500 animate-in zoom-in duration-200" />
+                )}
+                {fieldErrors.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.confirmPassword}</p>
                 )}
               </div>
             </div>
 
-            <div className="text-xs text-muted-foreground space-y-1 pt-2">
-              <p className="font-medium mb-2">Password requirements:</p>
-              <ul className="space-y-1 list-disc list-inside">
-                <li className={password.length >= 8 ? 'text-green-500' : ''}>
+            <div className="text-xs text-muted-foreground space-y-1 pt-2 bg-muted/30 p-3 rounded-lg">
+              <p className="font-medium mb-2 text-foreground">Password requirements:</p>
+              <ul className="space-y-1.5">
+                <li className={`flex items-center gap-2 transition-colors ${password.length >= 8 ? 'text-green-600 dark:text-green-500' : ''}`}>
+                  {password.length >= 8 ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border-2" />}
                   At least 8 characters
                 </li>
-                <li className={password.match(/[a-z]/) && password.match(/[A-Z]/) ? 'text-green-500' : ''}>
+                <li className={`flex items-center gap-2 transition-colors ${password.match(/[a-z]/) && password.match(/[A-Z]/) ? 'text-green-600 dark:text-green-500' : ''}`}>
+                  {password.match(/[a-z]/) && password.match(/[A-Z]/) ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border-2" />}
                   Upper and lowercase letters
                 </li>
-                <li className={password.match(/[0-9]/) ? 'text-green-500' : ''}>
+                <li className={`flex items-center gap-2 transition-colors ${password.match(/[0-9]/) ? 'text-green-600 dark:text-green-500' : ''}`}>
+                  {password.match(/[0-9]/) ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border-2" />}
                   At least one number
                 </li>
               </ul>
@@ -297,8 +325,8 @@ const SignUp: React.FC = () => {
           <CardFooter className="flex flex-col space-y-3">
             <Button
               type="submit"
-              className="w-full"
-              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300"
+              disabled={isLoading || isGoogleLoading}
               data-testid="signup-button"
             >
               {isLoading ? (
@@ -309,26 +337,40 @@ const SignUp: React.FC = () => {
               ) : (
                 <>
                   Create Account
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
 
             <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              <Separator className="my-4" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-background px-2 text-xs text-muted-foreground">OR CONTINUE WITH</span>
               </div>
             </div>
 
             <Button
               type="button"
               variant="outline"
-              className="w-full"
+              className="w-full group hover:bg-primary/5 transition-all duration-300"
+              onClick={handleGoogleSignUp}
+              disabled={isLoading || isGoogleLoading}
+              data-testid="google-signup-button"
+            >
+              {isGoogleLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Chrome className="mr-2 h-4 w-4 text-blue-500 group-hover:scale-110 transition-transform" />
+              )}
+              Sign up with Google
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full text-muted-foreground hover:text-foreground transition-colors"
               onClick={handleSkip}
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
               data-testid="skip-button"
             >
               Skip for now
@@ -336,7 +378,7 @@ const SignUp: React.FC = () => {
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline font-medium">
+              <Link to="/login" className="text-primary hover:underline font-medium transition-colors">
                 Sign in
               </Link>
             </p>
