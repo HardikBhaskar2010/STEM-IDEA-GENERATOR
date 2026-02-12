@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
-import { Loader2, Mail, Lock, User, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Sparkles, ArrowRight, CheckCircle2, AlertCircle, Chrome } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
