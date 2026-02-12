@@ -388,14 +388,6 @@ const Profile: React.FC = () => {
     unlocked: achievement.condition(projects)
   }));
 
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
-  };
-
   const handleLogout = async () => {
     const { error } = await authService.signOut();
     
