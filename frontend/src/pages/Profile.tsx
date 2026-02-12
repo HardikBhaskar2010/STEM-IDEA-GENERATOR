@@ -65,7 +65,13 @@ interface Achievement {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [userIdCopied, setUserIdCopied] = useState(false);
+  
   const { userMode, setUserMode, colorTheme, setColorTheme } = usePreferences();
   const { user } = useAuth();
   const { lowPerf, setLowPerf, suggested } = usePerf();
@@ -76,14 +82,20 @@ const Profile: React.FC = () => {
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [interestDialogOpen, setInterestDialogOpen] = useState(false);
+  const [newInterest, setNewInterest] = useState('');
+  
   const isGuest = user && authService.isGuestUser(user);
   
-  const [userData, setUserData] = useState({
-    name: user?.email?.split('@')[0] || 'STEM Maker',
-    email: user?.email || 'maker@example.com',
-    bio: 'Passionate about electronics and IoT. Always looking for the next exciting project to build!',
-    skills: ['Arduino', 'Raspberry Pi', 'IoT', '3D Printing', 'Circuit Design'],
-    joinDate: 'January 2024',
+  // Profile data from Supabase
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [editedProfile, setEditedProfile] = useState({
+    username: '',
+    display_name: '',
+    bio: '',
+    interests: [] as string[],
+    skills: [] as string[],
+    avatar_url: '',
   });
 
   // Load projects to calculate stats
@@ -97,6 +109,42 @@ const Profile: React.FC = () => {
       console.error('Error loading projects:', error);
     }
   }, []);
+
+  // Load profile data from Supabase
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user || isGuest) {
+        setIsLoadingProfile(false);
+        return;
+      }
+
+      try {
+        const userProfile = await profileService.getOrCreateProfile(user);
+        if (userProfile) {
+          setProfile(userProfile);
+          setEditedProfile({
+            username: userProfile.username || '',
+            display_name: userProfile.display_name || '',
+            bio: userProfile.bio || '',
+            interests: userProfile.interests || [],
+            skills: userProfile.skills || [],
+            avatar_url: userProfile.avatar_url || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load profile data',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    loadProfile();
+  }, [user, isGuest]);
 
   // Calculate real stats from projects
   const projectsCompleted = projects.filter(p => p.status === 'Completed').length;
