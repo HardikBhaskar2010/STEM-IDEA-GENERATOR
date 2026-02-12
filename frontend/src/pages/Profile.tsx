@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Settings, LogOut, Save, Camera, Eye, EyeOff, School, Palette, Check, Zap, Lock, Bell, Trophy, TrendingUp, Flame } from 'lucide-react';
+import { User, Mail, Calendar, Settings, LogOut, Save, Camera, Eye, EyeOff, School, Palette, Check, Zap, Lock, Bell, Trophy, TrendingUp, Flame, Upload, X, Plus, Loader2, Copy, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { useCompetition } from '@/contexts/CompetitionContext';
 import { LevelBadge } from '@/components/competition/LevelBadge';
 import { getLevelProgress } from '@/services/competitionService';
 import { authService } from '@/services/authService';
+import { profileService, STEM_INTERESTS, type UserProfile } from '@/services/profileService';
 import PreferencesDialog from '@/components/PreferencesDialog';
 import PrivacySettingsDialog from '@/components/PrivacySettingsDialog';
 import EmailPreferencesDialog from '@/components/EmailPreferencesDialog';
