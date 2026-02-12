@@ -1,141 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogIn, Mail, Lock, AlertCircle, Chrome, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { authService } from '@/services/authService';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/services/authService';
+import { Loader2, Mail, Lock, Sparkles, ArrowRight } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { mode, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isGuest } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [error, setError] = useState('');
 
-  // Redirect authenticated users (including guests) to Home
+  // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading && (mode === 'authenticated' || mode === 'guest')) {
-      navigate('/');
+    if (isAuthenticated && !isGuest) {
+      navigate('/dashboard');
     }
-  }, [authLoading, mode, navigate]);
+  }, [isAuthenticated, isGuest, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError(null);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    setError(null);
 
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
+    try {
+      const result = await authService.signIn({ email, password });
+      
+      if (result.error) {
+        setError(result.error.message || 'Failed to login');
+        toast({
+          title: 'Login Failed',
+          description: result.error.message || 'Please check your credentials',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully logged in.',
+        });
+        navigate('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
       setIsLoading(false);
-      return;
-    }
-
-    const { user, error: authError } = await authService.signIn({
-      email: formData.email,
-      password: formData.password,
-    });
-
-    if (authError) {
-      setError(authError.message || 'Failed to sign in');
-      setIsLoading(false);
-      return;
-    }
-
-    if (user) {
-      toast({
-        title: 'Welcome back!',
-        description: 'You have been successfully signed in.',
-      });
-      navigate('/');
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const { error: authError } = await authService.signInWithGoogle();
-
-    if (authError) {
-      setError(authError.message || 'Failed to sign in with Google');
-      setIsLoading(false);
-      return;
-    }
-
-    // OAuth redirect will handle navigation
-  };
-
-  const handleGuestMode = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const { user, error: authError } = await authService.continueAsGuest();
-
-    if (authError) {
-      setError(authError.message || 'Failed to enter guest mode');
-      setIsLoading(false);
-      return;
-    }
-
-    if (user) {
+  const handleSkip = async () => {
+    try {
+      await authService.continueAsGuest();
       toast({
-        title: 'Welcome, Guest!',
-        description: 'You can explore all features. Create an account anytime to save your progress.',
+        title: 'Continuing as Guest',
+        description: 'You can create an account anytime to save your progress.',
       });
-      navigate('/');
+      navigate('/dashboard');
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to continue as guest',
+        variant: 'destructive',
+      });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/5 px-4">
-      <Card className="w-full max-w-md glass-effect border-border/50">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-gradient-primary rounded-xl">
-              <LogIn className="w-6 h-6 text-white" />
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse delay-1000" />
+      </div>
+
+      <Card className="w-full max-w-md relative z-10 shadow-2xl border-primary/20" data-testid="login-card">
+        <CardHeader className="space-y-3 text-center">
+          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+            <Sparkles className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your STEM Project account</CardDescription>
+          <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
+          <CardDescription className="text-base">
+            Sign in to continue your STEM journey
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
+        <form onSubmit={handleLogin}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive" data-testid="error-alert">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
-                  name="email"
                   type="email"
                   placeholder="your@email.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={isLoading}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
-                  data-testid="login-email-input"
+                  required
+                  disabled={isLoading}
+                  data-testid="email-input"
                 />
               </div>
             </div>
@@ -143,74 +119,79 @@ const Login: React.FC = () => {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
-                  name="password"
                   type="password"
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={isLoading}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
-                  data-testid="login-password-input"
+                  required
+                  disabled={isLoading}
+                  data-testid="password-input"
                 />
               </div>
             </div>
 
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col space-y-3">
             <Button
               type="submit"
-              className="w-full bg-gradient-primary text-white"
+              className="w-full"
               disabled={isLoading}
-              data-testid="login-submit-button"
+              data-testid="login-button"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
-          </form>
 
-          <div className="relative my-6">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              OR
-            </span>
-          </div>
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
 
-          {/* Google Sign In */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            data-testid="google-signin-button"
-          >
-            <Chrome className="mr-2 h-4 w-4" />
-            Continue with Google
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleSkip}
+              disabled={isLoading}
+              data-testid="skip-button"
+            >
+              Skip for now
+            </Button>
 
-          {/* Guest Mode */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full border-dashed"
-            onClick={handleGuestMode}
-            disabled={isLoading}
-            data-testid="guest-mode-button"
-          >
-            <UserCircle className="mr-2 h-4 w-4" />
-            Continue as Guest
-          </Button>
-          <p className="text-xs text-center text-muted-foreground">
-            Guest mode: Full experience, create account anytime
-          </p>
-
-          <div className="text-center text-sm mt-4">
-            <span className="text-muted-foreground">Don't have an account? </span>
-            <Link to="/signup" className="text-primary hover:underline font-medium">
-              Sign up
-            </Link>
-          </div>
-        </CardContent>
+            <p className="text-center text-sm text-muted-foreground">
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-primary hover:underline font-medium">
+                Sign up
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );

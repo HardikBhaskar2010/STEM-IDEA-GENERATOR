@@ -1,160 +1,160 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, Mail, Lock, User, AlertCircle, Chrome, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { authService } from '@/services/authService';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/services/authService';
+import { Loader2, Mail, Lock, User, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
-  const { mode, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isGuest } = useAuth();
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [error, setError] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
-  // Redirect authenticated users (including guests) to Home
+  // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading && (mode === 'authenticated' || mode === 'guest')) {
-      navigate('/');
+    if (isAuthenticated && !isGuest) {
+      navigate('/dashboard');
     }
-  }, [authLoading, mode, navigate]);
+  }, [isAuthenticated, isGuest, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError(null);
-  };
+  // Calculate password strength
+  useEffect(() => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+    if (password.match(/[0-9]/)) strength++;
+    if (password.match(/[^a-zA-Z0-9]/)) strength++;
+    setPasswordStrength(strength);
+  }, [password]);
 
-  const validateForm = (): boolean => {
-    if (!formData.username || !formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      return false;
-    }
-
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    // Validation
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
     setIsLoading(true);
-    setError(null);
 
-    if (!validateForm()) {
-      setIsLoading(false);
-      return;
-    }
-
-    const { user, error: authError } = await authService.signUp({
-      email: formData.email,
-      password: formData.password,
-      username: formData.username,
-    });
-
-    if (authError) {
-      setError(authError.message || 'Failed to create account');
-      setIsLoading(false);
-      return;
-    }
-
-    if (user) {
-      toast({
-        title: 'Account created!',
-        description: 'Welcome to STEM Project Generator. Your account is ready.',
+    try {
+      const result = await authService.signUp({
+        email,
+        password,
+        username,
       });
-      navigate('/');
+      
+      if (result.error) {
+        setError(result.error.message || 'Failed to create account');
+        toast({
+          title: 'Sign Up Failed',
+          description: result.error.message || 'Please try again',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Account Created!',
+          description: 'Please check your email to verify your account.',
+        });
+        navigate('/login');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const { error: authError } = await authService.signInWithGoogle();
-
-    if (authError) {
-      setError(authError.message || 'Failed to sign in with Google');
-      setIsLoading(false);
-      return;
+  const handleSkip = async () => {
+    try {
+      await authService.continueAsGuest();
+      toast({
+        title: 'Continuing as Guest',
+        description: 'You can create an account anytime to save your progress.',
+      });
+      navigate('/dashboard');
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to continue as guest',
+        variant: 'destructive',
+      });
     }
-
-    // OAuth redirect will handle navigation
   };
 
-  const handleGuestMode = async () => {
-    setIsLoading(true);
-    setError(null);
+  const getStrengthColor = () => {
+    if (passwordStrength <= 1) return 'bg-red-500';
+    if (passwordStrength === 2) return 'bg-yellow-500';
+    if (passwordStrength === 3) return 'bg-blue-500';
+    return 'bg-green-500';
+  };
 
-    const { user, error: authError } = await authService.continueAsGuest();
-
-    if (authError) {
-      setError(authError.message || 'Failed to enter guest mode');
-      setIsLoading(false);
-      return;
-    }
-
-    if (user) {
-      toast({
-        title: 'Welcome, Guest!',
-        description: 'You can explore all features. Create an account anytime to save your progress.',
-      });
-      navigate('/');
-    }
+  const getStrengthText = () => {
+    if (passwordStrength <= 1) return 'Weak';
+    if (passwordStrength === 2) return 'Fair';
+    if (passwordStrength === 3) return 'Good';
+    return 'Strong';
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
-      <Card className="w-full max-w-md glass-effect border-border/50">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-gradient-secondary rounded-xl">
-              <UserPlus className="w-6 h-6 text-white" />
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse delay-1000" />
+      </div>
+
+      <Card className="w-full max-w-md relative z-10 shadow-2xl border-primary/20" data-testid="signup-card">
+        <CardHeader className="space-y-3 text-center">
+          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+            <Sparkles className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Join STEM Project Generator today</CardDescription>
+          <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
+          <CardDescription className="text-base">
+            Join STEM Idea Adventure and start creating
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
+        <form onSubmit={handleSignUp}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive" data-testid="error-alert">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="username"
-                  name="username"
+                  type="text"
                   placeholder="your_username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  disabled={isLoading}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="pl-10"
+                  required
+                  disabled={isLoading}
+                  data-testid="username-input"
                 />
               </div>
             </div>
@@ -162,16 +162,17 @@ const SignUp: React.FC = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
-                  name="email"
                   type="email"
                   placeholder="your@email.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={isLoading}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
+                  required
+                  disabled={isLoading}
+                  data-testid="email-input"
                 />
               </div>
             </div>
@@ -179,91 +180,123 @@ const SignUp: React.FC = () => {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
-                  name="password"
                   type="password"
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={isLoading}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
+                  required
+                  disabled={isLoading}
+                  data-testid="password-input"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
+              {password && (
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    {[...Array(4)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1 flex-1 rounded-full transition-colors ${
+                          i < passwordStrength ? getStrengthColor() : 'bg-muted'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Password strength: <span className="font-medium">{getStrengthText()}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
-                  name="confirmPassword"
                   type="password"
                   placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  disabled={isLoading}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10"
+                  required
+                  disabled={isLoading}
+                  data-testid="confirm-password-input"
                 />
+                {confirmPassword && password === confirmPassword && (
+                  <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                )}
+              </div>
+            </div>
+
+            <div className="text-xs text-muted-foreground space-y-1 pt-2">
+              <p className="font-medium mb-2">Password requirements:</p>
+              <ul className="space-y-1 list-disc list-inside">
+                <li className={password.length >= 8 ? 'text-green-500' : ''}>
+                  At least 8 characters
+                </li>
+                <li className={password.match(/[a-z]/) && password.match(/[A-Z]/) ? 'text-green-500' : ''}>
+                  Upper and lowercase letters
+                </li>
+                <li className={password.match(/[0-9]/) ? 'text-green-500' : ''}>
+                  At least one number
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col space-y-3">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              data-testid="signup-button"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
               </div>
             </div>
 
             <Button
-              type="submit"
-              className="w-full bg-gradient-secondary text-white"
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleSkip}
               disabled={isLoading}
-              data-testid="signup-submit-button"
+              data-testid="skip-button"
             >
-              {isLoading ? 'Creating account...' : 'Create Account'}
+              Skip for now
             </Button>
-          </form>
 
-          <div className="relative my-6">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              OR
-            </span>
-          </div>
-
-          {/* Google Sign In */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            data-testid="google-signup-button"
-          >
-            <Chrome className="mr-2 h-4 w-4" />
-            Continue with Google
-          </Button>
-
-          {/* Guest Mode */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full border-dashed"
-            onClick={handleGuestMode}
-            disabled={isLoading}
-            data-testid="guest-signup-button"
-          >
-            <UserCircle className="mr-2 h-4 w-4" />
-            Continue as Guest
-          </Button>
-          <p className="text-xs text-center text-muted-foreground">
-            Guest mode: Full experience, create account anytime
-          </p>
-
-          <div className="text-center text-sm mt-4">
-            <span className="text-muted-foreground">Already have an account? </span>
-            <Link to="/login" className="text-primary hover:underline font-medium">
-              Sign in
-            </Link>
-          </div>
-        </CardContent>
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Sign in
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );
