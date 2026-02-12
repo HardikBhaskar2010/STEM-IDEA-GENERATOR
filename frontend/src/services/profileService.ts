@@ -80,6 +80,8 @@ class ProfileService {
 
   /**
    * Create a new profile (called after signup)
+   * Note: This is typically handled by the database trigger (handle_new_user)
+   * but can be used as a fallback if needed
    */
   async createProfile(
     userId: string,
@@ -93,7 +95,7 @@ class ProfileService {
           user_id: userId,
           username: username,
           display_name: username,
-          email: email,
+          // Note: email is stored in auth.users, not in profiles table
         })
         .select()
         .single();
