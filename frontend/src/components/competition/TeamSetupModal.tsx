@@ -1,5 +1,6 @@
 // Team Setup Modal - Create or Join Team
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -12,8 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createTeam, joinTeam, validateTeamCode } from '@/services/competitionService';
-import { Users, School, Code, Check, X } from 'lucide-react';
+import { Users, School, Code, Check, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface TeamSetupModalProps {
   open: boolean;
@@ -25,6 +28,8 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
   const [activeTab, setActiveTab] = useState('join');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { isAuthenticated, isGuest } = useAuth();
+  const navigate = useNavigate();
 
   // Join Team State
   const [teamCode, setTeamCode] = useState('');
@@ -35,6 +40,18 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
   const [schoolName, setSchoolName] = useState('');
   const [createdCode, setCreatedCode] = useState<string | null>(null);
 
+  // Check if user needs to login
+  const requiresAuth = !isAuthenticated || isGuest;
+
+  const handleLoginRequired = () => {
+    toast({
+      title: 'Login Required',
+      description: 'Please create an account or login to join competitions',
+    });
+    onClose();
+    navigate('/login');
+  };
+
   const handleValidateCode = async () => {
     if (!teamCode.trim()) return;
     const result = await validateTeamCode(teamCode.trim());
@@ -42,6 +59,11 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
   };
 
   const handleJoinTeam = async () => {
+    if (requiresAuth) {
+      handleLoginRequired();
+      return;
+    }
+
     try {
       setLoading(true);
       await joinTeam(teamCode.trim());
@@ -63,6 +85,11 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
   };
 
   const handleCreateTeam = async () => {
+    if (requiresAuth) {
+      handleLoginRequired();
+      return;
+    }
+
     try {
       setLoading(true);
       const result = await createTeam(teamName, schoolName || undefined);
