@@ -23,6 +23,8 @@ import { CommandPalette } from "@/components/CommandPalette";
 
 // Lazy load page components
 const Welcome = React.lazy(() => import("./pages/Welcome"));
+const Login = React.lazy(() => import("./pages/Login"));
+const SignUp = React.lazy(() => import("./pages/SignUp"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const Generator = React.lazy(() => import("./pages/Generator"));
 const CodeGenerator = React.lazy(() => import("./pages/CodeGenerator"));
