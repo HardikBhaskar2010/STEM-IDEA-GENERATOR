@@ -979,6 +979,113 @@ const Profile: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add Interest Dialog */}
+      <Dialog open={interestDialogOpen} onOpenChange={setInterestDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              Add Interests
+            </DialogTitle>
+            <DialogDescription>
+              Select from popular STEM interests or add your own custom interest
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Custom Interest Input */}
+            <div className="space-y-2">
+              <Label htmlFor="custom-interest">Custom Interest</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="custom-interest"
+                  placeholder="e.g., Quantum Computing"
+                  value={newInterest}
+                  onChange={(e) => setNewInterest(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddInterest(newInterest);
+                    }
+                  }}
+                  className="flex-1"
+                  data-testid="custom-interest-input"
+                />
+                <Button
+                  onClick={() => handleAddInterest(newInterest)}
+                  disabled={!newInterest.trim()}
+                  size="icon"
+                  data-testid="add-custom-interest-button"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Predefined STEM Interests */}
+            <div className="space-y-2">
+              <Label>Popular STEM Interests</Label>
+              <div className="max-h-[300px] overflow-y-auto space-y-2 border rounded-lg p-3">
+                <div className="flex flex-wrap gap-2">
+                  {STEM_INTERESTS.map((interest) => {
+                    const isAdded = editedProfile.interests.includes(interest);
+                    return (
+                      <Button
+                        key={interest}
+                        variant={isAdded ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          if (isAdded) {
+                            handleRemoveInterest(interest);
+                          } else {
+                            handleAddInterest(interest);
+                          }
+                        }}
+                        className={`${isAdded ? 'bg-gradient-primary text-white' : ''}`}
+                        data-testid={`stem-interest-${interest.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {isAdded && <Check className="h-3 w-3 mr-1" />}
+                        {interest}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Current Interests Preview */}
+            {editedProfile.interests.length > 0 && (
+              <div className="space-y-2">
+                <Label>Your Interests ({editedProfile.interests.length})</Label>
+                <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg">
+                  {editedProfile.interests.map((interest, index) => (
+                    <Badge 
+                      key={index}
+                      variant="secondary"
+                      className="px-3 py-1"
+                    >
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setInterestDialogOpen(false);
+                setNewInterest('');
+              }}
+            >
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
