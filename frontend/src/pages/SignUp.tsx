@@ -44,15 +44,34 @@ const SignUp: React.FC = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
 
     // Validation
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    const errors: { [key: string]: string } = {};
+    
+    if (!username.trim()) {
+      errors.username = 'Username is required';
+    } else if (username.length < 3) {
+      errors.username = 'Username must be at least 3 characters';
+    }
+
+    if (!email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Please enter a valid email address';
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      errors.password = 'Password must be at least 8 characters long';
+    }
+
+    if (password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('Please fix the errors below');
       return;
     }
 
@@ -74,8 +93,9 @@ const SignUp: React.FC = () => {
         });
       } else {
         toast({
-          title: 'Account Created!',
-          description: 'Please check your email to verify your account.',
+          title: 'Account Created! 🎉',
+          description: 'Welcome to STEM Idea Adventure. Check your email to verify your account.',
+          duration: 5000,
         });
         navigate('/login');
       }
@@ -83,6 +103,28 @@ const SignUp: React.FC = () => {
       setError(err.message || 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const { error } = await authService.signInWithGoogle();
+      if (error) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to sign in with Google',
+          variant: 'destructive',
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign in with Google',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
