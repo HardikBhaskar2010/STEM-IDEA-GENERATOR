@@ -19,7 +19,7 @@
 
 ---
 
-## 🌟 What Makes Us Special
+## 🌟 What Makes Us Special 
 
 STEM Idea Adventure isn't just another project generator—it's an **immersive experience** that combines cutting-edge AI with breathtaking 3D visuals to inspire creativity and innovation. Whether you're a student exploring robotics, an educator planning lessons, or a maker bringing ideas to life, we've got you covered.
 
