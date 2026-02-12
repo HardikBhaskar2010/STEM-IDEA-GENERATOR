@@ -120,6 +120,16 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
           </DialogDescription>
         </DialogHeader>
 
+        {requiresAuth && (
+          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              You need to <strong>create an account or login</strong> to join competitions.
+              Click any action below to be redirected to login.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="join" data-testid="join-team-tab">Join Team</TabsTrigger>
