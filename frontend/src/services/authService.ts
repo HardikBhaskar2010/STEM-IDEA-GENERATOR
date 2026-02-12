@@ -50,27 +50,22 @@ class AuthService {
 
   async signUp(data: SignUpData): Promise<AuthResponse> {
     try {
+      // Pass username in metadata for the trigger to use
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          data: {
+            username: data.username ?? data.email.split('@')[0],
+            display_name: data.username ?? data.email.split('@')[0],
+          },
+        },
       })
 
       if (error) return { user: null, error }
 
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            username: data.username ?? data.email.split('@')[0],
-            email: data.email,
-          })
-
-        if (profileError) {
-          return { user: authData.user, error: profileError as AuthError }
-        }
-      }
-
+      // The profile will be automatically created by the database trigger
+      // defined in auth_profiles_schema.sql (handle_new_user function)
       return { user: authData.user, error: null }
     } catch (err) {
       return { user: null, error: err as AuthError }
