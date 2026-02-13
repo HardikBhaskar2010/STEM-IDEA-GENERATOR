@@ -167,6 +167,7 @@ const Navbar: React.FC = () => {
               </Badge>
             )}
             <ThemeToggle />
+            <NavbarAuthButton />
             {navItems.map((item, _index) => {
               const Icon = item.icon as React.ComponentType<{ className?: string }>;
               const active = isActive(item.path);
