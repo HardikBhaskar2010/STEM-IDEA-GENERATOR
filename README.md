@@ -27,6 +27,7 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 
 - **🤖 AI-Powered Intelligence**: Advanced AI that understands your vision and creates tailored project roadmaps
 - **🎨 Stunning 3D Graphics**: Immersive particle effects and interactive 3D component visualizations
+- **🔐 Futuristic Auth Experience**: Premium glassmorphism login/signup with animated backgrounds
 - **🎤 Voice Control**: Natural conversation with AI assistant via voice commands
 - **💬 Smart Chat System**: Context-aware AI guidance that remembers your preferences
 - **🏆 Competition Platform**: School-ready team competitions with leaderboards and levels
