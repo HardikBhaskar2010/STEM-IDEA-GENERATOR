@@ -1111,6 +1111,79 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📝 Changelog
 
+### 🚀 Version 2.6 - Futuristic Auth Experience (February 2026)
+
+#### 🎨 Complete Login & Sign Up Redesign
+- ✨ **Stunning Visual Design**: Premium futuristic STEM theme
+  - Dark gradient background: `from-black via-#0b0b1a to-#120022`
+  - Animated starry sky with twinkling particles
+  - Floating purple particles with anime.js
+  - Glowing circuit-like lines and effects
+  - Large pulsing orbs for depth
+- 🎭 **Glassmorphism UI**: Modern card design
+  - Translucent card with `bg-white/5` and `backdrop-blur-xl`
+  - Purple glow shadows and borders
+  - Smooth entrance animations with Framer Motion
+  - Rounded corners with premium feel
+- 🏆 **Hero Section**: Immersive left panel
+  - Orange "INCOMING TRANSMISSION" label with animated dot
+  - Large "STEM Idea Adventure" heading
+  - Purple gradient "starts here" subheading
+  - Three feature icons: Globe, Users, Rocket
+  - Feature descriptions for each element
+- 🎯 **Interactive Form Elements**:
+  - Translucent input fields with icon prefixes
+  - Purple focus states and hover effects
+  - Role selectors with pill-style radio buttons
+  - Active state: Purple fill + border + glow + scale animation
+  - Inactive state: Transparent with subtle border
+  - Smooth transitions on all interactions
+- 🔘 **Advanced Role Selectors**: Custom radio button components
+  - "I am joining as": Student/Teacher selection
+  - "How did you hear about us?": School/Social Media selection
+  - Interactive hover and click animations
+  - Visual feedback with scale and glow effects
+- 🎨 **Gradient CTA Button**: Eye-catching call-to-action
+  - Purple gradient: `from-purple-500 to-violet-600`
+  - "Start Your Adventure" text with sparkles icon
+  - Enhanced glow on hover with scale effect
+  - Loading states with spinner
+- 📱 **Responsive Design**: Works beautifully on all devices
+  - Desktop: 2-column layout (hero left, form right)
+  - Mobile: Stacked layout with simplified hero at top
+  - All elements adapt to screen size
+
+#### 🔧 Technical Implementation
+- ✅ Created 5 new reusable auth components:
+  - `AuthLayout.tsx` - Main wrapper with background and grid
+  - `BackgroundEffects.tsx` - Animated background with anime.js
+  - `HeroSection.tsx` - Left panel branding and features
+  - `AuthCard.tsx` - Glassmorphism card wrapper
+  - `RoleSelector.tsx` - Reusable radio button component
+- ✅ Redesigned Login page (`/login`) with new components
+- ✅ Redesigned Sign Up page (`/signup`) with extended form
+- ✅ Added starry twinkle animation to global CSS
+- ✅ Maintained all existing functionality:
+  - Email/password authentication
+  - Google OAuth integration
+  - Guest mode ("Skip for now")
+  - Form validation and error handling
+  - Navigation between pages
+  - Auto-redirect for logged-in users
+
+#### 🎨 Design System Integration
+- Matches existing purple theme perfectly
+- Uses Lucide React icons throughout
+- Leverages Framer Motion for animations
+- Anime.js for complex particle effects
+- Tailwind CSS for all styling
+- Dark theme optimized
+
+#### 📸 Updated Screenshots
+- New auth page screenshots showcase futuristic design
+- Consistent with overall app aesthetic
+- Professional and polished appearance
+
 ### 🎨 Version 2.5 - Enhanced User Profiles (February 2026)
 
 #### 👤 Profile Customization System
