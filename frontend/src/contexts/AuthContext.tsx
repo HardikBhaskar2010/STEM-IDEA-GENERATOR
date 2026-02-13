@@ -38,7 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const currentUser = await authService.getCurrentUser();
+        let currentUser = await authService.getCurrentUser();
+        
+        // If no user exists (not logged in and not guest), automatically create guest
+        if (!currentUser) {
+          const guestResult = await authService.continueAsGuest();
+          currentUser = guestResult.user;
+        }
+        
         setUser(currentUser);
         
         if (currentUser && authService.isGuestUser(currentUser)) {
