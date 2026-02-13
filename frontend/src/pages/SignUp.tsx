@@ -1,28 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
-import { Loader2, Mail, Lock, User, Sparkles, ArrowRight, CheckCircle2, AlertCircle, Chrome } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Sparkles, AlertCircle, Chrome, Building2, UserCircle, GraduationCap, School } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import AuthLayout from '@/components/auth/AuthLayout';
+import AuthCard from '@/components/auth/AuthCard';
+import RoleSelector from '@/components/auth/RoleSelector';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isGuest } = useAuth();
-  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [school, setSchool] = useState('');
+  const [role, setRole] = useState('');
+  const [joiningAs, setJoiningAs] = useState('student');
+  const [hearAbout, setHearAbout] = useState('school');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   // Redirect if already logged in
   useEffect(() => {
@@ -31,47 +35,17 @@ const SignUp: React.FC = () => {
     }
   }, [isAuthenticated, isGuest, navigate]);
 
-  // Calculate password strength
-  useEffect(() => {
-    let strength = 0;
-    if (password.length >= 8) strength++;
-    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
-    if (password.match(/[0-9]/)) strength++;
-    if (password.match(/[^a-zA-Z0-9]/)) strength++;
-    setPasswordStrength(strength);
-  }, [password]);
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setFieldErrors({});
 
-    // Validation
-    const errors: { [key: string]: string } = {};
-    
-    if (!username.trim()) {
-      errors.username = 'Username is required';
-    } else if (username.length < 3) {
-      errors.username = 'Username must be at least 3 characters';
-    }
-
-    if (!email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Please enter a valid email address';
+    if (!fullName.trim()) {
+      setError('Please enter your full name');
+      return;
     }
 
     if (password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
-    }
-
-    if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      setError('Please fix the errors below');
+      setError('Password must be at least 8 characters long');
       return;
     }
 
@@ -81,7 +55,7 @@ const SignUp: React.FC = () => {
       const result = await authService.signUp({
         email,
         password,
-        username,
+        username: fullName,
       });
       
       if (result.error) {
@@ -145,247 +119,289 @@ const SignUp: React.FC = () => {
     }
   };
 
-  const getStrengthColor = () => {
-    if (passwordStrength <= 1) return 'bg-red-500';
-    if (passwordStrength === 2) return 'bg-yellow-500';
-    if (passwordStrength === 3) return 'bg-blue-500';
-    return 'bg-green-500';
-  };
-
-  const getStrengthText = () => {
-    if (passwordStrength <= 1) return 'Weak';
-    if (passwordStrength === 2) return 'Fair';
-    if (passwordStrength === 3) return 'Good';
-    return 'Strong';
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
-
-      <Card className="w-full max-w-md relative z-10 shadow-2xl border-primary/20" data-testid="signup-card">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2">
-            <Sparkles className="h-8 w-8 text-primary" />
+    <AuthLayout>
+      <AuthCard>
+        {/* Icon Header */}
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', duration: 0.8, delay: 0.2 }}
+          className="flex justify-center mb-6"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-purple-500/30 rounded-full blur-xl animate-pulse" />
+            <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center border border-purple-400/30">
+              <Sparkles className="w-10 h-10 text-white" />
+            </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
-          <CardDescription className="text-base">
-            Join STEM Idea Adventure and start creating
-          </CardDescription>
-        </CardHeader>
+        </motion.div>
 
-        <form onSubmit={handleSignUp}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive" data-testid="error-alert" className="animate-in fade-in slide-in-from-top-2 duration-300">
+        <form onSubmit={handleSignUp} className="space-y-5">
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Alert variant="destructive" data-testid="error-alert" className="bg-red-500/10 border-red-500/50">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
-            )}
+            </motion.div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="your_username"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    setFieldErrors(prev => ({ ...prev, username: '' }));
-                  }}
-                  className={`pl-10 transition-all ${fieldErrors.username ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  required
-                  disabled={isLoading}
-                  data-testid="username-input"
-                />
-                {fieldErrors.username && (
-                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.username}</p>
-                )}
-              </div>
+          {/* Full Name Field */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="space-y-2"
+          >
+            <Label htmlFor="fullName" className="text-gray-300 text-sm">Full Name</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Luna Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/30 transition-all"
+                required
+                disabled={isLoading}
+                data-testid="fullname-input"
+              />
             </div>
+          </motion.div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setFieldErrors(prev => ({ ...prev, email: '' }));
-                  }}
-                  className={`pl-10 transition-all ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  required
-                  disabled={isLoading}
-                  data-testid="email-input"
-                />
-                {fieldErrors.email && (
-                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.email}</p>
-                )}
-              </div>
+          {/* Email Field */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="space-y-2"
+          >
+            <Label htmlFor="email" className="text-gray-300 text-sm">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="School / Organization"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/30 transition-all"
+                required
+                disabled={isLoading}
+                data-testid="email-input"
+              />
             </div>
+          </motion.div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setFieldErrors(prev => ({ ...prev, password: '' }));
-                  }}
-                  className={`pl-10 transition-all ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  required
-                  disabled={isLoading}
-                  data-testid="password-input"
-                />
-                {fieldErrors.password && (
-                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.password}</p>
-                )}
-              </div>
-              {password && (
-                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex gap-1">
-                    {[...Array(4)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                          i < passwordStrength ? getStrengthColor() : 'bg-muted'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Password strength: <span className={`font-semibold ${passwordStrength >= 3 ? 'text-green-500' : passwordStrength === 2 ? 'text-yellow-500' : 'text-red-500'}`}>{getStrengthText()}</span>
-                  </p>
-                </div>
-              )}
+          {/* School/Organization Field */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="space-y-2"
+          >
+            <Label htmlFor="school" className="text-gray-300 text-sm">School / Organization</Label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Input
+                id="school"
+                type="text"
+                placeholder="Your school or organization"
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/30 transition-all"
+                disabled={isLoading}
+                data-testid="school-input"
+              />
             </div>
+          </motion.div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setFieldErrors(prev => ({ ...prev, confirmPassword: '' }));
-                  }}
-                  className={`pl-10 transition-all ${fieldErrors.confirmPassword ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  required
-                  disabled={isLoading}
-                  data-testid="confirm-password-input"
-                />
-                {confirmPassword && password === confirmPassword && (
-                  <CheckCircle2 className="absolute right-3 top-3 h-4 w-4 text-green-500 animate-in zoom-in duration-200" />
-                )}
-                {fieldErrors.confirmPassword && (
-                  <p className="text-xs text-red-500 mt-1 animate-in fade-in slide-in-from-top-1">{fieldErrors.confirmPassword}</p>
-                )}
-              </div>
+          {/* Role Field */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.45, duration: 0.5 }}
+            className="space-y-2"
+          >
+            <Label htmlFor="role" className="text-gray-300 text-sm">Role</Label>
+            <div className="relative">
+              <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+              <Input
+                id="role"
+                type="text"
+                placeholder="e.g., Student, Teacher, Researcher"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/30 transition-all"
+                disabled={isLoading}
+                data-testid="role-input"
+              />
             </div>
+          </motion.div>
 
-            <div className="text-xs text-muted-foreground space-y-1 pt-2 bg-muted/30 p-3 rounded-lg">
-              <p className="font-medium mb-2 text-foreground">Password requirements:</p>
-              <ul className="space-y-1.5">
-                <li className={`flex items-center gap-2 transition-colors ${password.length >= 8 ? 'text-green-600 dark:text-green-500' : ''}`}>
-                  {password.length >= 8 ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border-2" />}
-                  At least 8 characters
-                </li>
-                <li className={`flex items-center gap-2 transition-colors ${password.match(/[a-z]/) && password.match(/[A-Z]/) ? 'text-green-600 dark:text-green-500' : ''}`}>
-                  {password.match(/[a-z]/) && password.match(/[A-Z]/) ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border-2" />}
-                  Upper and lowercase letters
-                </li>
-                <li className={`flex items-center gap-2 transition-colors ${password.match(/[0-9]/) ? 'text-green-600 dark:text-green-500' : ''}`}>
-                  {password.match(/[0-9]/) ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border-2" />}
-                  At least one number
-                </li>
-              </ul>
+          {/* Password Field */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="space-y-2"
+          >
+            <Label htmlFor="password" className="text-gray-300 text-sm">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/30 transition-all"
+                required
+                disabled={isLoading}
+                data-testid="password-input"
+              />
             </div>
-          </CardContent>
+            <p className="text-xs text-gray-500">Must be at least 8 characters</p>
+          </motion.div>
 
-          <CardFooter className="flex flex-col space-y-3">
+          {/* I am joining as */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.55, duration: 0.5 }}
+          >
+            <RoleSelector
+              label="I am joining as:"
+              options={[
+                { value: 'student', label: 'Student' },
+                { value: 'teacher', label: 'Teacher' },
+              ]}
+              value={joiningAs}
+              onChange={setJoiningAs}
+              name="joining-as"
+            />
+          </motion.div>
+
+          {/* How did you hear about us */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
+            <RoleSelector
+              label="How did you hear about us?"
+              options={[
+                { value: 'school', label: 'School' },
+                { value: 'social-media', label: 'Social Media' },
+              ]}
+              value={hearAbout}
+              onChange={setHearAbout}
+              name="hear-about"
+            />
+          </motion.div>
+
+          {/* Sign Up Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.65, duration: 0.5 }}
+          >
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300"
+              className="w-full bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white font-medium py-6 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-[1.02]"
               disabled={isLoading || isGoogleLoading}
               data-testid="signup-button"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Creating account...
                 </>
               ) : (
                 <>
-                  Create Account
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  Start Your Adventure
+                  <Sparkles className="ml-2 h-5 w-5" />
                 </>
               )}
             </Button>
+          </motion.div>
 
-            <div className="relative w-full">
-              <Separator className="my-4" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-background px-2 text-xs text-muted-foreground">OR CONTINUE WITH</span>
-              </div>
+          {/* Separator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="relative my-6"
+          >
+            <Separator className="bg-white/10" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="bg-[#0b0b1a] px-3 text-xs text-gray-400 uppercase tracking-wider">Or continue with</span>
             </div>
+          </motion.div>
 
+          {/* Google Sign Up */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75, duration: 0.5 }}
+          >
             <Button
               type="button"
               variant="outline"
-              className="w-full group hover:bg-primary/5 transition-all duration-300"
+              className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 py-6 rounded-xl transition-all duration-300"
               onClick={handleGoogleSignUp}
               disabled={isLoading || isGoogleLoading}
               data-testid="google-signup-button"
             >
               {isGoogleLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : (
-                <Chrome className="mr-2 h-4 w-4 text-blue-500 group-hover:scale-110 transition-transform" />
+                <Chrome className="mr-2 h-5 w-5 text-blue-400" />
               )}
               Sign up with Google
             </Button>
+          </motion.div>
 
+          {/* Skip Button */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+          >
             <Button
               type="button"
               variant="ghost"
-              className="w-full text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-300"
               onClick={handleSkip}
               disabled={isLoading || isGoogleLoading}
               data-testid="skip-button"
             >
+              <UserCircle className="mr-2 h-4 w-4" />
               Skip for now
             </Button>
+          </motion.div>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline font-medium transition-colors">
-                Sign in
-              </Link>
-            </p>
-          </CardFooter>
+          {/* Login Link */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.85, duration: 0.5 }}
+            className="text-center text-sm text-gray-400 pt-4"
+          >
+            Already have an account?{' '}
+            <Link to="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+              Sign in
+            </Link>
+          </motion.p>
         </form>
-      </Card>
-    </div>
+      </AuthCard>
+    </AuthLayout>
   );
 };
 
