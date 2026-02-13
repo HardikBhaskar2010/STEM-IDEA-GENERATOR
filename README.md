@@ -814,6 +814,12 @@ STEM-IDEA-GENERATOR/
 ├── ⚛️ frontend/                     # React Frontend
 │   ├── src/
 │   │   ├── 🎨 components/          # React components
+│   │   │   ├── auth/              # Authentication components
+│   │   │   │   ├── AuthLayout.tsx           # Auth page wrapper
+│   │   │   │   ├── BackgroundEffects.tsx    # Animated background
+│   │   │   │   ├── HeroSection.tsx          # Left hero panel
+│   │   │   │   ├── AuthCard.tsx             # Glassmorphism card
+│   │   │   │   └── RoleSelector.tsx         # Radio button component
 │   │   │   ├── three/             # Three.js 3D components
 │   │   │   │   ├── ParticleField.tsx        # Particle system
 │   │   │   │   ├── FloatingGeometry.tsx     # 3D shapes
@@ -826,6 +832,8 @@ STEM-IDEA-GENERATOR/
 │   │   │
 │   │   ├── 📄 pages/               # Application pages
 │   │   │   ├── Home.tsx           # Landing page
+│   │   │   ├── Login.tsx          # Futuristic login page
+│   │   │   ├── SignUp.tsx         # Futuristic signup page
 │   │   │   ├── Dashboard.tsx      # User dashboard
 │   │   │   ├── Generator.tsx      # Project generator
 │   │   │   ├── Competition.tsx    # Competition hub
