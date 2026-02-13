@@ -254,25 +254,6 @@ const Login: React.FC = () => {
             </Button>
           </motion.div>
 
-          {/* Skip Button */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-300"
-              onClick={handleSkip}
-              disabled={isLoading || isGoogleLoading}
-              data-testid="skip-button"
-            >
-              <UserCircle className="mr-2 h-4 w-4" />
-              Skip for now
-            </Button>
-          </motion.div>
-
           {/* Sign Up Link */}
           <motion.p
             initial={{ opacity: 0 }}
