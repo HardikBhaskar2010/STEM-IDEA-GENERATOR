@@ -366,7 +366,14 @@ Teacher Creates Team → Shares Code → Students Join → Generate Ideas → Su
 ### 📊 Smart Dashboard
 <img src="./screenshots/02-login-page.jpeg" alt="Dashboard" width="800"/>
 
-*Visual progress tracking with analytics and insights*
+*Futuristic login page with glassmorphism, animated particles, and purple gradients*
+
+**NEW Design Features:**
+- Dark gradient background with starry effects
+- Left hero section with "STEM Idea Adventure" branding
+- Glassmorphism auth card with purple glow
+- Interactive form elements with smooth animations
+- "Start Your Adventure" gradient button
 
 ---
 
