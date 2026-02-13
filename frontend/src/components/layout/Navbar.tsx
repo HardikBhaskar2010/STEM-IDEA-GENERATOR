@@ -9,6 +9,7 @@ import ThemeToggle from '@/components/ui/theme-toggle';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCompetition } from '@/contexts/CompetitionContext';
 import { Badge } from '@/components/ui/badge';
+import { NavbarAuthButton } from '@/components/auth/NavbarAuthButton';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
