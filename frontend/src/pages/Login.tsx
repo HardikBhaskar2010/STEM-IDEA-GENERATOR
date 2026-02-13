@@ -80,23 +80,6 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSkip = async () => {
-    try {
-      await authService.continueAsGuest();
-      toast({
-        title: 'Continuing as Guest',
-        description: 'You can create an account anytime to save your progress.',
-      });
-      navigate('/dashboard');
-    } catch (err: any) {
-      toast({
-        title: 'Error',
-        description: 'Failed to continue as guest',
-        variant: 'destructive',
-      });
-    }
-  };
-
   return (
     <AuthLayout>
       <AuthCard>
