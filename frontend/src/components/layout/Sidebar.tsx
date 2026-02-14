@@ -150,7 +150,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <NavbarAuthButton 
                 variant="default"
                 className="w-full justify-center"
+                data-testid="sidebar-auth-button"
               />
+            </div>
+          )}
+
+          {/* Debug: Show guest status */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mx-2 mb-2 p-2 bg-yellow-500/10 rounded text-xs text-yellow-500">
+              Guest: {isGuest ? 'Yes' : 'No'}
             </div>
           )}
 
