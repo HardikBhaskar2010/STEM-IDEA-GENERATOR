@@ -400,6 +400,7 @@ const Components: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
+              </div>
             );
           })}
           </div>
