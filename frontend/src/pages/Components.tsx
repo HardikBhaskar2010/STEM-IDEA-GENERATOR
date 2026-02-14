@@ -35,10 +35,15 @@ const Components: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [supabaseConnected, setSupabaseConnected] = useState(false);
   const { showPrice } = usePreferences();
-  const { isGuest } = useAuth();
+  const { isGuest, isLoading: authLoading } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [componentToDelete, setComponentToDelete] = useState<{ id: string; name: string } | null>(null);
+  
+  // Debug: Log auth state
+  React.useEffect(() => {
+    console.log('📦 Components Page - Auth State:', { isGuest, authLoading });
+  }, [isGuest, authLoading]);
   
   // Component details modal state
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
