@@ -27,7 +27,7 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 
 - **🤖 AI-Powered Intelligence**: Advanced AI that understands your vision and creates tailored project roadmaps
 - **🎨 Stunning 3D Graphics**: Immersive particle effects and interactive 3D component visualizations
-- **🔐 Futuristic Auth Experience**: Premium glassmorphism login/signup with animated backgrounds
+- **🔐 Soft-Locked Auth Experience**: Guest-friendly exploration with strategic feature locks
 - **🎤 Voice Control**: Natural conversation with AI assistant via voice commands
 - **💬 Smart Chat System**: Context-aware AI guidance that remembers your preferences
 - **🏆 Competition Platform**: School-ready team competitions with leaderboards and levels
@@ -39,6 +39,52 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 ---
 
 ## ✨ Features
+
+### 🔐 **Soft-Locked Auth Experience**
+
+A **guest-friendly** authentication system that lets users explore freely while encouraging sign-ups through strategic feature locks:
+
+<table>
+<tr>
+<td width="50%">
+
+#### 🌟 Guest Mode (Auto-Activated)
+- **Instant Access**: No sign-up required to start exploring
+- **Full Browsing**: Navigate all pages and features
+- **Generate Projects**: Create unlimited AI-powered project ideas
+- **Browse Components**: Explore 500+ component catalog
+- **View Competitions**: See competition info and leaderboards
+- **Learn Resources**: Access all learning materials
+
+</td>
+<td width="50%">
+
+#### 🔒 Smart Locks (Conversion Points)
+- **Save Projects** → Login Modal with context
+- **Access Library** → Full page lock with CTA
+- **View Profile** → Full page lock with benefits
+- **Component Details** → Login Modal for specs
+- **Join Competitions** → Login Modal for teams
+- **Newsletter** → Opt-in checkbox on signup
+
+</td>
+</tr>
+<tr>
+<td colspan="2">
+
+#### 🎨 Beautiful Lock Screens
+- **Purple Gradient CTAs**: Matches design system (`from-purple-500 to-violet-600`)
+- **Blur Effects**: Subtle `backdrop-blur-md` overlays
+- **Lock Icons**: Animated icons with glow effects
+- **Adventure Theme**: Motivational messaging ("Start Your Adventure")
+- **Smooth Transitions**: Framer Motion animations
+- **Quick Login**: Modal popup for instant sign-in
+
+**Flow**: *Explore Freely → Try Advanced Feature → See Beautiful Lock → Sign In → Full Access*
+
+</td>
+</tr>
+</table>
 
 ### 🤖 **AI Intelligence Hub**
 
@@ -1126,6 +1172,78 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 ## 📝 Changelog
+
+### 🎯 Version 2.7 - Soft-Locked Auth System (February 2026)
+
+#### 🔓 Guest-Friendly Experience
+- ✨ **Auto-Guest Mode**: Users automatically become guests without friction
+- 🌍 **Free Exploration**: Browse all pages, generate projects, view components
+- 🔒 **Strategic Locks**: Lock only advanced features to encourage conversion
+- 💫 **Beautiful Lock Screens**: Premium UI with purple gradients and blur effects
+- 🚀 **Quick Login**: Modal popups for instant sign-in from any lock point
+- 📧 **Newsletter Opt-in**: Checkbox on signup for project updates
+
+#### 🎨 Lock Implementation
+**Pages with Full Lock:**
+- ✅ Library Page: Full page lock with LockedFeatureCard
+- ✅ Profile Page: Full page lock with benefits messaging
+
+**Features with Action Lock:**
+- ✅ Generator Save Button: LoginModal on click
+- ✅ Component Details: LoginModal when guest tries to explore
+- ✅ Competition Join: LoginModal for team features
+
+**UI Components:**
+- ✅ Sidebar: Auth button at top for guests
+- ✅ Navbar: Sign In button already integrated
+- ✅ SignUp: Newsletter checkbox with privacy notice
+
+#### 🎯 Lock Strategy
+**What Guests Can Do:**
+- Generate unlimited AI project ideas
+- Browse 500+ component catalog
+- View competition leaderboards
+- Access all learning resources
+- Navigate entire app freely
+
+**What Requires Sign-In:**
+- Save projects to library
+- Access saved project library
+- View/edit user profile
+- See detailed component specs
+- Join competition teams
+- Submit competition entries
+
+#### 🛠️ Technical Implementation
+**Files Modified (7):**
+- `/pages/Generator.tsx` - Save button lock
+- `/pages/Library.tsx` - Full page lock
+- `/pages/Profile.tsx` - Full page lock
+- `/pages/Components.tsx` - Detail lock
+- `/pages/Competition.tsx` - Join/submit lock
+- `/components/layout/Sidebar.tsx` - Guest auth button
+- `/pages/SignUp.tsx` - Newsletter checkbox
+
+**Auth Components (Already Existed):**
+- `AuthGuard.tsx` - Blur overlay wrapper
+- `LockedFeatureCard.tsx` - Full page lock card
+- `LoginModal.tsx` - Quick login popup
+- `NavbarAuthButton.tsx` - Sign In/Profile button
+
+#### 💡 User Experience
+**Guest Journey:**
+```
+Landing → Auto-Guest → Explore Freely → Try Advanced Feature 
+→ See Lock Screen → Click "Start Your Adventure" → Sign In → Full Access
+```
+
+**Design Features:**
+- Purple gradient CTAs matching design system
+- Subtle blur effects with `backdrop-blur-md`
+- Animated lock icons with glow
+- Adventure-themed messaging
+- Smooth Framer Motion transitions
+- Context-specific messages per feature
 
 ### 🚀 Version 2.6 - Futuristic Auth Experience (February 2026)
 
