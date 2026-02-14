@@ -166,6 +166,39 @@ const Components: React.FC = () => {
             </Badge>
           </div>
         )}
+        
+        {/* Guest Mode Banner */}
+        {isGuest && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-6xl mx-auto mb-8"
+          >
+            <Card className="glass-effect border-purple-500/30 bg-gradient-to-r from-purple-900/20 via-violet-900/20 to-purple-900/20">
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                    <Lock className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Browsing as Guest</p>
+                    <p className="text-sm text-gray-300">Sign in to add components and view full details</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowLoginModal(true)}
+                  className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white font-medium px-6 rounded-xl"
+                  data-testid="guest-banner-signin-button"
+                >
+                  <Sparkles className="mr-2 w-4 h-4" />
+                  Sign In
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+        
         <div className="relative mb-12">
           {/* Ambient background glow */}
           <div className="absolute top-0 left-1/4 w-72 h-72 bg-secondary/10 rounded-full blur-[100px] pointer-events-none" />
