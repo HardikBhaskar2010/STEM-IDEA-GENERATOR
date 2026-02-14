@@ -3,7 +3,7 @@
 ## Objective
 Verify that the guest/locked feature authentication system works correctly across all pages.
 
-## Test Scenarios
+## Test Scenarios 
 
 ### 1. Initial Load - Auto Guest Creation
 **Steps:**
