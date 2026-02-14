@@ -13,6 +13,8 @@ import { componentService, type Component } from '@/services/componentService';
 import { toast } from '@/hooks/use-toast';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
+import { useAuth } from '@/contexts/AuthContext';
+import { LoginModal } from '@/components/auth/LoginModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +34,8 @@ const Components: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [supabaseConnected, setSupabaseConnected] = useState(false);
   const { showPrice } = usePreferences();
+  const { isGuest } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [componentToDelete, setComponentToDelete] = useState<{ id: string; name: string } | null>(null);
   
@@ -108,6 +112,12 @@ const Components: React.FC = () => {
 
   // Handle component details
   const handleExploreDetails = async (componentId: string) => {
+    // Check if guest - show login modal
+    if (isGuest) {
+      setShowLoginModal(true);
+      return;
+    }
+
     setSelectedComponentId(componentId);
     setDetailsModalOpen(true);
     setDetailsLoading(true);
@@ -315,7 +325,7 @@ const Components: React.FC = () => {
                       ripple={true}
                       onClick={() => handleExploreDetails((component as any).id)}
                     >
-                      Explore Details
+                      {isGuest ? 'Sign In to Explore' : 'Explore Details'}
                     </Button>
                     
                     {/* Only show delete button for Supabase components (they have string IDs) */}
@@ -398,6 +408,14 @@ const Components: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Login Modal for Guest Users */}
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        feature="component details"
+        message="Sign in to explore detailed specifications, datasheets, and purchase links for components."
+      />
     </Layout>
   );
 };
