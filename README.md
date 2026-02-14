@@ -770,6 +770,50 @@ The AI assistant understands natural language commands:
 
 ## 🎮 Usage Guide
 
+### 🌟 Guest Mode & Authentication
+
+#### 👋 Starting as a Guest
+
+When you first visit the app:
+1. **Automatic Guest Mode**: You're automatically logged in as a guest
+2. **No Sign-Up Required**: Start exploring immediately
+3. **Full Navigation**: Access all pages and browse freely
+4. **Generate Projects**: Create unlimited AI-powered ideas
+
+#### 🔒 What's Locked for Guests?
+
+While browsing, you'll encounter soft locks on advanced features:
+
+**When You Try To:**
+- **Save a Project** → Login modal appears
+- **Access Library** → Full page lock with benefits
+- **View Profile** → Full page lock with adventure theme
+- **Explore Component Details** → Login modal with specs preview
+- **Join Competition** → Login modal with team features
+
+**What You'll See:**
+- Beautiful purple gradient CTA buttons
+- Blur effects on locked content
+- Animated lock icons
+- Clear messaging: "Sign in to unlock this feature"
+- Quick "Start Your Adventure" button
+
+#### ✅ Converting to Full Account
+
+**From Any Lock Screen:**
+1. Click **"Start Your Adventure"** button
+2. Choose sign-in method (Email or Google)
+3. Complete registration in under 1 minute
+4. Instantly unlock all features
+
+**Benefits After Sign-In:**
+- ✅ Save unlimited projects to library
+- ✅ Track progress across all projects
+- ✅ Join competition teams and earn points
+- ✅ View detailed component specifications
+- ✅ Customize profile and preferences
+- ✅ Sync data across devices
+
 ### 💬 Using the AI Chat
 
 1. **Open Chat**: Press `Ctrl+K` or click the AI Assistant button
