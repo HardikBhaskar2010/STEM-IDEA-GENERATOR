@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Cpu, Zap, Activity, Wifi, Battery, CircuitBoard, Plus, Trash2 } from 'lucide-react';
+import { Search, Filter, Cpu, Zap, Activity, Wifi, Battery, CircuitBoard, Plus, Trash2, Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal } from '@/components/auth/LoginModal';
+import { motion } from 'framer-motion';
 import {
   AlertDialog,
   AlertDialogAction,
