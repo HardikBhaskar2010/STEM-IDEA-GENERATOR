@@ -681,6 +681,14 @@ const Generator: React.FC = () => {
         newLevel={successNewLevel}
         onComplete={handleAnimationComplete}
       />
+
+      {/* Login Modal for Guest Users */}
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        feature="save projects"
+        message="Sign in to save your projects and access them anytime from your library."
+      />
     </Layout>
   );
 };
