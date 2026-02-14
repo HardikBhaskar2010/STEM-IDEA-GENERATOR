@@ -98,7 +98,7 @@ const Library: React.FC = () => {
     return project.status === activeTab;
   });
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
