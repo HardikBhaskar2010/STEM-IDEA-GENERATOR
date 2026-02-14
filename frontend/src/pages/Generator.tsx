@@ -22,6 +22,8 @@ import CodeGenerationModal from '@/components/CodeGenerationModal';
 import { useCompetition } from '@/contexts/CompetitionContext';
 import { CompetitionSubmissionModal } from '@/components/competition/CompetitionSubmissionModal';
 import { SuccessAnimation } from '@/components/competition/SuccessAnimation';
+import { LoginModal } from '@/components/auth/LoginModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Generator: React.FC = () => {
   const navigate = useNavigate();
