@@ -472,8 +472,8 @@ const Components: React.FC = () => {
       <LoginModal
         open={showLoginModal}
         onClose={() => setShowLoginModal(false)}
-        feature="component details"
-        message="Sign in to explore detailed specifications, datasheets, and purchase links for components."
+        feature="full access"
+        message="Sign in to add components, explore detailed specifications, and manage your inventory."
       />
     </Layout>
   );
