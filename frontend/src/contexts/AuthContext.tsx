@@ -63,9 +63,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
 
     // Listen for auth state changes
-    const subscription = authService.onAuthStateChange((newUser, newProvider) => {
-      setUser(newUser);
-      setProvider(newProvider || null);
+    const subscription = authService.onAuthStateChange(async (newUser, newProvider) => {
+      // If user logs out (newUser is null), automatically create a guest
+      if (!newUser) {
+        const guestResult = await authService.continueAsGuest();
+        setUser(guestResult.user);
+        setProvider('guest');
+      } else {
+        setUser(newUser);
+        setProvider(newProvider || null);
+      }
     });
 
     // Listen for guest login events
