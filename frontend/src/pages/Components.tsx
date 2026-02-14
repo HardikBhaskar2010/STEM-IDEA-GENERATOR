@@ -294,13 +294,25 @@ const Components: React.FC = () => {
             const stockText = stockValue;
             
             return (
-              <Card 
-                key={(component as any).id}
-                className="group glass-effect border-border/50"
-                enableAnimation={true}
-                enableHover={true}
-                animationDelay={index * 50}
-              >
+              <div key={(component as any).id} className="relative">
+                <Card 
+                  className={`group glass-effect border-border/50 ${isGuest ? 'opacity-90' : ''}`}
+                  enableAnimation={true}
+                  enableHover={!isGuest}
+                  animationDelay={index * 50}
+                >
+                  {/* Guest Blur Overlay */}
+                  {isGuest && (
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] rounded-lg z-10 pointer-events-none flex items-center justify-center">
+                      <div className="absolute top-3 right-3">
+                        <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30 backdrop-blur-sm">
+                          <Lock className="w-3 h-3 mr-1" />
+                          Sign in
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                  
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
                     <div className={`w-12 h-12 ${(component as any).color || 'bg-gradient-primary'} rounded-lg flex items-center justify-center group-hover:animate-glow-pulse`}>
