@@ -187,10 +187,17 @@ const Components: React.FC = () => {
               
               <Button 
                 className="bg-gradient-secondary text-white shadow-glow-secondary hover:shadow-glow-lg transition-all duration-300 rounded-xl h-14 px-8 text-lg font-bold"
-                onClick={() => setIsAddFormOpen(true)}
+                onClick={() => {
+                  if (isGuest) {
+                    setShowLoginModal(true);
+                  } else {
+                    setIsAddFormOpen(true);
+                  }
+                }}
+                data-testid="add-module-button"
               >
                 <Plus className="mr-2 h-6 w-6" />
-                Add Module
+                {isGuest ? 'Sign In to Add' : 'Add Module'}
               </Button>
             </div>
           </div>
