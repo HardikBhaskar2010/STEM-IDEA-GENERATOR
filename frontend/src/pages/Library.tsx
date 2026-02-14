@@ -10,12 +10,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { projectService, type SavedProject } from '@/services/projectService';
 import { formatDistanceToNow } from 'date-fns';
+import { LockedFeatureCard } from '@/components/auth/LockedFeatureCard';
 
 const Library: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [projects, setProjects] = useState<SavedProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const navigate = useNavigate();
 
   // Load projects from Supabase
@@ -98,6 +99,36 @@ const Library: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin">
             <BookOpen className="w-8 h-8 text-primary" />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show locked page for guests
+  if (isGuest) {
+    return (
+      <Layout>
+        <div className="bg-gradient-to-b from-primary/5 via-background to-background pt-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto py-12">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                <div className="space-y-2">
+                  <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gradient">
+                    Archive
+                  </h1>
+                  <p className="text-muted-foreground text-lg max-w-lg">
+                    A curated collection of your STEM explorations and prototypes.
+                  </p>
+                </div>
+              </div>
+              
+              <LockedFeatureCard
+                title="Unlock Your Project Library"
+                description="Sign in to save projects, access your archive, and track your progress across all your STEM adventures."
+                feature="Project Library"
+              />
+            </div>
           </div>
         </div>
       </Layout>
