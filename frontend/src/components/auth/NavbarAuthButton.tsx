@@ -1,28 +1,49 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogIn, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LogIn, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
-/**
- * NavbarAuthButton - Shows Sign In button for guests, User menu for authenticated
- * Placed in top-right corner of navbar
- */
-export const NavbarAuthButton: React.FC = () => {
-  const navigate = useNavigate();
-  const { mode } = useAuth();
+interface NavbarAuthButtonProps {
+  className?: string;
+  variant?: 'default' | 'outline' | 'ghost';
+}
 
-  // For authenticated users, show user menu (handled elsewhere)
-  if (mode === 'authenticated') {
-    return null; // Profile dropdown already exists in navbar
+/**
+ * NavbarAuthButton Component
+ * 
+ * Shows "Sign In" button for guests or profile button for authenticated users
+ * 
+ * @param className - Additional CSS classes
+ * @param variant - Button variant
+ */
+export const NavbarAuthButton: React.FC<NavbarAuthButtonProps> = ({
+  className = '',
+  variant = 'outline'
+}) => {
+  const navigate = useNavigate();
+  const { isGuest, isAuthenticated } = useAuth();
+
+  // Show profile button for authenticated users
+  if (isAuthenticated && !isGuest) {
+    return (
+      <Button
+        onClick={() => navigate('/profile')}
+        variant={variant}
+        className={`${className} rounded-full`}
+      >
+        <User className="w-4 h-4 mr-2" />
+        Profile
+      </Button>
+    );
   }
 
-  // For guest users, show Sign In button
+  // Show sign in button for guests
   return (
     <Button
       onClick={() => navigate('/login')}
-      className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white font-medium px-6 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
-      data-testid="navbar-signin-button"
+      variant={variant}
+      className={`${className} bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white border-none rounded-full shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300`}
     >
       <LogIn className="w-4 h-4 mr-2" />
       Sign In
