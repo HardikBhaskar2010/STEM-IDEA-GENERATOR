@@ -10,6 +10,7 @@ import { authService } from '@/services/authService';
 import { Loader2, Mail, Lock, User, Sparkles, AlertCircle, Chrome, Building2, UserCircle, GraduationCap, School } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthCard from '@/components/auth/AuthCard';
 import RoleSelector from '@/components/auth/RoleSelector';
@@ -27,6 +28,7 @@ const SignUp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -287,6 +289,33 @@ const SignUp: React.FC = () => {
               onChange={setHearAbout}
               name="hear-about"
             />
+          </motion.div>
+
+          {/* Newsletter Opt-in */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.63, duration: 0.5 }}
+            className="flex items-start space-x-3 p-4 rounded-lg bg-white/5 border border-white/10"
+          >
+            <Checkbox
+              id="newsletter"
+              checked={newsletterOptIn}
+              onCheckedChange={(checked) => setNewsletterOptIn(checked as boolean)}
+              className="mt-0.5"
+              data-testid="newsletter-checkbox"
+            />
+            <div className="flex-1">
+              <Label
+                htmlFor="newsletter"
+                className="text-sm text-gray-300 cursor-pointer leading-relaxed"
+              >
+                Send me project ideas, STEM tips, and platform updates via email
+              </Label>
+              <p className="text-xs text-gray-500 mt-1">
+                You can unsubscribe anytime. We respect your privacy.
+              </p>
+            </div>
           </motion.div>
 
           {/* Sign Up Button */}
