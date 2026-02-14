@@ -3,7 +3,7 @@
 # 🚀 STEM Idea Adventure 
 
 ### *Embark on a journey to discover, create, and innovate with AI-powered project ideas*
- 
+
 [![Live Demo](https://img.shields.io/badge/🌐_Live-Demo-6366f1?style=for-the-badge)](https://stemidea.vercel.app)
 [![License: MIT](https://img.shields.io/badge/📄_License-MIT-10b981?style=for-the-badge)](LICENSE)
 [![React](https://img.shields.io/badge/⚛️_React-18.3.1-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
