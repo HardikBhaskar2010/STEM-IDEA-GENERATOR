@@ -21,6 +21,8 @@ import { VoiceCommand } from '@/components/VoiceCommand';
 import { TTSVisualizer } from '@/components/TTSVisualizer';
 import { useTTS } from '@/contexts/TTSContext';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { NavbarAuthButton } from '@/components/auth/NavbarAuthButton';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { colorTheme } = usePreferences();
   const { isTTSActive } = useTTS();
   const { isCompetitionMode, userProgress } = useCompetition();
+  const { isGuest } = useAuth();
   
   // Debug TTS state changes
   useEffect(() => {
@@ -141,6 +144,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Navigation Items */}
         <nav className="flex-1 overflow-y-auto py-4 px-2 custom-scrollbar">
+          {/* Auth Button for Guests */}
+          {isGuest && (
+            <div className="mx-2 mb-4">
+              <NavbarAuthButton 
+                variant="default"
+                className="w-full justify-center"
+              />
+            </div>
+          )}
+
           {/* Competition Indicator */}
           {isCompetitionMode && userProgress && (
             <div className="mx-2 mb-3 p-2 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30">
