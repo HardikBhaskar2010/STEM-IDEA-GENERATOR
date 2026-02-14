@@ -74,7 +74,7 @@ const Profile: React.FC = () => {
   const [userIdCopied, setUserIdCopied] = useState(false);
   
   const { userMode, setUserMode, colorTheme, setColorTheme } = usePreferences();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { lowPerf, setLowPerf, suggested } = usePerf();
   const { isCompetitionMode, teamInfo, userProgress } = useCompetition();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -92,11 +92,12 @@ const Profile: React.FC = () => {
   useEffect(() => {
     console.log('👤 Profile - Auth State:', { 
       hasUser: !!user, 
-      isGuest, 
+      isGuest,
+      authLoading,
       userId: user?.id,
       userType: user && 'isGuest' in user ? 'GuestUser' : 'SupabaseUser'
     });
-  }, [user, isGuest]);
+  }, [user, isGuest, authLoading]);
   
   // Profile data from Supabase
   const [profile, setProfile] = useState<UserProfile | null>(null);
