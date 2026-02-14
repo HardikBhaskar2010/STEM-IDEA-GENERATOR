@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const Generator: React.FC = () => {
   const navigate = useNavigate();
   const { isCompetitionMode } = useCompetition();
+  const { isGuest } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSynthesized, setIsSynthesized] = useState(false);
