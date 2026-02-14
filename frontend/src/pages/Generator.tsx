@@ -38,6 +38,7 @@ const Generator: React.FC = () => {
   const [showCodeGenModal, setShowCodeGenModal] = useState(false);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [successAnimationType, setSuccessAnimationType] = useState<'submission' | 'levelup'>('submission');
   const [successPoints, setSuccessPoints] = useState(10);
   const [successNewLevel, setSuccessNewLevel] = useState<string | undefined>(undefined);
