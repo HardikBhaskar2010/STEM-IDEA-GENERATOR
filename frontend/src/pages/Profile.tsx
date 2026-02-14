@@ -24,6 +24,7 @@ import { profileService, STEM_INTERESTS, type UserProfile } from '@/services/pro
 import PreferencesDialog from '@/components/PreferencesDialog';
 import PrivacySettingsDialog from '@/components/PrivacySettingsDialog';
 import EmailPreferencesDialog from '@/components/EmailPreferencesDialog';
+import { LockedFeatureCard } from '@/components/auth/LockedFeatureCard';
 import {
   Dialog,
   DialogContent,
@@ -408,6 +409,36 @@ const Profile: React.FC = () => {
     // Redirect to home page
     navigate('/');
   };
+
+  // Show locked page for guests
+  if (isGuest) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-gradient-primary rounded-2xl shadow-glow animate-glow-pulse">
+                <User className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <span className="text-gradient">Your Profile</span>
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              Manage your account and track your maker journey
+            </p>
+          </div>
+
+          <LockedFeatureCard
+            title="Unlock Your Profile"
+            description="Sign in to create your profile, save your preferences, track achievements, and manage your STEM maker journey."
+            feature="Profile & Settings"
+          />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
