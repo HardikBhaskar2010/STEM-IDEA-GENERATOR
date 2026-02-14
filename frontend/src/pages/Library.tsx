@@ -16,8 +16,13 @@ const Library: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [projects, setProjects] = useState<SavedProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Debug: Log auth state
+  useEffect(() => {
+    console.log('📚 Library Page - Auth State:', { isGuest, authLoading, hasUser: !!user });
+  }, [isGuest, authLoading, user]);
 
   // Load projects from Supabase
   useEffect(() => {
