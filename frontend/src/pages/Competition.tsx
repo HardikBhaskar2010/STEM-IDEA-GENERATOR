@@ -18,6 +18,8 @@ import {
 } from '@/services/competitionService';
 import { Trophy, Users, TrendingUp, Award, Plus } from 'lucide-react';
 import { PageLoading } from '@/components/ui/loading';
+import { useAuth } from '@/contexts/AuthContext';
+import { LoginModal } from '@/components/auth/LoginModal';
 
 const Competition: React.FC = () => {
   const {
@@ -31,6 +33,8 @@ const Competition: React.FC = () => {
   const [showTeamSetup, setShowTeamSetup] = useState(false);
   const [activeTab, setActiveTab] = useState('team');
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { isGuest } = useAuth();
 
   // Leaderboard data
   const [topScorers, setTopScorers] = useState<any[]>([]);
@@ -87,6 +91,14 @@ const Competition: React.FC = () => {
     setActiveTab('team');
   };
 
+  const handleJoinClick = () => {
+    if (isGuest) {
+      setShowLoginModal(true);
+    } else {
+      setShowTeamSetup(true);
+    }
+  };
+
   if (contextLoading) {
     return <PageLoading />;
   }
@@ -111,7 +123,7 @@ const Competition: React.FC = () => {
             {!isCompetitionMode && (
               <Button
                 size="lg"
-                onClick={() => setShowTeamSetup(true)}
+                onClick={handleJoinClick}
                 data-testid="join-competition-button"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -245,7 +257,7 @@ const Competition: React.FC = () => {
 
               <Button
                 size="lg"
-                onClick={() => setShowTeamSetup(true)}
+                onClick={handleJoinClick}
                 className="text-lg px-8 py-6"
                 data-testid="join-competition-cta"
               >
@@ -266,6 +278,14 @@ const Competition: React.FC = () => {
         open={showTeamSetup}
         onClose={() => setShowTeamSetup(false)}
         onSuccess={handleTeamSetupSuccess}
+      />
+
+      {/* Login Modal for Guest Users */}
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        feature="competitions"
+        message="Sign in to join teams, submit projects, and compete on leaderboards with your classmates."
       />
     </Layout>
   );
