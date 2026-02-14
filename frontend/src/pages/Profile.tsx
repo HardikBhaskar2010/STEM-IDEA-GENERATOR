@@ -422,6 +422,18 @@ const Profile: React.FC = () => {
   };
 
   // Show locked page for guests
+  if (authLoading || isLoadingProfile) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8 max-w-6xl flex items-center justify-center min-h-screen">
+          <div className="animate-spin">
+            <User className="w-8 h-8 text-primary" />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (isGuest) {
     return (
       <Layout>
