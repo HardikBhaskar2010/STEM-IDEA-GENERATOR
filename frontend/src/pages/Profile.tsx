@@ -88,6 +88,16 @@ const Profile: React.FC = () => {
   
   const isGuest = user && authService.isGuestUser(user);
   
+  // Debug logging for auth state
+  useEffect(() => {
+    console.log('👤 Profile - Auth State:', { 
+      hasUser: !!user, 
+      isGuest, 
+      userId: user?.id,
+      userType: user && 'isGuest' in user ? 'GuestUser' : 'SupabaseUser'
+    });
+  }, [user, isGuest]);
+  
   // Profile data from Supabase
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editedProfile, setEditedProfile] = useState({
