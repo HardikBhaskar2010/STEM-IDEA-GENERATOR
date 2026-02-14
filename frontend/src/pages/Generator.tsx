@@ -162,6 +162,12 @@ const Generator: React.FC = () => {
       return;
     }
 
+    // Check if user is guest - show login modal
+    if (isGuest) {
+      setShowLoginModal(true);
+      return;
+    }
+
     setIsSaving(true);
     try {
       // Save to Supabase using projectService
