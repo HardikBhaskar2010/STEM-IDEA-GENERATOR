@@ -303,7 +303,7 @@ const Components: React.FC = () => {
                 >
                   {/* Guest Blur Overlay */}
                   {isGuest && (
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] rounded-lg z-10 pointer-events-none flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[10px] rounded-lg z-10 pointer-events-none flex items-center justify-center">
                       <div className="absolute top-3 right-3">
                         <Badge variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30 backdrop-blur-sm">
                           <Lock className="w-3 h-3 mr-1" />
