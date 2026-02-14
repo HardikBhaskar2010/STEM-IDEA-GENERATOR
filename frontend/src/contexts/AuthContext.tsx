@@ -96,6 +96,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ? 'guest'
     : 'authenticated';
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔐 Auth State:', { 
+      hasUser: !!user, 
+      isGuest, 
+      isAuthenticated, 
+      mode,
+      userId: user?.id 
+    });
+  }, [user, isGuest, isAuthenticated, mode]);
+
   return (
     <AuthContext.Provider
       value={{
