@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { colorTheme } = usePreferences();
   const { isTTSActive } = useTTS();
   const { isCompetitionMode, userProgress } = useCompetition();
-  const { isGuest } = useAuth();
+  const { isGuest, isAdmin } = useAuth();
   
   // Debug TTS state changes
   useEffect(() => {
