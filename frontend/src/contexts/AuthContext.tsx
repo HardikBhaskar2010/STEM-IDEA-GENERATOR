@@ -100,6 +100,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ? 'guest'
     : 'authenticated';
 
+  // Check if user is admin (owner)
+  const isAdmin = !isGuest && isAuthenticated && (user as User)?.email === OWNER_EMAIL;
+
   // Debug logging
   useEffect(() => {
     console.log('🔐 Auth State:', { 
@@ -107,9 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isGuest, 
       isAuthenticated, 
       mode,
-      userId: user?.id 
+      isAdmin,
+      userId: user?.id,
+      userEmail: (user as User)?.email 
     });
-  }, [user, isGuest, isAuthenticated, mode]);
+  }, [user, isGuest, isAuthenticated, mode, isAdmin]);
 
   return (
     <AuthContext.Provider
