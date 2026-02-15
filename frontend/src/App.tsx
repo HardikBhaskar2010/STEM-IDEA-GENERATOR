@@ -38,6 +38,7 @@ const ProjectDetail = React.lazy(() => import("./pages/ProjectDetail"));
 const ComponentComparison = React.lazy(() => import("./pages/ComponentComparison"));
 const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const Presentation = React.lazy(() => import("./pages/Presentation"));
+const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
