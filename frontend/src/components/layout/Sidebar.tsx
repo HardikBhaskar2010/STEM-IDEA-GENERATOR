@@ -211,6 +211,36 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 </Link>
               );
             })}
+
+            {/* Admin Panel Link - Only visible to admin */}
+            {isAdmin && (
+              <>
+                <div className="my-2 border-t border-white/10" />
+                <Link
+                  to={adminNavItem.path}
+                  onClick={() => isMobile && onClose()}
+                  data-testid="sidebar-link-admin-panel"
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative',
+                    isActive(adminNavItem.path)
+                      ? 'text-white'
+                      : 'text-purple-400 hover:text-white hover:bg-purple-500/10'
+                  )}
+                >
+                  <Shield className={cn(
+                    'w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110',
+                    isActive(adminNavItem.path) && 'text-white'
+                  )} />
+                  
+                  <span className="font-medium text-sm">{adminNavItem.label}</span>
+                  
+                  {/* Active indicator */}
+                  {isActive(adminNavItem.path) && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-glow -z-10" />
+                  )}
+                </Link>
+              </>
+            )}
           </div>
         </nav>
 
