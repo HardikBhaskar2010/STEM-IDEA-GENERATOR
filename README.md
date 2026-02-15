@@ -1,7 +1,7 @@
 <div align="center">
  
 # 🚀 STEM Idea Adventure 
-
+ 
 ### *Embark on a journey to discover, create, and innovate with AI-powered project ideas*
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live-Demo-6366f1?style=for-the-badge)](https://stemidea.vercel.app)
