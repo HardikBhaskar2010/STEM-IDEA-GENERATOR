@@ -386,8 +386,8 @@ const Components: React.FC = () => {
                       {isGuest ? 'Sign In to Explore' : 'Explore Details'}
                     </Button>
                     
-                    {/* Only show delete button for Supabase components (they have string IDs) and authenticated users */}
-                    {!isGuest && typeof (component as any).id === 'string' && supabaseConnected && (
+                    {/* Only show delete button for admin users */}
+                    {isAdmin && typeof (component as any).id === 'string' && supabaseConnected && (
                       <Button 
                         size="icon"
                         variant="ghost"
