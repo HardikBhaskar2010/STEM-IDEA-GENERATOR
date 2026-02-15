@@ -93,6 +93,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/about', label: 'About', icon: Info },
   ];
 
+  // Add admin panel for admin users only
+  const adminNavItem = { path: '/admin', label: 'Admin Panel', icon: Shield };
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
