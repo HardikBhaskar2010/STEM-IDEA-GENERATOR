@@ -3,6 +3,9 @@ import { authService } from '@/services/authService';
 import { User } from '@supabase/supabase-js';
 import { GuestUser } from '@/services/guestService';
 
+// Owner email for admin access
+const OWNER_EMAIL = 'hardik.bhaskar2010@gmail.com';
+
 // Auth modes
 export type AuthMode = 'unauthenticated' | 'guest' | 'authenticated';
 export type AuthProvider = 'guest' | 'google' | 'email' | null;
@@ -14,6 +17,7 @@ interface AuthContextType {
   mode: AuthMode;
   provider: AuthProvider;
   isGuest: boolean;
+  isAdmin: boolean;
   refreshUser: () => Promise<void>;
 }
 
