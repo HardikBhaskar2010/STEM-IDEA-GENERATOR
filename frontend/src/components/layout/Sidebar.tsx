@@ -10,7 +10,8 @@ import {
   X,
   User,
   Code,
-  Trophy
+  Trophy,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
