@@ -24,11 +24,13 @@ import { CompetitionSubmissionModal } from '@/components/competition/Competition
 import { SuccessAnimation } from '@/components/competition/SuccessAnimation';
 import { LoginModal } from '@/components/auth/LoginModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAchievements } from '@/contexts/AchievementContext';
 
 const Generator: React.FC = () => {
   const navigate = useNavigate();
   const { isCompetitionMode } = useCompetition();
   const { isGuest } = useAuth();
+  const { checkForNewAchievements } = useAchievements();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSynthesized, setIsSynthesized] = useState(false);
