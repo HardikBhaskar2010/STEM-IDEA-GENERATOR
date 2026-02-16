@@ -252,6 +252,9 @@ const Generator: React.FC = () => {
             description: "Opening Veronica AI workspace...",
           });
           
+          // Check for achievement unlocks after saving
+          await checkForNewAchievements();
+          
           // Small delay to show the toast
           setTimeout(() => {
             navigate(`/code-generator?project=${savedProject.id}`);
