@@ -17,6 +17,7 @@ import { usePreferences, COLOR_THEMES, ColorTheme } from '@/contexts/Preferences
 import { useAuth } from '@/contexts/AuthContext';
 import { usePerf } from '@/contexts/PerfContext';
 import { useCompetition } from '@/contexts/CompetitionContext';
+import { useAchievements } from '@/contexts/AchievementContext';
 import { LevelBadge } from '@/components/competition/LevelBadge';
 import { getLevelProgress } from '@/services/competitionService';
 import { authService } from '@/services/authService';
@@ -25,6 +26,8 @@ import PreferencesDialog from '@/components/PreferencesDialog';
 import PrivacySettingsDialog from '@/components/PrivacySettingsDialog';
 import EmailPreferencesDialog from '@/components/EmailPreferencesDialog';
 import { LockedFeatureCard } from '@/components/auth/LockedFeatureCard';
+import { AchievementList } from '@/components/achievements/AchievementList';
+import { AchievementStats } from '@/components/achievements/AchievementStats';
 import {
   Dialog,
   DialogContent,
