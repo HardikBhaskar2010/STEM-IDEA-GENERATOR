@@ -104,6 +104,10 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
         title: '✅ Team Created!',
         description: `Team code: ${result.team_code}`,
       });
+      
+      // Check for achievement unlocks after creating team
+      await checkForNewAchievements();
+      
       onSuccess();
     } catch (error: any) {
       toast({
