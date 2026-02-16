@@ -108,9 +108,10 @@ const App = () => {
                         </Suspense>
                       </BrowserRouter>
                     </TooltipProvider>
-                  </CompetitionProvider>
-                </CodeGenerationProvider>
-              </TTSProvider>
+                  </AchievementProvider>
+                </CompetitionProvider>
+              </CodeGenerationProvider>
+            </TTSProvider>
             </AnimationProvider>
           </ThreeDProvider>
         </PerfProvider>
