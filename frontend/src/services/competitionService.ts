@@ -113,7 +113,7 @@ export const createTeam = async (name: string, schoolName?: string): Promise<{ t
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/teams/create`, {
+    const response = await fetch(`${API_BASE_URL}/competition/teams/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -141,7 +141,7 @@ export const joinTeam = async (teamCode: string): Promise<TeamInfo> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/teams/join`, {
+    const response = await fetch(`${API_BASE_URL}/competition/teams/join`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -172,7 +172,7 @@ export const getMyTeam = async (): Promise<TeamInfo | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/teams/my-team/${user.id}`);
+    const response = await fetch(`${API_BASE_URL}/competition/teams/my-team/${user.id}`);
     
     if (response.status === 404) {
       return null; // User not in a team
@@ -194,7 +194,7 @@ export const leaveTeam = async (): Promise<void> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/teams/leave`, {
+    const response = await fetch(`${API_BASE_URL}/competition/teams/leave`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: user.id }),
@@ -212,7 +212,7 @@ export const leaveTeam = async (): Promise<void> => {
 
 export const validateTeamCode = async (teamCode: string): Promise<{ valid: boolean; team_name?: string }> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/competition/teams/validate-code/${teamCode}`);
+    const response = await fetch(`${API_BASE_URL}/competition/teams/validate-code/${teamCode}`);
     return await response.json();
   } catch (error) {
     console.error('Error validating team code:', error);
@@ -236,7 +236,7 @@ export const createSubmission = async (
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/submissions/create`, {
+    const response = await fetch(`${API_BASE_URL}/competition/submissions/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -267,7 +267,7 @@ export const getMySubmissions = async (): Promise<Submission[]> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/submissions/my-submissions/${user.id}`);
+    const response = await fetch(`${API_BASE_URL}/competition/submissions/my-submissions/${user.id}`);
     
     if (!response.ok) return [];
 
@@ -284,7 +284,7 @@ export const upvoteSubmission = async (submissionId: string): Promise<void> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/submissions/upvote`, {
+    const response = await fetch(`${API_BASE_URL}/competition/submissions/upvote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -312,7 +312,7 @@ export const getUserProgress = async (): Promise<UserProgress | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/users/progress/${user.id}`);
+    const response = await fetch(`${API_BASE_URL}/competition/users/progress/${user.id}`);
     
     if (!response.ok) return null;
 
@@ -345,7 +345,7 @@ export const getTopScorersLeaderboard = async (limit: number = 20, teamId?: stri
     const params = new URLSearchParams({ limit: limit.toString() });
     if (teamId) params.append('team_id', teamId);
 
-    const response = await fetch(`${API_BASE_URL}/api/competition/leaderboards/top-scorers?${params}`);
+    const response = await fetch(`${API_BASE_URL}/competition/leaderboards/top-scorers?${params}`);
     
     if (!response.ok) return [];
 
@@ -359,7 +359,7 @@ export const getTopScorersLeaderboard = async (limit: number = 20, teamId?: stri
 
 export const getConsistencyLeaderboard = async (limit: number = 20): Promise<ConsistencyLeaderboardEntry[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/competition/leaderboards/consistency?limit=${limit}`);
+    const response = await fetch(`${API_BASE_URL}/competition/leaderboards/consistency?limit=${limit}`);
     
     if (!response.ok) return [];
 
@@ -373,7 +373,7 @@ export const getConsistencyLeaderboard = async (limit: number = 20): Promise<Con
 
 export const getTeamLeaderboard = async (limit: number = 20): Promise<TeamLeaderboardEntry[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/competition/leaderboards/teams?limit=${limit}`);
+    const response = await fetch(`${API_BASE_URL}/competition/leaderboards/teams?limit=${limit}`);
     
     if (!response.ok) return [];
 
