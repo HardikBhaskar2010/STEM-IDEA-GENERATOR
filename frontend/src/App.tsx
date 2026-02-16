@@ -14,6 +14,7 @@ import { ThreeDProvider } from "@/contexts/ThreeDContext";
 import { TTSProvider } from "@/contexts/TTSContext";
 import { CodeGenerationProvider } from "@/contexts/CodeGenerationContext";
 import { CompetitionProvider } from "@/contexts/CompetitionContext";
+import { AchievementProvider } from "@/contexts/AchievementContext";
 import { PageLoading } from "@/components/ui/loading";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { preloadAnimations } from "@/lib/animation";
