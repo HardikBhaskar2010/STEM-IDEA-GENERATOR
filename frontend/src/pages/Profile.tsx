@@ -779,38 +779,47 @@ const Profile: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="achievements" className="space-y-6">
+            {/* Achievement Stats Card */}
+            <AchievementStats stats={achievementStats} isLoading={achievementsLoading} />
+
+            {/* Achievements List */}
             <Card className="glass-effect border-border/50">
               <CardHeader>
-                <CardTitle>Your Achievements</CardTitle>
-                <CardDescription>
-                  Track your progress and unlock new badges as you complete projects
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your Achievements</CardTitle>
+                    <CardDescription>
+                      Track your progress and unlock new badges as you complete projects
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => checkForNewAchievements()}
+                    className="gap-2"
+                  >
+                    <Trophy className="h-4 w-4" />
+                    Check Progress
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {achievements.map((achievement, index) => (
-                    <div
-                      key={achievement.id}
-                      className={`
-                        p-4 rounded-lg border transition-all animate-scale-in
-                        ${achievement.unlocked 
-                          ? 'bg-gradient-primary/10 border-primary/50 hover-lift' 
-                          : 'bg-muted/50 border-border opacity-50'
-                        }
-                      `}
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="text-3xl mb-2">{achievement.icon}</div>
-                      <h4 className="font-semibold mb-1">{achievement.title}</h4>
-                      <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                      {achievement.unlocked && (
-                        <Badge className="mt-2 bg-gradient-primary text-white">
-                          Unlocked
-                        </Badge>
-                      )}
+                {achievementsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin">
+                      <Trophy className="w-8 h-8 text-primary" />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ) : realAchievements.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      No achievements yet. Start your journey!
+                    </p>
+                  </div>
+                ) : (
+                  <AchievementList achievements={realAchievements} showFilters={true} />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
