@@ -83,6 +83,9 @@ export const CompetitionSubmissionModal: React.FC<CompetitionSubmissionModalProp
       // Refresh user progress to update XP/level
       await refreshUserProgress();
 
+      // Check for achievement unlocks after submission
+      await checkForNewAchievements();
+
       onSuccess(result.points_awarded, result.new_level);
       onClose();
     } catch (error: any) {
