@@ -14,6 +14,7 @@ import { CATEGORIES, createSubmission, type Category } from '@/services/competit
 import { Trophy, Award, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompetition } from '@/contexts/CompetitionContext';
+import { useAchievements } from '@/contexts/AchievementContext';
 
 interface CompetitionSubmissionModalProps {
   open: boolean;
