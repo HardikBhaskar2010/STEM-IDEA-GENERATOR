@@ -80,6 +80,7 @@ const Profile: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { lowPerf, setLowPerf, suggested } = usePerf();
   const { isCompetitionMode, teamInfo, userProgress } = useCompetition();
+  const { achievements: realAchievements, stats: achievementStats, isLoading: achievementsLoading, checkForNewAchievements } = useAchievements();
   const [projects, setProjects] = useState<Project[]>([]);
   const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
