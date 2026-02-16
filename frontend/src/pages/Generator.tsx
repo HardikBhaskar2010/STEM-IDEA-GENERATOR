@@ -142,6 +142,11 @@ const Generator: React.FC = () => {
         title: "Project Generated!",
         description: "Your personalized STEM project is ready.",
       });
+      
+      // Check for achievement unlocks after generating
+      if (!isGuest) {
+        await checkForNewAchievements();
+      }
     } catch (error) {
       console.error('Generation failed:', error);
       toast({
