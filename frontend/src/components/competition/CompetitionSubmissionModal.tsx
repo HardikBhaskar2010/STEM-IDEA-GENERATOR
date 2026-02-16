@@ -57,6 +57,7 @@ export const CompetitionSubmissionModal: React.FC<CompetitionSubmissionModalProp
   );
   const { toast } = useToast();
   const { teamInfo, refreshUserProgress } = useCompetition();
+  const { checkForNewAchievements } = useAchievements();
 
   const handleSubmit = async () => {
     if (!teamInfo) {
