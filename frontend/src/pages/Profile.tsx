@@ -221,6 +221,9 @@ const Profile: React.FC = () => {
           title: 'Profile Updated',
           description: 'Your profile has been successfully updated.',
         });
+        
+        // Check for achievement unlocks after profile update
+        await checkForNewAchievements();
       }
     } catch (error) {
       console.error('Error saving profile:', error);
