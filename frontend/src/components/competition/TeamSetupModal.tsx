@@ -73,6 +73,10 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
         title: '🎉 Joined Team!',
         description: `You are now part of ${codeValidation?.teamName || 'the team'}`,
       });
+      
+      // Check for achievement unlocks after joining team
+      await checkForNewAchievements();
+      
       onSuccess();
       onClose();
     } catch (error: any) {
