@@ -198,6 +198,9 @@ const Generator: React.FC = () => {
           description: "Your project has been added to your library.",
         });
         
+        // Check for achievement unlocks after saving
+        await checkForNewAchievements();
+        
         // Navigate to library to see the saved project
         navigate('/library');
       } else {
