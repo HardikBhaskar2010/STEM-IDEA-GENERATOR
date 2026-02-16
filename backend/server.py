@@ -5793,6 +5793,15 @@ try:
 except Exception as e:
     logger.warning(f"Competition routes not loaded: {e}")
 
+# ───────────────── ACHIEVEMENT SYSTEM ─────────────────
+# Import achievement routes
+try:
+    from achievement_routes import achievement_router
+    app.include_router(achievement_router)
+    logger.info("Achievement system routes registered successfully")
+except Exception as e:
+    logger.warning(f"Achievement routes not loaded: {e}")
+
 # ───────────────── REGISTER ROUTER ─────────────────
 app.include_router(api)
 
