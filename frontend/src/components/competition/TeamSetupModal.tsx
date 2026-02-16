@@ -31,6 +31,7 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
   const { toast } = useToast();
   const { isAuthenticated, isGuest } = useAuth();
   const navigate = useNavigate();
+  const { checkForNewAchievements } = useAchievements();
 
   // Join Team State
   const [teamCode, setTeamCode] = useState('');
