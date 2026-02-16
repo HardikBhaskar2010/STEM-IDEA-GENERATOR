@@ -278,6 +278,9 @@ const Profile: React.FC = () => {
             title: 'Avatar Updated',
             description: 'Your profile picture has been updated',
           });
+          
+          // Check for achievement unlocks after avatar upload
+          await checkForNewAchievements();
         }
       }
     } catch (error) {
