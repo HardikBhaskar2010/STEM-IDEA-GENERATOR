@@ -17,6 +17,7 @@ import { Users, School, Code, Check, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAchievements } from '@/contexts/AchievementContext';
 
 interface TeamSetupModalProps {
   open: boolean;
