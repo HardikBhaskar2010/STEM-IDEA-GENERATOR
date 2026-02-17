@@ -19,7 +19,6 @@ import {
   type Submission,
 } from '@/services/competitionService';
 import { Trophy, Users, TrendingUp, Award, Plus } from 'lucide-react';
-import { PageLoading } from '@/components/ui/loading';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal } from '@/components/auth/LoginModal';
 
