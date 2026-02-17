@@ -17,14 +17,16 @@ const CompetitionContext = createContext<CompetitionContextType | undefined>(und
 export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [teamInfo, setTeamInfo] = useState<TeamInfo | null>(null);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const refreshTeamInfo = async () => {
     try {
       const info = await getMyTeam();
       setTeamInfo(info);
+      return info;
     } catch (error) {
       console.error('Error refreshing team info:', error);
+      return null;
     }
   };
 
@@ -39,11 +41,19 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const refreshAll = async () => {
     setIsLoading(true);
-    await Promise.all([refreshTeamInfo(), refreshUserProgress()]);
+    // First fetch team info
+    const team = await refreshTeamInfo();
+    // Only fetch user progress if user is in a team
+    if (team) {
+      await refreshUserProgress();
+    } else {
+      setUserProgress(null);
+    }
     setIsLoading(false);
   };
 
   useEffect(() => {
+    // Load data in background without blocking UI
     refreshAll();
   }, []);
 
