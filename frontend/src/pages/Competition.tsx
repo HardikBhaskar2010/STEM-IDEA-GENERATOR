@@ -204,7 +204,9 @@ const Competition: React.FC = () => {
 
             {/* Progress Tab */}
             <TabsContent value="progress" className="space-y-6">
-              {userProgress ? (
+              {contextLoading ? (
+                <ProgressCardSkeleton />
+              ) : userProgress ? (
                 <ProgressCard progress={userProgress} />
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
