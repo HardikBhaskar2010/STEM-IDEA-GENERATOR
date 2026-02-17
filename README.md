@@ -1,6 +1,6 @@
 <div align="center">
  
-# 🚀 STEM Idea Adventure 
+# 🚀 STEM Idea Adventure
 
 ### *Embark on a journey to discover, create, and innovate with AI-powered project ideas*
 
