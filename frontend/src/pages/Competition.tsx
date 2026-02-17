@@ -6,7 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCompetition } from '@/contexts/CompetitionContext';
 import { TeamSetupModal } from '@/components/competition/TeamSetupModal';
 import { TeamInfoCard } from '@/components/competition/TeamInfoCard';
+import { TeamInfoCardSkeleton } from '@/components/competition/TeamInfoCardSkeleton';
 import { ProgressCard } from '@/components/competition/ProgressCard';
+import { ProgressCardSkeleton } from '@/components/competition/ProgressCardSkeleton';
 import { LeaderboardTable } from '@/components/competition/LeaderboardTable';
 import { SubmissionHistory } from '@/components/competition/SubmissionHistory';
 import {
