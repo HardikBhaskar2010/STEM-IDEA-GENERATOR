@@ -159,8 +159,15 @@ const Competition: React.FC = () => {
 
             {/* Team Tab */}
             <TabsContent value="team" className="space-y-6">
-              {teamInfo && (
+              {contextLoading ? (
+                <TeamInfoCardSkeleton />
+              ) : teamInfo ? (
                 <TeamInfoCard teamInfo={teamInfo} onLeave={() => refreshAll()} />
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No team information available</p>
+                </div>
               )}
             </TabsContent>
 
