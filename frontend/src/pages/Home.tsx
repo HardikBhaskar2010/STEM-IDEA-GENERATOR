@@ -13,6 +13,8 @@ import { projectService, type SavedProject } from '@/services/projectService';
 import { toast } from '@/hooks/use-toast';
 import { HeroScene3D } from '@/components/three/HeroScene3D';
 import { BackgroundCanvas3D } from '@/components/three/BackgroundCanvas3D';
+import { LivingCard } from '@/components/command-bridge';
+import { NumberCounter, FloatingMotion } from '@/components/animations';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
