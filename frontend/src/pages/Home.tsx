@@ -188,40 +188,79 @@ const Home: React.FC = () => {
                 </div>
               </div>
 
-              {/* Stats Cards */}
+              {/* Stats Cards - Enhanced with Command Bridge Components */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-                <Card className="glass-effect border-primary/10 shadow-sm hover:shadow-md transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-primary">{stats.total}</p>
-                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Total</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="glass-effect border-emerald-500/10 shadow-sm hover:shadow-md transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-emerald-500">{stats.completed}</p>
-                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Completed</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="glass-effect border-sky-500/10 shadow-sm hover:shadow-md transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-sky-500">{stats.inProgress}</p>
-                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Active</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="glass-effect border-amber-500/10 shadow-sm hover:shadow-md transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-amber-500">{stats.planning}</p>
-                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Planning</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <FloatingMotion distance={3} duration={3000} delay={0}>
+                  <LivingCard 
+                    variant="energy" 
+                    floating={true}
+                    glowPulse={true}
+                    className="border-primary/10 shadow-sm hover:shadow-md"
+                  >
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-primary">
+                          <NumberCounter from={0} to={stats.total} />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Total</p>
+                      </div>
+                    </CardContent>
+                  </LivingCard>
+                </FloatingMotion>
+
+                <FloatingMotion distance={3} duration={3200} delay={100}>
+                  <LivingCard 
+                    variant="energy" 
+                    floating={true}
+                    glowPulse={true}
+                    className="border-emerald-500/10 shadow-sm hover:shadow-md"
+                  >
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-emerald-500">
+                          <NumberCounter from={0} to={stats.completed} />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Completed</p>
+                      </div>
+                    </CardContent>
+                  </LivingCard>
+                </FloatingMotion>
+
+                <FloatingMotion distance={3} duration={3400} delay={200}>
+                  <LivingCard 
+                    variant="energy" 
+                    floating={true}
+                    glowPulse={true}
+                    className="border-sky-500/10 shadow-sm hover:shadow-md"
+                  >
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-sky-500">
+                          <NumberCounter from={0} to={stats.inProgress} />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Active</p>
+                      </div>
+                    </CardContent>
+                  </LivingCard>
+                </FloatingMotion>
+
+                <FloatingMotion distance={3} duration={3600} delay={300}>
+                  <LivingCard 
+                    variant="energy" 
+                    floating={true}
+                    glowPulse={true}
+                    className="border-amber-500/10 shadow-sm hover:shadow-md"
+                  >
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-amber-500">
+                          <NumberCounter from={0} to={stats.planning} />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">Planning</p>
+                      </div>
+                    </CardContent>
+                  </LivingCard>
+                </FloatingMotion>
               </div>
 
               {/* Projects List */}
