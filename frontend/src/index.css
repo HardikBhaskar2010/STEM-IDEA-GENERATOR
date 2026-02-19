@@ -942,3 +942,281 @@ html[data-mode="low"] {
 .Pane2 {
   overflow: hidden;
 }
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* COMMAND BRIDGE UI ANIMATIONS */
+/* AI Command Bridge aesthetic: Tony Stark Lab + Cyberpunk HUD */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* Energy Glow Pulse - Breathing glow effect for living cards */
+@keyframes glow-pulse-command {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px hsl(var(--primary-glow) / 0.5),
+      0 0 40px hsl(var(--primary-glow) / 0.3),
+      inset 0 0 20px hsl(var(--primary-glow) / 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 40px hsl(var(--primary-glow) / 0.8),
+      0 0 60px hsl(var(--primary-glow) / 0.5),
+      inset 0 0 30px hsl(var(--primary-glow) / 0.2);
+  }
+}
+
+/* Energy Border Shimmer - Animated gradient border */
+@keyframes energy-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Neural Pulse - For sidebar nodes */
+@keyframes neural-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Energy Flow - For line animations */
+@keyframes energy-flow {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Holographic Scan - Scanning effect */
+@keyframes holographic-scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Particle Float - For energy particles */
+@keyframes particle-float {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--particle-x, 100px), var(--particle-y, -100px)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Cyberpunk Grid - Background grid animation */
+@keyframes grid-pulse {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Command Button Hover - Enhanced button effect */
+@keyframes command-hover {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 30px rgba(168, 85, 247, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+  }
+}
+
+/* Data Stream - For charts and data visualization */
+@keyframes data-stream {
+  0% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+}
+
+/* Utility Classes for Command Bridge */
+@layer utilities {
+  /* Glow Pulse Utility */
+  .glow-pulse-command {
+    animation: glow-pulse-command var(--glow-duration, 3s) ease-in-out infinite;
+  }
+  
+  /* Energy Shimmer Utility */
+  .energy-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary-glow) / 0.3) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: energy-shimmer 3s linear infinite;
+  }
+  
+  /* Neural Pulse Utility */
+  .neural-pulse {
+    animation: neural-pulse 2s ease-in-out infinite;
+  }
+  
+  /* Holographic Effect */
+  .holographic {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .holographic::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary-glow)),
+      transparent
+    );
+    animation: holographic-scan 3s linear infinite;
+  }
+  
+  /* Cyberpunk Border */
+  .cyber-border {
+    position: relative;
+    border: 1px solid hsl(var(--primary) / 0.3);
+  }
+  
+  .cyber-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    background: linear-gradient(
+      45deg,
+      hsl(var(--primary-glow)),
+      transparent 30%,
+      transparent 70%,
+      hsl(var(--primary-glow))
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .cyber-border:hover::before {
+    opacity: 1;
+  }
+  
+  /* Energy Particle */
+  .energy-particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: hsl(var(--primary-glow));
+    box-shadow: 0 0 10px hsl(var(--primary-glow));
+    pointer-events: none;
+    animation: particle-float 4s ease-out forwards;
+  }
+  
+  /* Command Text Glow */
+  .command-text-glow {
+    text-shadow: 
+      0 0 10px hsl(var(--primary-glow) / 0.8),
+      0 0 20px hsl(var(--primary-glow) / 0.5),
+      0 0 30px hsl(var(--primary-glow) / 0.3);
+  }
+  
+  /* Neural Grid Background */
+  .neural-grid {
+    background-image: 
+      linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-pulse 4s ease-in-out infinite;
+  }
+  
+  /* Data Visualization Animation */
+  .data-appear {
+    animation: data-stream 0.8s ease-out forwards;
+  }
+  
+  /* Command Button Effect */
+  .command-btn-hover:hover {
+    animation: command-hover 0.6s ease-in-out;
+  }
+}
+
+/* Performance Mode Overrides for Command Bridge */
+html[data-mode="low"] {
+  .glow-pulse-command,
+  .energy-shimmer,
+  .neural-pulse,
+  .holographic::before,
+  .energy-particle,
+  .neural-grid {
+    animation: none !important;
+  }
+  
+  .command-text-glow {
+    text-shadow: none !important;
+  }
+  
+  .cyber-border::before {
+    display: none;
+  }
+}
+
+html[data-mode="medium"] {
+  .energy-particle {
+    display: none;
+  }
+  
+  .glow-pulse-command {
+    animation-duration: 4s !important;
+  }
+}
+
+/* Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  .glow-pulse-command,
+  .energy-shimmer,
+  .neural-pulse,
+  .holographic::before,
+  .energy-particle,
+  .neural-grid,
+  .data-appear,
+  .command-btn-hover {
+    animation: none !important;
+  }
+}
