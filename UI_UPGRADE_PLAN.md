@@ -216,10 +216,10 @@ interface CommandButtonProps {
 ### Phase 1: Foundation (Week 1)
 
 #### Day 1-2: Core Animation System
-- [ ] Create `/lib/energyPath.ts` - SVG path utilities
-- [ ] Create `/lib/commandAnimations.ts` - anime.js presets
-- [ ] Create `/lib/particleSystem.ts` - Particle helpers
-- [ ] Add command bridge CSS animations to `index.css`
+- [x] Create `/lib/energyPath.ts` - SVG path utilities
+- [x] Create `/lib/commandAnimations.ts` - anime.js presets
+- [x] Create `/lib/particleSystem.ts` - Particle helpers
+- [x] Add command bridge CSS animations to `index.css`
 
 #### Day 3-4: Base Components
 - [ ] `EnergyFlow.tsx` - SVG path energy animations
