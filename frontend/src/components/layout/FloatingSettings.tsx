@@ -22,11 +22,12 @@ export const FloatingSettings = () => {
   const [showThemeDialog, setShowThemeDialog] = useState(false);
   const [showVoiceDialog, setShowVoiceDialog] = useState(false);
 
-  // Create mock hrefs for settings items (they will open dialogs instead)
   const items = [
     {
       title: "Theme",
-      icon: <Palette className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      icon: (
+        <Palette className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+      ),
       href: "#theme",
     },
     {
@@ -40,14 +41,16 @@ export const FloatingSettings = () => {
     },
     {
       title: "Voice",
-      icon: <Mic className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      icon: (
+        <Mic className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+      ),
       href: "#voice",
     },
   ];
 
   return (
     <>
-      <div className=\"fixed bottom-6 left-1/2 translate-x-[260px] md:translate-x-[340px] z-50\">
+      <div className="fixed bottom-6 left-1/2 translate-x-[260px] md:translate-x-[340px] z-50">
         <div className="relative">
           {/* Custom click handlers overlay */}
           <div className="absolute inset-0 flex gap-4 items-end px-4 pb-3 pointer-events-none z-10">
