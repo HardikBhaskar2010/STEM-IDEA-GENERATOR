@@ -47,7 +47,7 @@ export const FloatingSettings = () => {
 
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 translate-x-[280px] z-50">
+      <div className=\"fixed bottom-6 left-1/2 translate-x-[260px] md:translate-x-[340px] z-50\">
         <div className="relative">
           {/* Custom click handlers overlay */}
           <div className="absolute inset-0 flex gap-4 items-end px-4 pb-3 pointer-events-none z-10">
