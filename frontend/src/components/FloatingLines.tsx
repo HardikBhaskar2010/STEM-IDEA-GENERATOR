@@ -385,7 +385,14 @@ export default function FloatingLines({
       const rect = renderer.domElement.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
+      const isInside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
       const dpr = renderer.getPixelRatio();
+
+      if (!isInside) {
+        targetInfluenceRef.current = 0.0;
+        targetParallaxRef.current.set(0, 0);
+        return;
+      }
 
       targetMouseRef.current.set(x * dpr, (rect.height - y) * dpr);
       targetInfluenceRef.current = 1.0;
@@ -401,11 +408,13 @@ export default function FloatingLines({
 
     const handlePointerLeave = () => {
       targetInfluenceRef.current = 0.0;
+      targetParallaxRef.current.set(0, 0);
     };
 
     if (interactive) {
-      renderer.domElement.addEventListener('pointermove', handlePointerMove);
-      renderer.domElement.addEventListener('pointerleave', handlePointerLeave);
+      window.addEventListener('pointermove', handlePointerMove);
+      window.addEventListener('pointerleave', handlePointerLeave);
+      window.addEventListener('blur', handlePointerLeave);
     }
 
     let raf = 0;
@@ -432,8 +441,9 @@ export default function FloatingLines({
       cancelAnimationFrame(raf);
       if (ro) ro.disconnect();
       if (interactive) {
-        renderer.domElement.removeEventListener('pointermove', handlePointerMove);
-        renderer.domElement.removeEventListener('pointerleave', handlePointerLeave);
+        window.removeEventListener('pointermove', handlePointerMove);
+        window.removeEventListener('pointerleave', handlePointerLeave);
+        window.removeEventListener('blur', handlePointerLeave);
       }
       renderer.dispose();
       material.dispose();
