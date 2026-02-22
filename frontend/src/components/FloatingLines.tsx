@@ -197,9 +197,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 }
 
 void main() {
-  vec4 color = vec4(0.0);
-  mainImage(color, gl_FragCoord.xy);
-  gl_FragColor = color;
+  mainImage(gl_FragColor, gl_FragCoord.xy);
 }
 `;
 
@@ -461,5 +459,5 @@ export default function FloatingLines({
     linesGradient
   ]);
 
-  return <div ref={containerRef} className=\"floating-lines-container\" style={{ mixBlendMode }} />;
+  return <div ref={containerRef} className="floating-lines-container" style={{ mixBlendMode }} />;
 }
