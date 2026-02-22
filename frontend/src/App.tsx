@@ -21,6 +21,7 @@ import { preloadAnimations } from "@/lib/animation";
 import { PerfPromptBanner } from "@/components/ui/perf-prompt-banner";
 import { debugApiCalls } from "@/utils/apiDebug";
 import { CommandPalette } from "@/components/CommandPalette";
+import FloatingLines from "@/components/FloatingLines";
 
 // Lazy load page components
 const Welcome = React.lazy(() => import("./pages/Welcome"));
@@ -62,7 +63,15 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <div className="relative min-h-screen w-full overflow-hidden bg-background">
+        <FloatingLines 
+          enabledWaves={["top", "middle", "bottom"]}
+          lineCount={10}
+          lineDistance={8}
+          interactive={true}
+          parallax={true}
+        />
+        <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <PreferencesProvider>
             <PerfProvider>
@@ -118,6 +127,7 @@ const App = () => {
       </PreferencesProvider>
     </AuthProvider>
     </QueryClientProvider>
+    </div>
   </ErrorBoundary>
 );
 };
