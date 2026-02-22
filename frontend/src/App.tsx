@@ -63,14 +63,17 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <div className="relative min-h-screen w-full overflow-hidden bg-background">
+      <div className="relative min-h-screen w-full overflow-hidden bg-background/20">
         <FloatingLines 
           enabledWaves={["top", "middle", "bottom"]}
-          lineCount={10}
-          lineDistance={8}
+          lineCount={5}
+          lineDistance={5}
+          bendRadius={5}
+          bendStrength={-0.5}
           interactive={true}
           parallax={true}
         />
+        <div className="relative z-10">
         <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <PreferencesProvider>
@@ -127,6 +130,7 @@ const App = () => {
       </PreferencesProvider>
     </AuthProvider>
     </QueryClientProvider>
+    </div>
     </div>
   </ErrorBoundary>
 );
