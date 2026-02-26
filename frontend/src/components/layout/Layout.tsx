@@ -16,13 +16,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="relative min-h-screen">
       {/* Background - Base layer */}
-      <div className="fixed inset-0 bg-background z-0" />
+      <div className="fixed inset-0 bg-background" style={{ zIndex: 0 }} />
       
       {/* Animated background gradient */}
-      <div className="fixed inset-0 bg-gradient-hero opacity-5 animate-gradient-shift pointer-events-none z-1" />
+      <div className="fixed inset-0 bg-gradient-hero opacity-5 animate-gradient-shift pointer-events-none" style={{ zIndex: 1 }} />
       
       {/* Main Content - Stacked on top of backgrounds */}
-      <main className="relative min-h-screen pb-24 z-10">
+      <main className="relative min-h-screen pb-24" style={{ zIndex: 10 }}>
         {children}
       </main>
   
