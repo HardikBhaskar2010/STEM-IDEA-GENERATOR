@@ -1,7 +1,12 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
+
+interface ScrollDrivenHeroProps {
+  overlayContent?: React.ReactNode;
+}
 
 interface ThreeHeroSceneProps {
   scrollProgressRef: React.MutableRefObject<number>;
@@ -293,4 +298,72 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
     </>
   );
 };
+
+const ScrollDrivenHero: React.FC<ScrollDrivenHeroProps> = ({ overlayContent }) => {
+  const heroRef = useRef<HTMLElement>(null);
+  const scrollProgressRef = useRef(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+    updateMotionPreference();
+
+    mediaQuery.addEventListener('change', updateMotionPreference);
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateMotionPreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!heroRef.current) return;
+      const rect = heroRef.current.getBoundingClientRect();
+      const progress = Math.min(Math.max(-rect.top / window.innerHeight, 0), 1);
+      scrollProgressRef.current = progress;
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
+  return (
+    <section ref={heroRef} className="relative h-[200vh] bg-black" aria-label="STEM 3D hero">
+      <div className="sticky top-0 h-screen w-full overflow-hidden">
+        <Canvas
+          dpr={[1, 2]}
+          gl={{ antialias: true, alpha: false }}
+          className="absolute inset-0"
+        >
+          <color attach="background" args={['#000000']} />
+          <ThreeHeroScene
+            scrollProgressRef={scrollProgressRef}
+            prefersReducedMotion={prefersReducedMotion}
+            hoveredNodeId={hoveredNodeId}
+            selectedNodeId={selectedNodeId}
+            focusedNodeId={focusedNodeId}
+            onNodeHover={setHoveredNodeId}
+            onNodeClick={setSelectedNodeId}
+            onNodeFocus={setFocusedNodeId}
+          />
+        </Canvas>
+
+        <div className="relative z-10 flex h-full items-center justify-center px-6 pointer-events-none">
+          <div className="pointer-events-auto">{overlayContent}</div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 export default ScrollDrivenHero;
