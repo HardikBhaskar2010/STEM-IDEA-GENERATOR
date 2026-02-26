@@ -293,3 +293,4 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
     </>
   );
 };
+export default ScrollDrivenHero;
