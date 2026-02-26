@@ -31,25 +31,38 @@ export function FloatingLinesBackground() {
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         zIndex: 1,
         pointerEvents: 'none',
-        opacity: 0.6
+        opacity: 0.6,
+        overflow: 'hidden'
       }}
     >
-      <FloatingLines
-        linesGradient={gradientColors}
-        enabledWaves={['top', 'middle', 'bottom']}
-        lineCount={5}
-        lineDistance={5}
-        bendRadius={5}
-        bendStrength={-0.5}
-        interactive={true}
-        parallax={true}
-        animationSpeed={1}
-        mixBlendMode="lighten"
-      />
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'auto'
+        }}
+      >
+        <FloatingLines
+          linesGradient={gradientColors}
+          enabledWaves={['top', 'middle', 'bottom']}
+          lineCount={5}
+          lineDistance={5}
+          bendRadius={5}
+          bendStrength={-0.5}
+          interactive={true}
+          parallax={true}
+          animationSpeed={1}
+          mixBlendMode="lighten"
+          mouseDamping={0.08}
+        />
+      </div>
     </div>
   );
 }
