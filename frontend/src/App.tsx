@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { SpeedInsights } from "@vercel/speed-insights/react"
-import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ import { preloadAnimations } from "@/lib/animation";
 import { PerfPromptBanner } from "@/components/ui/perf-prompt-banner";
 import { debugApiCalls } from "@/utils/apiDebug";
 import { CommandPalette } from "@/components/CommandPalette";
+import { FloatingLinesBackground } from "@/components/layout/FloatingLinesBackground"; // 🌊 Added
 
 // Lazy load page components
 const Welcome = React.lazy(() => import("./pages/Welcome"));
@@ -45,18 +46,17 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 // Preload animations on app initialization
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   preloadAnimations();
 }
 
 const App = () => {
-  // Initialize API debugging in development/production for troubleshooting
   useEffect(() => {
     debugApiCalls();
-    console.log('🔍 Environment Variables:', {
+    console.log("🔍 Environment Variables:", {
       VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
       NODE_ENV: import.meta.env.NODE_ENV,
-      MODE: import.meta.env.MODE
+      MODE: import.meta.env.MODE,
     });
   }, []);
 
@@ -73,54 +73,57 @@ const App = () => {
                       <CompetitionProvider>
                         <AchievementProvider>
                           <TooltipProvider>
-                      {/* 🔥 Vercel magic */}
-                      <SpeedInsights />
-                      <Analytics />
+                            {/* 🔥 Vercel magic */}
+                            <SpeedInsights />
+                            <Analytics />
 
-                      <Toaster />
-                      <Sonner />
+                            <Toaster />
+                            <Sonner />
 
-                      <BrowserRouter>
-                        {/* 🚀 CMD+K Command Palette */}
-                        <CommandPalette />
-                        <PerfPromptBanner />
-                        <Suspense fallback={<PageLoading />}>
-                          <Routes>
-                            <Route path="/" element={<Welcome />} />
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/signup" element={<SignUp />} />
-                            <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/auth/callback" element={<AuthCallback />} />
-                            <Route path="/project/:id" element={<ProjectDetail />} />
-                            <Route path="/generator" element={<Generator />} />
-                            <Route path="/code-generator" element={<CodeGenerator />} />
-                            <Route path="/competition" element={<Competition />} />
-                            <Route path="/components" element={<Components />} />
-                            <Route path="/components/compare" element={<ComponentComparison />} />
-                            <Route path="/library" element={<Library />} />
-                            <Route path="/learn" element={<Learn />} />
-                            <Route path="/profile" element={<Profile />} />
-                            <Route path="/about" element={<About />} />
-                            <Route path="/admin" element={<AdminDashboard />} />
-                            <Route path="/presentation" element={<Presentation />} />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </Suspense>
-                      </BrowserRouter>
-                    </TooltipProvider>
-                  </AchievementProvider>
-                </CompetitionProvider>
-              </CodeGenerationProvider>
-            </TTSProvider>
-            </AnimationProvider>
-          </ThreeDProvider>
-        </PerfProvider>
-      </PreferencesProvider>
-    </AuthProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+                            <BrowserRouter>
+                              {/* 🚀 CMD+K Command Palette */}
+                              <CommandPalette />
+                              <PerfPromptBanner />
+
+                              {/* 🌊 Floating Lines Background - All pages except "/" */}
+                              <FloatingLinesBackground />
+
+                              <Suspense fallback={<PageLoading />}>
+                                <Routes>
+                                  <Route path="/" element={<Welcome />} />
+                                  <Route path="/login" element={<Login />} />
+                                  <Route path="/signup" element={<SignUp />} />
+                                  <Route path="/dashboard" element={<Dashboard />} />
+                                  <Route path="/auth/callback" element={<AuthCallback />} />
+                                  <Route path="/project/:id" element={<ProjectDetail />} />
+                                  <Route path="/generator" element={<Generator />} />
+                                  <Route path="/code-generator" element={<CodeGenerator />} />
+                                  <Route path="/competition" element={<Competition />} />
+                                  <Route path="/components" element={<Components />} />
+                                  <Route path="/components/compare" element={<ComponentComparison />} />
+                                  <Route path="/library" element={<Library />} />
+                                  <Route path="/learn" element={<Learn />} />
+                                  <Route path="/profile" element={<Profile />} />
+                                  <Route path="/about" element={<About />} />
+                                  <Route path="/admin" element={<AdminDashboard />} />
+                                  <Route path="/presentation" element={<Presentation />} />
+                                  <Route path="*" element={<NotFound />} />
+                                </Routes>
+                              </Suspense>
+                            </BrowserRouter>
+                          </TooltipProvider>
+                        </AchievementProvider>
+                      </CompetitionProvider>
+                    </CodeGenerationProvider>
+                  </TTSProvider>
+                </AnimationProvider>
+              </ThreeDProvider>
+            </PerfProvider>
+          </PreferencesProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
 };
-
 
 export default App;
