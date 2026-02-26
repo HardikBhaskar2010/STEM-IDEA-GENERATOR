@@ -8,8 +8,10 @@ interface ThreeHeroSceneProps {
   prefersReducedMotion: boolean;
   hoveredNodeId: string | null;
   selectedNodeId: string | null;
+  focusedNodeId: string | null;
   onNodeHover: (id: string | null) => void;
   onNodeClick: (id: string | null) => void;
+  onNodeFocus: (id: string | null) => void;
 }
 
 interface FeatureNode {
@@ -20,27 +22,33 @@ interface FeatureNode {
   scale: number;
   color: string;
   rotation: [number, number, number];
-  layer: 1 | 2 | 3; // Depth staging
+  arcAngle: number; // Angle on orbital arc
 }
 
 /**
- * Luna V2: Interactive Product Atlas with Neural Motion Path
- * Feature nodes connected by architected neural pathway
- * Controlled powerful energy + System responds to you
+ * Luna V3: Orbital Focus System
+ * Feature nodes revolve along controlled arc
+ * Scroll rotates orbit group (subtle, not aggressive)
+ * Each node becomes centered sequentially with focus detection
+ * Premium, curated staging with intentional choreography
  */
 export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
   scrollProgressRef,
   prefersReducedMotion,
   hoveredNodeId,
   selectedNodeId,
+  focusedNodeId,
   onNodeHover,
   onNodeClick,
+  onNodeFocus,
 }) => {
   const { viewport, raycaster, camera, pointer } = useThree();
   const groupRef = useRef<THREE.Group>(null);
+  const orbitGroupRef = useRef<THREE.Group>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
   const neuralPathRef = useRef<THREE.Mesh>(null);
   const [hoveredMesh, setHoveredMesh] = useState<THREE.Mesh | null>(null);
+  const focusedNodeRef = useRef<string | null>(null);
 
   // Detect mobile for responsive object count
   const isMobile = viewport.width < 768;
@@ -54,35 +62,48 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
     soft: '#C4B5FD',
   };
 
-  // Feature Nodes with metadata (Depth-staged)
+  // Orbital parameters
+  const orbitRadius = 3;
+  const arcSpread = isMobile ? Math.PI / 2 : (Math.PI * 2) / 3; // 90° mobile, 120° desktop
+
+  // Feature Nodes with Orbital Arc Positioning
   const featureNodes = useMemo((): FeatureNode[] => {
     const nodes: FeatureNode[] = [];
 
-    // Layer 1 (Z -2): Core Engine
-    nodes.push({
-      id: 'core-engine',
-      title: 'AI Idea Generation',
-      type: 'cube',
-      position: [0, 0, -2],
-      scale: 0.8,
-      color: colors.primary,
-      rotation: [0.2, 0.3, 0.1],
-      layer: 1,
+    // Calculate orbital positions for 4 main nodes
+    const mainNodeIds = [
+      { id: 'core-engine', title: 'AI Idea Generation', type: 'cube' as const, color: colors.primary },
+      { id: 'component-system', title: '500+ Components', type: 'cube' as const, color: colors.secondary },
+      { id: 'learning-sphere', title: 'Learn By Doing', type: 'sphere' as const, color: colors.accent },
+      { id: 'innovation-engine', title: 'Innovation Engine', type: 'torus' as const, color: colors.highlight },
+    ];
+
+    // Distribute nodes along arc
+    mainNodeIds.forEach((node, index) => {
+      const angleOffset = -arcSpread / 2; // Start angle
+      const angleStep = arcSpread / (mainNodeIds.length - 1);
+      const angle = angleOffset + angleStep * index;
+
+      // Orbital positioning formula
+      const x = orbitRadius * Math.sin(angle);
+      const z = -4 + orbitRadius * Math.cos(angle);
+      const y = Math.sin(index * 0.5) * 0.3; // Slight vertical variation
+
+      nodes.push({
+        id: node.id,
+        title: node.title,
+        type: node.type,
+        position: [x, y, z],
+        scale: node.type === 'torus' ? 0.7 : 0.8,
+        color: node.color,
+        rotation: [0.2, 0.3, 0.1],
+        arcAngle: angle,
+      });
     });
 
-    // Layer 2 (Z -4): Systems
+    // Add supporting cluster nodes only on desktop
     if (!isMobile) {
-      nodes.push({
-        id: 'component-system',
-        title: '500+ Components',
-        type: 'cube',
-        position: [3, 1, -4],
-        scale: 0.6,
-        color: colors.secondary,
-        rotation: [0.3, 0.2, 0.4],
-        layer: 2,
-      });
-
+      // Component clusters
       nodes.push({
         id: 'component-cluster-1',
         title: 'Component Cluster',
@@ -91,7 +112,7 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
         scale: 0.4,
         color: colors.secondary,
         rotation: [0.1, 0.5, 0.2],
-        layer: 2,
+        arcAngle: 0,
       });
 
       nodes.push({
@@ -102,34 +123,10 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
         scale: 0.35,
         color: colors.secondary,
         rotation: [0.4, 0.1, 0.3],
-        layer: 2,
+        arcAngle: 0,
       });
-    } else {
-      // Mobile: Single component node
-      nodes.push({
-        id: 'component-system',
-        title: '500+ Components',
-        type: 'cube',
-        position: [3, 0.5, -4],
-        scale: 0.6,
-        color: colors.secondary,
-        rotation: [0.3, 0.2, 0.4],
-        layer: 2,
-      });
-    }
 
-    nodes.push({
-      id: 'learning-sphere',
-      title: 'Learn By Doing',
-      type: 'sphere',
-      position: [-3, 0, -4],
-      scale: 0.65,
-      color: colors.accent,
-      rotation: [0, 0, 0],
-      layer: 2,
-    });
-
-    if (!isMobile) {
+      // Learning support
       nodes.push({
         id: 'learning-support',
         title: 'Learning Support',
@@ -138,23 +135,10 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
         scale: 0.4,
         color: colors.accent,
         rotation: [0, 0, 0],
-        layer: 2,
-      });
-    }
-
-    // Layer 3 (Z -6): Innovation
-    if (!isMobile) {
-      nodes.push({
-        id: 'innovation-engine',
-        title: 'Innovation Engine',
-        type: 'torus',
-        position: [0, 1.5, -6],
-        scale: 0.7,
-        color: colors.highlight,
-        rotation: [Math.PI / 4, 0, Math.PI / 6],
-        layer: 3,
+        arcAngle: 0,
       });
 
+      // Innovation ring
       nodes.push({
         id: 'innovation-ring-2',
         title: 'Innovation Ring',
@@ -163,7 +147,7 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
         scale: 0.55,
         color: colors.soft,
         rotation: [Math.PI / 3, Math.PI / 4, 0],
-        layer: 3,
+        arcAngle: 0,
       });
     }
 
@@ -175,17 +159,14 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
 
   // Neural Motion Path - CatmullRomCurve3
   const neuralPath = useMemo(() => {
-    // Order nodes by depth (layer) for path flow
     const orderedNodes = [...featureNodes]
       .filter(node => interactiveNodeIds.includes(node.id))
-      .sort((a, b) => a.layer - b.layer);
+      .sort((a, b) => a.arcAngle - b.arcAngle);
 
-    // Create curve from node positions
     const points = orderedNodes.map(
       node => new THREE.Vector3(...node.position)
     );
 
-    // Add smooth intermediate points for better flow
     if (points.length >= 2) {
       const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.3);
       return curve;
@@ -199,7 +180,18 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
     if (!groupRef.current || prefersReducedMotion) return;
 
     const meshes = groupRef.current.children
-      .filter(child => child instanceof THREE.Mesh && child.userData.isInteractive) as THREE.Mesh[];
+      .filter(child => {
+        if (child instanceof THREE.Group) {
+          return child.children.filter(c => c instanceof THREE.Mesh && c.userData.isInteractive);
+        }
+        return child instanceof THREE.Mesh && child.userData.isInteractive;
+      })
+      .flatMap(child => {
+        if (child instanceof THREE.Group) {
+          return child.children.filter(c => c instanceof THREE.Mesh && c.userData.isInteractive) as THREE.Mesh[];
+        }
+        return [child] as THREE.Mesh[];
+      });
 
     raycaster.setFromCamera(pointer, camera);
     const intersects = raycaster.intersectObjects(meshes, false);
@@ -240,15 +232,16 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
     const progress = scrollProgressRef.current; // 0-1 for 500vh
     const camera = cameraRef.current;
     const group = groupRef.current;
+    const orbitGroup = orbitGroupRef.current;
     const neuralPathMesh = neuralPathRef.current;
 
-    if (!camera || !group) return;
+    if (!camera || !group || !orbitGroup) return;
 
     // If reduced motion is preferred, keep static positions
     if (prefersReducedMotion) {
-      camera.position.z = 8;
+      camera.position.z = 7;
       camera.position.y = 0;
-      group.rotation.y = 0;
+      orbitGroup.rotation.y = 0;
       if (neuralPathMesh) {
         (neuralPathMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.4;
       }
@@ -258,27 +251,25 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
     // Scroll-based damping when panel is open
     const motionDamping = selectedNodeId ? 0.4 : 1.0;
 
-    // LERP-BASED CAMERA MOVEMENT (smooth, no jitter)
-    // Target positions based on scroll progress
-    const targetCameraZ = 8 - progress * 3; // 8 → 5
-    const targetCameraY = progress * 0.5; // 0 → 0.5
+    // CAMERA: Mostly stable, minimal forward drift
+    const targetCameraZ = 7 - progress * 1; // 7 → 6 (subtle)
+    const targetCameraY = progress * 0.3; // 0 → 0.3 (minimal)
 
-    // Apply smooth lerp (0.08 = premium smoothness)
     camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCameraZ, 0.08);
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetCameraY, 0.08);
 
     // Subtle camera tilt
-    const targetCameraRotationX = -progress * 0.1;
+    const targetCameraRotationX = -progress * 0.08;
     camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetCameraRotationX, 0.08);
 
-    // Hover: Camera micro-tilt (very subtle)
-    if (hoveredNodeId && hoveredMesh) {
+    // Hover: Camera micro-tilt (disabled on mobile)
+    if (!isMobile && hoveredNodeId && hoveredMesh) {
       const meshPos = new THREE.Vector3();
       hoveredMesh.getWorldPosition(meshPos);
       const screenPos = meshPos.project(camera);
       
-      const tiltX = screenPos.y * 0.02; // Very small tilt
-      const tiltY = -screenPos.x * 0.02;
+      const tiltX = screenPos.y * 0.015;
+      const tiltY = -screenPos.x * 0.015;
       
       camera.rotation.x = THREE.MathUtils.lerp(
         camera.rotation.x, 
@@ -292,48 +283,75 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
       );
     }
 
-    // Click: Slight forward camera lerp
-    if (selectedNodeId) {
-      const targetZ = targetCameraZ - 0.5; // Subtle forward movement
-      camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.05);
+    // ORBITAL ROTATION: Scroll-driven (0.6π max = ~108 degrees)
+    const rotationRange = 0.6 * Math.PI;
+    const targetOrbitRotation = progress * rotationRange * motionDamping;
+    orbitGroup.rotation.y = THREE.MathUtils.lerp(
+      orbitGroup.rotation.y,
+      targetOrbitRotation,
+      0.08
+    );
+
+    // FOCUS DETECTION: Camera-space method (performance-safe)
+    const focusThreshold = 0.3;
+    let newFocusedNode: string | null = null;
+    let closestZ = Infinity;
+
+    orbitGroup.children.forEach((child) => {
+      if (child instanceof THREE.Mesh && child.userData.isInteractive) {
+        const worldPos = new THREE.Vector3();
+        child.getWorldPosition(worldPos);
+
+        // Transform to camera space
+        const cameraSpacePos = worldPos.clone().sub(camera.position);
+        cameraSpacePos.applyQuaternion(camera.quaternion.clone().invert());
+
+        // Check if centered (abs(x) < threshold)
+        if (Math.abs(cameraSpacePos.x) < focusThreshold) {
+          // Among centered candidates, pick closest Z
+          if (cameraSpacePos.z < closestZ) {
+            closestZ = cameraSpacePos.z;
+            newFocusedNode = child.userData.nodeId;
+          }
+        }
+      }
+    });
+
+    // Only update React state if focused node changed
+    if (newFocusedNode !== focusedNodeRef.current) {
+      focusedNodeRef.current = newFocusedNode;
+      onNodeFocus(newFocusedNode);
     }
 
-    // Scene rotation with restraint (dampened when panel open)
-    const targetGroupRotationY = progress * 0.3 * Math.PI * motionDamping;
-    group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, targetGroupRotationY, 0.08);
-
-    // Subtle sine wave for X rotation (adds life, dampened when panel open)
-    const targetGroupRotationX = Math.sin(state.clock.elapsedTime * 0.2) * 0.05 * motionDamping;
-    group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, targetGroupRotationX, 0.05);
-
-    // Neural Path: Progressive emissive reveal (250vh-420vh = progress 0.5-0.84)
-    if (neuralPathMesh) {
+    // Neural Path: Distance-based emissive enhancement
+    if (neuralPathMesh && neuralPath) {
       const material = neuralPathMesh.material as THREE.MeshStandardMaterial;
       
-      // Scroll-based reveal: 0 at 250vh (0.5) → 0.4 at 420vh (0.84)
-      let targetIntensity = 0;
+      // Base intensity from scroll (250vh-420vh = 0.5-0.84)
+      let baseIntensity = 0;
       if (progress >= 0.5 && progress <= 0.84) {
-        const revealProgress = (progress - 0.5) / 0.34; // 0-1 in reveal zone
-        targetIntensity = revealProgress * 0.4;
+        const revealProgress = (progress - 0.5) / 0.34;
+        baseIntensity = revealProgress * 0.4;
       } else if (progress > 0.84) {
-        targetIntensity = 0.4;
+        baseIntensity = 0.4;
       }
 
-      // Hover: Path emissive ripple (system responds to you)
-      if (hoveredNodeId && !selectedNodeId) {
-        targetIntensity = Math.min(0.6, targetIntensity + 0.2);
-        
-        // Subtle pulse
-        const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.1;
-        targetIntensity += pulse;
+      // Focus: Boost only near focused node (distance-based)
+      let targetIntensity = baseIntensity;
+      if (focusedNodeId && !selectedNodeId) {
+        const focusedNode = featureNodes.find(n => n.id === focusedNodeId);
+        if (focusedNode) {
+          // Add subtle boost (not whole path)
+          targetIntensity = Math.min(0.6, baseIntensity + 0.15);
+        }
       }
 
-      // Selected: Stronger glow near active node
+      // Selected: Stronger glow
       if (selectedNodeId) {
-        targetIntensity = Math.min(0.7, targetIntensity + 0.3);
+        targetIntensity = Math.min(0.7, baseIntensity + 0.3);
       }
 
-      // Apply lerp for smooth transitions
+      // Apply lerp
       material.emissiveIntensity = THREE.MathUtils.lerp(
         material.emissiveIntensity,
         targetIntensity,
@@ -341,59 +359,83 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
       );
     }
 
-    // Individual node animations (controlled)
-    group.children.forEach((child, index) => {
+    // Individual node animations
+    orbitGroup.children.forEach((child, index) => {
       if (child instanceof THREE.Mesh && child.userData.nodeId) {
         const nodeId = child.userData.nodeId;
         const isHovered = nodeId === hoveredNodeId;
         const isSelected = nodeId === selectedNodeId;
-        const isOtherSelected = selectedNodeId && nodeId !== selectedNodeId;
+        const isFocused = nodeId === focusedNodeId;
+        const isOtherFocused = focusedNodeId && nodeId !== focusedNodeId;
 
-        // Rotation (max 180° influence from scroll)
+        // Rotation
         const baseRotationSpeed = 0.001 + (index * 0.0002);
-        const targetRotationY = child.userData.initialRotation.y + (progress * Math.PI);
-        const targetRotationX = child.userData.initialRotation.x + (progress * Math.PI * 0.5);
+        const targetRotationY = child.userData.initialRotation.y + (progress * Math.PI * 0.5);
+        const targetRotationX = child.userData.initialRotation.x + (progress * Math.PI * 0.3);
 
         child.rotation.y = THREE.MathUtils.lerp(child.rotation.y, targetRotationY, 0.06);
         child.rotation.x = THREE.MathUtils.lerp(child.rotation.x, targetRotationX, 0.06);
-
-        // Gentle continuous rotation
         child.rotation.z += baseRotationSpeed * motionDamping;
 
-        // Scale: Base breathing + hover/select effects
+        // Scale: Base breathing + focus effects
         const breatheAmount = Math.sin(state.clock.elapsedTime * 0.5 + index) * 0.05;
         let targetScale = child.userData.initialScale * (1 + breatheAmount + progress * 0.1);
 
-        // Hover: Scale to 1.08
+        // Focus: Scale to 1.05
+        if (isFocused) {
+          targetScale *= 1.05;
+        }
+
+        // Hover: Additional emphasis
         if (isHovered) {
-          targetScale *= 1.08;
+          targetScale *= 1.03;
         }
 
         // Selected: Slight emphasis
         if (isSelected) {
-          targetScale *= 1.05;
+          targetScale *= 1.02;
         }
 
         const currentScale = child.scale.x;
         const newScale = THREE.MathUtils.lerp(currentScale, targetScale, 0.06);
         child.scale.set(newScale, newScale, newScale);
 
-        // Opacity: Reduce non-selected nodes when one is selected
+        // Opacity: Gradual hierarchy (Focused: 1.0, Near: 0.85, Far: 0.65)
         const material = child.material as THREE.MeshStandardMaterial;
         let targetOpacity = 1;
-        if (isOtherSelected) {
-          targetOpacity = 0.4;
-        }
-        material.opacity = THREE.MathUtils.lerp(material.opacity, targetOpacity, 0.1);
-        material.transparent = targetOpacity < 1;
 
-        // Emissive: Boost on hover
+        if (focusedNodeId) {
+          if (isFocused) {
+            targetOpacity = 1.0; // Focused: full opacity
+          } else {
+            // Calculate distance to focused node in arc
+            const focusedNode = featureNodes.find(n => n.id === focusedNodeId);
+            const currentNode = featureNodes.find(n => n.id === nodeId);
+            if (focusedNode && currentNode && currentNode.arcAngle !== 0) {
+              const angleDiff = Math.abs(focusedNode.arcAngle - currentNode.arcAngle);
+              // Near nodes: 0.85, Far nodes: 0.65
+              targetOpacity = angleDiff < Math.PI / 4 ? 0.85 : 0.65;
+            } else {
+              targetOpacity = 0.7; // Supporting nodes
+            }
+          }
+        } else if (isOtherFocused) {
+          targetOpacity = 0.7;
+        }
+
+        material.opacity = THREE.MathUtils.lerp(material.opacity, targetOpacity, 0.1);
+        material.transparent = true;
+
+        // Emissive: Boost on focus
         let targetEmissive = 0.1;
+        if (isFocused) {
+          targetEmissive = 0.3; // +0.2 boost
+        }
         if (isHovered) {
-          targetEmissive = 0.3;
+          targetEmissive = Math.max(targetEmissive, 0.25);
         }
         if (isSelected) {
-          targetEmissive = 0.25;
+          targetEmissive = Math.max(targetEmissive, 0.2);
         }
         material.emissiveIntensity = THREE.MathUtils.lerp(
           material.emissiveIntensity,
@@ -410,11 +452,11 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
       <PerspectiveCamera
         ref={cameraRef}
         makeDefault
-        position={[0, 0, 8]}
+        position={[0, 0, 7]}
         fov={50}
       />
 
-      {/* Lighting setup - ambient + directional + accent */}
+      {/* Lighting setup */}
       <ambientLight intensity={0.4} color={colors.soft} />
       <directionalLight
         position={[5, 5, 5]}
@@ -437,64 +479,66 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
         distance={8}
       />
 
-      {/* Scene group - contains all objects */}
+      {/* Scene group */}
       <group ref={groupRef}>
-        {/* Feature Nodes */}
-        {featureNodes.map((node) => {
-          const isInteractive = interactiveNodeIds.includes(node.id);
+        {/* Orbital Group - rotates with scroll */}
+        <group ref={orbitGroupRef}>
+          {/* Feature Nodes */}
+          {featureNodes.map((node) => {
+            const isInteractive = interactiveNodeIds.includes(node.id);
 
-          // Common material properties
-          const materialProps = {
-            color: node.color,
-            metalness: node.type === 'cube' ? 0.3 : 0.1,
-            roughness: node.type === 'cube' ? 0.4 : 0.2,
-            emissive: node.color,
-            emissiveIntensity: 0.1,
-          };
+            const materialProps = {
+              color: node.color,
+              metalness: node.type === 'cube' ? 0.3 : 0.1,
+              roughness: node.type === 'cube' ? 0.4 : 0.2,
+              emissive: node.color,
+              emissiveIntensity: 0.1,
+            };
 
-          return (
-            <mesh
-              key={node.id}
-              position={node.position}
-              rotation={node.rotation}
-              scale={node.scale}
-              castShadow={!isMobile}
-              receiveShadow={!isMobile}
-              userData={{
-                nodeId: node.id,
-                initialScale: node.scale,
-                initialRotation: { x: node.rotation[0], y: node.rotation[1], z: node.rotation[2] },
-                isInteractive,
-              }}
-            >
-              {node.type === 'cube' && <boxGeometry args={[1, 1, 1]} />}
-              {node.type === 'sphere' && <sphereGeometry args={[1, 32, 32]} />}
-              {node.type === 'torus' && <torusGeometry args={[1, 0.4, 16, 32]} />}
-              <meshStandardMaterial
-                {...materialProps}
-                transparent={node.type === 'torus'}
-                opacity={node.type === 'torus' ? 0.6 : 1}
-              />
-            </mesh>
-          );
-        })}
+            return (
+              <mesh
+                key={node.id}
+                position={node.position}
+                rotation={node.rotation}
+                scale={node.scale}
+                castShadow={!isMobile}
+                receiveShadow={!isMobile}
+                userData={{
+                  nodeId: node.id,
+                  initialScale: node.scale,
+                  initialRotation: { x: node.rotation[0], y: node.rotation[1], z: node.rotation[2] },
+                  isInteractive,
+                }}
+              >
+                {node.type === 'cube' && <boxGeometry args={[1, 1, 1]} />}
+                {node.type === 'sphere' && <sphereGeometry args={[1, 32, 32]} />}
+                {node.type === 'torus' && <torusGeometry args={[1, 0.4, 16, 32]} />}
+                <meshStandardMaterial
+                  {...materialProps}
+                  transparent={true}
+                  opacity={1}
+                />
+              </mesh>
+            );
+          })}
+        </group>
 
-        {/* Neural Motion Path - Architected System */}
+        {/* Neural Motion Path */}
         {neuralPath && (
           <mesh ref={neuralPathRef}>
             <tubeGeometry
               args={[
                 neuralPath,
-                isMobile ? 32 : 64, // Segments (lower for mobile)
-                0.08, // Radius (thin tube)
-                isMobile ? 8 : 12, // Radial segments
-                false, // Not closed
+                isMobile ? 32 : 64,
+                0.08,
+                isMobile ? 8 : 12,
+                false,
               ]}
             />
             <meshStandardMaterial
               color={colors.highlight}
               emissive={colors.highlight}
-              emissiveIntensity={0} // Starts at 0, reveals with scroll
+              emissiveIntensity={0}
               transparent={true}
               opacity={0.5}
               metalness={0.2}
@@ -509,5 +553,3 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
     </>
   );
 };
-
-
