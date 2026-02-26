@@ -304,7 +304,7 @@ const Generator: React.FC = () => {
 
   return (
     <Layout>
-      <div className="relative bg-gradient-to-b from-primary/5 via-background to-background pt-16">
+      <div className="relative bg-gradient-to-b from-primary/5 via-background/80 to-background/80 backdrop-blur-sm pt-16">
         {/* 3D Particle Background */}
         <BackgroundCanvas3D density="high" className="opacity-60" />
         
