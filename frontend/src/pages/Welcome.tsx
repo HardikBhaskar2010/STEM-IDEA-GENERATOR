@@ -4,7 +4,7 @@ import { Sparkles, Zap, Rocket, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import ScrollCinematicHero from '@/components/ScrollCinematicHero';
+import ScrollDrivenHero from '@/components/ScrollDrivenHero';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
@@ -40,11 +40,8 @@ const Welcome: React.FC = () => {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black">
-      {/* ==================== SECTION 1: CINEMATIC HERO ==================== */}
-      <ScrollCinematicHero
-        totalFrames={120}
-        frameBasePath="/frames/ezgif-frame-"
-        scrollMultiplier={3}
+      {/* ==================== SECTION 1: 3D SCROLL HERO ==================== */}
+      <ScrollDrivenHero
         overlayContent={
           <div className={`text-center space-y-6 transition-all duration-1000 ${
             isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
@@ -405,5 +402,6 @@ const Welcome: React.FC = () => {
 };
 
 export default Welcome;
+
 
 
