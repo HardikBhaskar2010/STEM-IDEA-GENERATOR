@@ -155,7 +155,7 @@ const Home: React.FC = () => {
   if (showDashboard) {
   return (
     <Layout>
-      <div className="bg-gradient-to-b from-primary/5 via-background/80 to-background/80 backdrop-blur-sm pt-16">
+      <div className="bg-gradient-to-b from-primary/5 via-background to-background pt-16">
         <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto py-12">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">

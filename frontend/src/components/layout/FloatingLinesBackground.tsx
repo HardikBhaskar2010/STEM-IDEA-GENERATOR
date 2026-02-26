@@ -33,8 +33,9 @@ export function FloatingLinesBackground() {
         left: 0,
         width: '100vw',
         height: '100vh',
-        zIndex: -1,
-        pointerEvents: 'none'
+        zIndex: 1,
+        pointerEvents: 'none',
+        opacity: 0.6
       }}
     >
       <FloatingLines
@@ -47,7 +48,7 @@ export function FloatingLinesBackground() {
         interactive={true}
         parallax={true}
         animationSpeed={1}
-        mixBlendMode="screen"
+        mixBlendMode="lighten"
       />
     </div>
   );

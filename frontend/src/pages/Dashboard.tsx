@@ -136,7 +136,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="relative min-h-screen p-8 bg-background/80 backdrop-blur-sm">
+      <div className="relative min-h-screen p-8">
         {/* 3D Particle Background */}
         <BackgroundCanvas3D density="medium" className="opacity-50" />
         

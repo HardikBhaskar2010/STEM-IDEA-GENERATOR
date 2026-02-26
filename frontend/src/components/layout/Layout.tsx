@@ -14,12 +14,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const showFooter = !pathname.startsWith('/about');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background">
       {/* Animated background gradient */}
-      <div className="fixed inset-0 bg-gradient-hero opacity-5 animate-gradient-shift pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-hero opacity-5 animate-gradient-shift pointer-events-none" style={{ zIndex: 0 }} />
       
-      {/* Main Content - Full Width */}
-      <main className="relative min-h-screen pb-24">
+      {/* Main Content - Full Width - Above floating lines background */}
+      <main className="relative min-h-screen pb-24" style={{ zIndex: 10 }}>
         {children}
       </main>
   
