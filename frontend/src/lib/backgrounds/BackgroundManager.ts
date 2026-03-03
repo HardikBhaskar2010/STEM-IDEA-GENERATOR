@@ -100,15 +100,40 @@ export class BackgroundManager {
    * @returns Promise resolving to the imported module
    */
   private async dynamicImport(metadata: BackgroundMetadata): Promise<any> {
-    // The importPath in metadata is like '@/components/backgrounds/LiquidEther'
-    // We need to handle this dynamically
-    const path = metadata.importPath.replace('@/', '../');
-    
+    // Use a proper import map for Vite compatibility
+    // Vite requires static import paths for proper code splitting
+    const importMap: Record<string, () => Promise<any>> = {
+      'liquid-ether': () => import('@/components/backgrounds/LiquidEther'),
+      'silk': () => import('@/components/backgrounds/Silk'),
+      'plasma': () => import('@/components/backgrounds/Plasma'),
+      'prism': () => import('@/components/backgrounds/Prism'),
+      'floating-lines': () => import('@/components/backgrounds/FloatingLines'),
+      'grid-scan': () => import('@/components/backgrounds/GridScan'),
+      'beams': () => import('@/components/backgrounds/Beams'),
+      'pixel-blast': () => import('@/components/backgrounds/PixelBlast'),
+      'particles': () => import('@/components/backgrounds/Particles'),
+      'pixel-snow': () => import('@/components/backgrounds/PixelSnow'),
+      'color-bends': () => import('@/components/backgrounds/ColorBends'),
+      'gradient-blinds': () => import('@/components/backgrounds/GradientBlinds'),
+      'grainient': () => import('@/components/backgrounds/Grainient'),
+      'prismatic-burst': () => import('@/components/backgrounds/PrismaticBurst'),
+      'dither': () => import('@/components/backgrounds/Dither'),
+      'dark-veil': () => import('@/components/backgrounds/DarkVeil'),
+      'light-pillar': () => import('@/components/backgrounds/LightPillar'),
+      'light-rays': () => import('@/components/backgrounds/LightRays'),
+      'aurora': () => import('@/components/backgrounds/Aurora'),
+      'lightning': () => import('@/components/backgrounds/Lightning'),
+      'galaxy': () => import('@/components/backgrounds/Galaxy'),
+    };
+
     try {
-      // Use dynamic import with variable
-      return await import(/* @vite-ignore */ path);
+      const loader = importMap[metadata.id];
+      if (!loader) {
+        throw new Error(`Background "${metadata.id}" not found in import map`);
+      }
+      return await loader();
     } catch (error) {
-      console.error(`Failed to import from ${path}:`, error);
+      console.error(`Failed to import background ${metadata.id}:`, error);
       throw new Error(`Failed to load background component: ${metadata.name}`);
     }
   }
