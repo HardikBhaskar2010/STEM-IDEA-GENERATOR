@@ -15,15 +15,12 @@ import { TTSProvider } from "@/contexts/TTSContext";
 import { CodeGenerationProvider } from "@/contexts/CodeGenerationContext";
 import { CompetitionProvider } from "@/contexts/CompetitionContext";
 import { AchievementProvider } from "@/contexts/AchievementContext";
-import { EffectsProvider } from "@/contexts/EffectsContext";
 import { PageLoading } from "@/components/ui/loading";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { preloadAnimations } from "@/lib/animation";
 import { PerfPromptBanner } from "@/components/ui/perf-prompt-banner";
 import { debugApiCalls } from "@/utils/apiDebug";
 import { CommandPalette } from "@/components/CommandPalette";
-import { GlobalBackground } from "@/components/layout/GlobalBackground"; // 🌊 Centralized background management
-import { CursorLayer } from "@/effects/cursor/CursorLayer"; // 🖱️ Global cursor effects
 import { polyfillRAF } from '@/lib/browserCompat';
 
 // Lazy load page components
@@ -76,8 +73,7 @@ const App = () => {
                     <CodeGenerationProvider>
                       <CompetitionProvider>
                         <AchievementProvider>
-                          <EffectsProvider>
-                            <TooltipProvider>
+                          <TooltipProvider>
                             {/* 🔥 Vercel magic */}
                             <SpeedInsights />
                             <Analytics />
@@ -85,16 +81,10 @@ const App = () => {
                             <Toaster />
                             <Sonner />
 
-                            {/* 🖱️ Global Cursor Effects */}
-                            <CursorLayer />
-
                             <BrowserRouter>
                               {/* 🚀 CMD+K Command Palette */}
                               <CommandPalette />
                               <PerfPromptBanner />
-
-                              {/* 🌊 Global Background - Route-aware rendering */}
-                              <GlobalBackground />
 
                               <Suspense fallback={<PageLoading />}>
                                 <Routes>
@@ -120,9 +110,8 @@ const App = () => {
                               </Suspense>
                             </BrowserRouter>
                           </TooltipProvider>
-                        </EffectsProvider>
-                      </AchievementProvider>
-                    </CompetitionProvider>
+                        </AchievementProvider>
+                      </CompetitionProvider>
                   </CodeGenerationProvider>
                 </TTSProvider>
               </AnimationProvider>

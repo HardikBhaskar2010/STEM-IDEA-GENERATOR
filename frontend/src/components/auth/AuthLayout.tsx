@@ -1,5 +1,4 @@
 import React from 'react';
-import BackgroundEffects from './BackgroundEffects';
 import HeroSection from './HeroSection';
 
 interface AuthLayoutProps {
@@ -8,9 +7,7 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background effects */}
-      <BackgroundEffects />
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">{/* Background removed */}
       
       {/* Mobile hero - show at top on small screens */}
       <div className="lg:hidden relative z-10 px-4 pt-12 pb-6">
