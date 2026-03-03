@@ -170,6 +170,7 @@ export default function MotionStudio() {
             </div>
           ) : (
             <EffectsBrowser
+              key={effectsLoaded ? 'loaded' : 'loading'}
               selectedEffectId={state.selectedEffectId}
               onSelectEffect={handleSelectEffect}
               searchQuery={state.searchQuery}
