@@ -23,9 +23,14 @@ import { effectsRegistry } from '@/effects/core/EffectsRegistry';
 import { loadAllEffects } from '@/effects';
 
 export default function MotionStudio() {
+  const [effectsLoaded, setEffectsLoaded] = useState(false);
+  
   // 🔥 FIX M-10: Load effects when Motion Studio mounts
   useEffect(() => {
-    loadAllEffects();
+    loadAllEffects().then(() => {
+      setEffectsLoaded(true);
+      console.log('✅ Effects loaded and state updated');
+    });
   }, []);
   
   const compatibility = useMemo(() => getEffectsCompatibilityReport(), []);
@@ -156,14 +161,23 @@ export default function MotionStudio() {
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT: Effects Browser */}
         <aside className="w-80 border-r border-border bg-card/30 backdrop-blur-sm overflow-y-auto" data-testid="motion-studio-effects-sidebar">
-          <EffectsBrowser
-            selectedEffectId={state.selectedEffectId}
-            onSelectEffect={handleSelectEffect}
-            searchQuery={state.searchQuery}
-            onSearchChange={(q) => setState(s => ({ ...s, searchQuery: q }))}
-            selectedType={state.selectedType}
-            onTypeChange={(type) => setState(s => ({ ...s, selectedType: type as EffectType | 'all' }))}
-          />
+          {!effectsLoaded ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Loading effects...</p>
+              </div>
+            </div>
+          ) : (
+            <EffectsBrowser
+              selectedEffectId={state.selectedEffectId}
+              onSelectEffect={handleSelectEffect}
+              searchQuery={state.searchQuery}
+              onSearchChange={(q) => setState(s => ({ ...s, searchQuery: q }))}
+              selectedType={state.selectedType}
+              onTypeChange={(type) => setState(s => ({ ...s, selectedType: type as EffectType | 'all' }))}
+            />
+          )}
         </aside>
         
         {/* RIGHT: Live Preview */}
