@@ -36,7 +36,7 @@ export interface PresetUpdateInput {
  */
 export async function savePreset(input: PresetCreateInput): Promise<EffectPreset | null> {
   try {
-    const userId = UserIdManager.getGuestId();
+    const userId = await UserIdManager.ensureUserExists();
     
     const { data, error } = await supabase
       .from('effect_presets')
@@ -68,7 +68,7 @@ export async function savePreset(input: PresetCreateInput): Promise<EffectPreset
  */
 export async function getUserPresets(): Promise<EffectPreset[]> {
   try {
-    const userId = UserIdManager.getGuestId();
+    const userId = await UserIdManager.ensureUserExists();
     
     const { data, error } = await supabase
       .from('effect_presets')
@@ -142,7 +142,7 @@ export async function updatePreset(
   updates: PresetUpdateInput
 ): Promise<EffectPreset | null> {
   try {
-    const userId = UserIdManager.getGuestId();
+    const userId = await UserIdManager.ensureUserExists();
     
     // Build update object
     const updateData: any = {
@@ -180,7 +180,7 @@ export async function updatePreset(
  */
 export async function deletePreset(id: string): Promise<boolean> {
   try {
-    const userId = UserIdManager.getGuestId();
+    const userId = await UserIdManager.ensureUserExists();
     
     const { error } = await supabase
       .from('effect_presets')
@@ -234,7 +234,7 @@ export async function duplicatePreset(id: string): Promise<EffectPreset | null> 
  */
 export async function togglePresetPublic(id: string): Promise<EffectPreset | null> {
   try {
-    const userId = UserIdManager.getGuestId();
+    const userId = await UserIdManager.ensureUserExists();
     
     // First get current state
     const { data: current, error: fetchError } = await supabase
