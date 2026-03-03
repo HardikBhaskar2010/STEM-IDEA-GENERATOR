@@ -68,7 +68,7 @@ const PresetSharePage: React.FC = () => {
       
       if (duplicate) {
         toast.success('Preset imported to your collection!');
-        navigate('/motion-studio');
+        navigate('/dashboard');
         
         // Load the preset into the effects engine
         setTimeout(() => {
@@ -88,8 +88,8 @@ const PresetSharePage: React.FC = () => {
     
     // Load preset for preview
     loadPreset(preset);
-    toast.success('Preset loaded! Check the Motion Studio to see the effects.');
-    navigate('/motion-studio');
+    toast.success('Preset loaded!');
+    navigate('/dashboard');
   };
 
   if (isLoading) {

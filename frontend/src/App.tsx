@@ -33,7 +33,6 @@ const SignUp = React.lazy(() => import("./pages/SignUp"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const Generator = React.lazy(() => import("./pages/Generator"));
 const CodeGenerator = React.lazy(() => import("./pages/CodeGenerator"));
-const MotionStudio = React.lazy(() => import("./pages/MotionStudio"));
 const Competition = React.lazy(() => import("./pages/Competition"));
 const Components = React.lazy(() => import("./pages/Components"));
 const Library = React.lazy(() => import("./pages/Library"));
@@ -107,7 +106,6 @@ const App = () => {
                                   <Route path="/project/:id" element={<ProjectDetail />} />
                                   <Route path="/generator" element={<Generator />} />
                                   <Route path="/code-generator" element={<CodeGenerator />} />
-                                  <Route path="/motion-studio" element={<MotionStudio />} />
                                   <Route path="/competition" element={<Competition />} />
                                   <Route path="/components" element={<Components />} />
                                   <Route path="/components/compare" element={<ComponentComparison />} />
