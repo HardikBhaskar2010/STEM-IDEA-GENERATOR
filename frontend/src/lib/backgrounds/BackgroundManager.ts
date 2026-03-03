@@ -327,16 +327,13 @@ export class BackgroundManager {
   }
 
   /**
-   * Check if background should render based on current route
-   * Only renders in Motion Studio routes
+   * Check if background should render
+   * Backgrounds can render on any route now
    * @returns True if background should render
    */
   shouldRenderBackground(): boolean {
-    // Check if we're on a Motion Studio route
-    const isMotionStudioRoute = window.location.pathname === '/motion-studio';
-    
-    // Only render if we have a background and we're on the right route
-    return isMotionStudioRoute && this.currentBackground !== null;
+    // Render if we have a background loaded
+    return this.currentBackground !== null;
   }
 
   /**
