@@ -4,18 +4,12 @@ import { Sparkles, Zap, Rocket, ArrowRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffects } from '@/contexts/EffectsContext';
-import { effectsRegistry } from '@/effects/core/EffectsRegistry';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
   const { colorTheme } = usePreferences();
   const { isAuthenticated, isLoading } = useAuth();
-  const { activeTextEffect, activeTextSettings, effectsEnabled } = useEffects();
   const [isVisible, setIsVisible] = useState(false);
-  
-  // Get active text effect component
-  const textEffect = activeTextEffect && effectsEnabled ? effectsRegistry.get(activeTextEffect) : null;
 
   useEffect(() => {
     // Trigger animations after mount
