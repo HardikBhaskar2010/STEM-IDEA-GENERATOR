@@ -7,8 +7,8 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from supabase import Client
 
-from database.connection import get_db_client
-from models.ai_guidance import (
+from backend.database.connection import get_db_client
+from backend.models.ai_guidance import (
     ProjectContext, Task, Milestone, TaskStatus, TaskPriority
 )
 

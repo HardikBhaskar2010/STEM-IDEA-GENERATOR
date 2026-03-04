@@ -135,6 +135,11 @@ class ProjectContext(BaseModel):
     milestones: List[Milestone] = Field(default_factory=list)
     progress: float = Field(default=0.0, ge=0.0, le=100.0)
     deadlines: List[datetime] = Field(default_factory=list)
+    # Enhanced fields for comprehensive context (Requirements 1.2, 9.4)
+    technology_stack: List[str] = Field(default_factory=list)
+    files: List[Dict[str, Any]] = Field(default_factory=list)
+    dependencies: List[str] = Field(default_factory=list)
+    ai_suggestions: Optional[Dict[str, Any]] = Field(default=None)
 
     class Config:
         json_encoders = {
