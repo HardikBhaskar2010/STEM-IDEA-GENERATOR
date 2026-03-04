@@ -19,7 +19,6 @@ import {
   Info,
   Shield,
   LogIn,
-  Sparkles,
 } from "lucide-react";
 
 export const FloatingNav = () => {
@@ -90,11 +89,6 @@ export const FloatingNav = () => {
 
   // Add Admin-only items if admin
   if (isAdmin) {
-    items.push({
-      title: "Motion Studio",
-      icon: <Sparkles className="h-full w-full text-purple-500 dark:text-purple-400" />,
-      href: "/motion-studio",
-    });
     items.push({
       title: "Admin Panel",
       icon: <Shield className="h-full w-full text-purple-500 dark:text-purple-400" />,

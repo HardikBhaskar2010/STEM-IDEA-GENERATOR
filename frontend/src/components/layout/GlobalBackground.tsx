@@ -7,7 +7,7 @@ import ScrollDrivenHero from '../ScrollDrivenHero';
  * 
  * This component uses route-aware logic to render exactly ONE background system per route:
  * - "/" (Welcome) → ScrollDrivenHero only (interactive 3D with raycasting)
- * - "/login" and "/motion-studio" → No global backgrounds (pages control their own)
+ * - "/login" → No global backgrounds (pages control their own)
  * - All other routes → FloatingLinesBackground only
  * 
  * All backgrounds enforce a standardized layering contract:
@@ -25,11 +25,6 @@ export function GlobalBackground() {
 
   // Route: "/login" - No global background (AuthLayout controls its own)
   if (location.pathname === '/login') {
-    return null;
-  }
-
-  // Route: "/motion-studio" - No global background (studio controls preview backgrounds)
-  if (location.pathname === '/motion-studio') {
     return null;
   }
 
