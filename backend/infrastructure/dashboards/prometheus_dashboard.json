@@ -1,0 +1,202 @@
+{
+  "dashboard": {
+    "title": "STEM Project Generator - Backend Monitoring",
+    "description": "Comprehensive monitoring dashboard for backend services",
+    "tags": ["backend", "monitoring", "stem"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Requests/sec",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Response Time (p50, p95, p99)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p99"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Seconds",
+            "format": "s"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(errors_total[5m])",
+            "legendFormat": "{{error_type}} - {{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Errors/sec",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Cache Hit Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) * 100",
+            "legendFormat": "Hit Rate %"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Percentage",
+            "format": "percent",
+            "max": 100,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Circuit Breaker Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "circuit_breaker_state",
+            "legendFormat": "{{service_name}}"
+          }
+        ],
+        "mappings": [
+          {
+            "value": 0,
+            "text": "CLOSED",
+            "color": "green"
+          },
+          {
+            "value": 1,
+            "text": "OPEN",
+            "color": "red"
+          },
+          {
+            "value": 2,
+            "text": "HALF_OPEN",
+            "color": "yellow"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "db_pool_connections_total",
+            "legendFormat": "Total"
+          },
+          {
+            "expr": "db_pool_connections_active",
+            "legendFormat": "Active"
+          },
+          {
+            "expr": "db_pool_connections_idle",
+            "legendFormat": "Idle"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Connections",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Rate Limit Exceeded Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(rate_limit_exceeded_total[5m])",
+            "legendFormat": "{{identifier_type}} - {{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Events/sec",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Cache Size",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "cache_entries_total",
+            "legendFormat": "Total Entries"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Entries",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "HTTP Status Codes",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (status) (rate(http_requests_total[5m]))",
+            "legendFormat": "{{status}}"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Redis Connection Pool",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "redis_pool_connections_total",
+            "legendFormat": "Redis Connections"
+          }
+        ]
+      }
+    ],
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}

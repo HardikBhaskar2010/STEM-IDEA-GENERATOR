@@ -1,18 +1,22 @@
 # Veronica AI Code Generation Service
-# Requirements: 1.1, 1.2, 1.3
-# Task: 2.1 Implement VeronicaAIService class with OpenRouter integration
+# Requirements: 1.1, 1.2, 1.3, 3.2, 4.2, 5.1
+# Task: 9.1 Enhance CodeGenerationService with streaming support, caching, circuit breaker, and rate limiting
 
 import logging
 import json
 import os
 import asyncio
-from datetime import datetime, timezone
+import hashlib
+from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any, AsyncGenerator, Tuple
 from enum import Enum
 
 # Remove anthropic import and use OpenRouter instead
-from database.connection import get_db_client
-from models.ai_guidance import ProjectContext
+from backend.database.connection import get_db_client
+from backend.models.ai_guidance import ProjectContext
+from backend.infrastructure.base_service import BaseService
+from backend.infrastructure.circuit_breaker import get_circuit_breaker
+from backend.infrastructure.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -101,14 +105,39 @@ class GeneratedCode:
         self.completed_at = None
 
 
-class VeronicaAIService:
+class VeronicaAIService(BaseService):
     """
     Veronica AI Service for generating code using OpenRouter free models
     Uses different specialized models for different tasks
+    
+    Enhanced with:
+    - BaseService inheritance for caching and logging
+    - Streaming response support
+    - Circuit breaker for AI API calls
+    - Caching for generated code (1 hour TTL)
+    - Rate limiting support (enforced at API layer)
+    
+    Requirements:
+    - 1.1: Service consolidation with BaseService patterns
+    - 3.2: Caching for generated code
+    - 4.2: Rate limiting for code generation endpoints
+    - 5.1: Circuit breaker for AI calls
     """
     
-    def __init__(self):
-        """Initialize the Veronica AI service"""
+    def __init__(
+        self,
+        cache=None,
+        logger_instance=None,
+        db_client=None
+    ):
+        """Initialize the Veronica AI service with BaseService capabilities"""
+        # Initialize BaseService
+        super().__init__(
+            cache=cache or get_redis_client(),
+            logger_instance=logger_instance or logger,
+            db_client=db_client
+        )
+        
         self.openrouter_client = None
         self.openrouter_config = None
         
@@ -119,12 +148,20 @@ class VeronicaAIService:
             self.openrouter_config = openrouter_config
             
             if self.openrouter_client:
-                logger.info("Veronica AI initialized with OpenRouter - multi-model code generation enabled")
+                self.logger.info("Veronica AI initialized with OpenRouter - multi-model code generation enabled")
             else:
-                logger.warning("OpenRouter client not available - code generation will be disabled")
+                self.logger.warning("OpenRouter client not available - code generation will be disabled")
         except ImportError as e:
-            logger.error(f"Failed to import OpenRouter client: {e}")
-            logger.warning("Code generation will be disabled")
+            self.logger.error(f"Failed to import OpenRouter client: {e}")
+            self.logger.warning("Code generation will be disabled")
+        
+        # Get circuit breaker for AI API calls
+        self.circuit_breaker = get_circuit_breaker(
+            name="openrouter_api",
+            failure_threshold=5,
+            timeout=timedelta(seconds=60),
+            half_open_timeout=timedelta(seconds=30)
+        )
         
         # Multi-model configuration for different tasks
         self.models = {
@@ -138,6 +175,9 @@ class VeronicaAIService:
         # Generation configuration
         self.max_tokens = 4000
         self.temperature = 0.3  # Lower temperature for more consistent code
+        
+        # Cache TTL for generated code (1 hour)
+        self.code_cache_ttl = timedelta(hours=1)
         
         # Platform-specific configurations
         self.platform_configs = {
@@ -175,9 +215,42 @@ class VeronicaAIService:
         """
         return self.models.get(task_type, self.models["code_generation"])
     
+    def _generate_cache_key(
+        self,
+        project_context: ProjectContext,
+        params: GenerationParams
+    ) -> str:
+        """
+        Generate a cache key for code generation request
+        
+        Args:
+            project_context: Project context with requirements
+            params: Generation parameters
+            
+        Returns:
+            Cache key string
+        """
+        # Create a hash of the generation parameters
+        cache_data = {
+            "title": project_context.title,
+            "description": project_context.description,
+            "goals": project_context.goals if hasattr(project_context, 'goals') else [],
+            "platform": params.platform.value,
+            "complexity": params.complexity_level.value,
+            "include_comments": params.include_comments,
+            "include_tests": params.include_tests,
+            "custom_requirements": params.custom_requirements or ""
+        }
+        
+        # Generate hash
+        cache_str = json.dumps(cache_data, sort_keys=True)
+        cache_hash = hashlib.sha256(cache_str.encode()).hexdigest()[:16]
+        
+        return f"code_gen:{cache_hash}"
+    
     async def _generate_with_model(self, messages: List[Dict], task_type: str, temperature: float = None) -> str:
         """
-        Generate response using the appropriate model for the task
+        Generate response using the appropriate model for the task with circuit breaker protection
         
         Args:
             messages: Messages to send to the model
@@ -186,6 +259,9 @@ class VeronicaAIService:
             
         Returns:
             Generated response text
+            
+        Raises:
+            Exception: If OpenRouter client not available or circuit breaker is open
         """
         if not self.openrouter_client:
             raise Exception("OpenRouter client not available")
@@ -193,13 +269,21 @@ class VeronicaAIService:
         model = self._get_model_for_task(task_type)
         temp = temperature if temperature is not None else self.temperature
         
-        logger.info(f"Using model {model} for task: {task_type}")
+        self.logger.info(f"Using model {model} for task: {task_type}")
         
-        response = await self.openrouter_client.generate_completion(
-            messages=messages,
-            max_tokens=self.max_tokens,
-            temperature=temp,
-            model=model
+        # Wrap OpenRouter call with circuit breaker
+        async def _call_openrouter():
+            return await self.openrouter_client.generate_completion(
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=temp,
+                model=model
+            )
+        
+        # Execute with circuit breaker protection
+        response = await self.circuit_breaker.call(
+            _call_openrouter,
+            fallback=lambda: "# Code generation temporarily unavailable. Please try again later."
         )
         
         return response
@@ -208,16 +292,18 @@ class VeronicaAIService:
         self,
         project_context: ProjectContext,
         params: GenerationParams,
-        user_id: str
+        user_id: str,
+        use_cache: bool = True
     ) -> AsyncGenerator[Tuple[str, Optional[CodeFile]], None]:
         """
-        Generate code for a project using OpenRouter free models
+        Generate code for a project using OpenRouter free models with caching support
         Yields streaming responses for real-time updates
         
         Args:
             project_context: Project context with requirements and components
             params: Generation parameters (platform, complexity, etc.)
             user_id: ID of the user requesting generation
+            use_cache: Whether to use cached results (default: True)
             
         Yields:
             Tuple of (status_message, optional_code_file)
@@ -225,6 +311,10 @@ class VeronicaAIService:
         Raises:
             ValueError: If parameters are invalid
             Exception: If generation fails
+            
+        Requirements:
+        - 3.2: Caching for generated code (1 hour TTL)
+        - 5.1: Circuit breaker for AI calls
         """
         if not self.openrouter_client:
             raise Exception("OpenRouter client not available - check configuration")
@@ -233,6 +323,35 @@ class VeronicaAIService:
             raise ValueError("Project context is required for code generation")
         
         try:
+            # Generate cache key
+            cache_key = self._generate_cache_key(project_context, params)
+            
+            # Check cache if enabled
+            if use_cache and self.cache:
+                try:
+                    cached_result = await self.get_cache(cache_key, serialize=True)
+                    if cached_result:
+                        self.logger.info(f"Cache hit for code generation: {cache_key}")
+                        yield ("Retrieved from cache...", None)
+                        
+                        # Yield cached files
+                        for file_data in cached_result.get("files", []):
+                            code_file = CodeFile(
+                                file_path=file_data["file_path"],
+                                file_name=file_data["file_name"],
+                                file_type=file_data["file_type"],
+                                content=file_data["content"],
+                                description=file_data.get("description"),
+                                is_main_file=file_data.get("is_main_file", False)
+                            )
+                            yield (f"Loaded {code_file.file_name} from cache", code_file)
+                        
+                        yield ("Code generation completed (from cache)!", None)
+                        return
+                except Exception as e:
+                    self.logger.warning(f"Cache retrieval failed: {e}")
+                    # Continue with generation
+            
             # Create generation record in database
             generation_id = await self._create_generation_record(
                 project_context.project_id, user_id, params
@@ -259,7 +378,7 @@ class VeronicaAIService:
             
             yield ("Generating code with Veronica AI (Trinity Large model)...", None)
             
-            # Use specialized code generation model
+            # Use specialized code generation model with circuit breaker
             response = await self._generate_with_model(messages, "code_generation")
             
             yield ("Processing generated code...", None)
@@ -272,6 +391,29 @@ class VeronicaAIService:
             # Save files to database
             await self._save_generated_files(generation_id, generated_files)
             
+            # Cache the generated files
+            if use_cache and self.cache:
+                try:
+                    cache_data = {
+                        "files": [
+                            {
+                                "file_path": f.file_path,
+                                "file_name": f.file_name,
+                                "file_type": f.file_type,
+                                "content": f.content,
+                                "description": f.description,
+                                "is_main_file": f.is_main_file
+                            }
+                            for f in generated_files
+                        ],
+                        "generation_id": generation_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                    await self.set_cache(cache_key, cache_data, ttl=self.code_cache_ttl, serialize=True)
+                    self.logger.info(f"Cached generated code: {cache_key}")
+                except Exception as e:
+                    self.logger.warning(f"Failed to cache generated code: {e}")
+            
             # Yield each generated file
             for file in generated_files:
                 yield (f"Generated {file.file_name}", file)
@@ -282,7 +424,7 @@ class VeronicaAIService:
             yield ("Code generation completed successfully!", None)
             
         except Exception as e:
-            logger.error(f"Code generation failed: {e}")
+            self.logger.error(f"Code generation failed: {e}")
             if 'generation_id' in locals():
                 await self._update_generation_status(generation_id, GenerationStatus.FAILED, str(e))
             raise
@@ -978,3 +1120,37 @@ class VeronicaAIService:
                 "error": str(e),
                 "recommendations": ["Unable to analyze project - please provide more details"]
             }
+
+    async def health_check(self) -> Dict[str, Any]:
+        """
+        Service-specific health check
+        
+        Returns:
+            Dictionary with health status
+            
+        Requirements:
+        - 10.4: Service-specific health check interface
+        """
+        health = await self.base_health_check()
+        
+        # Check OpenRouter client availability
+        health["openrouter_available"] = self.openrouter_client is not None
+        
+        # Check circuit breaker state
+        try:
+            breaker_state = await self.circuit_breaker.get_state()
+            health["circuit_breaker_state"] = breaker_state.value
+            health["circuit_breaker_healthy"] = breaker_state.value != "open"
+        except Exception as e:
+            health["circuit_breaker_state"] = "unknown"
+            health["circuit_breaker_healthy"] = False
+            health["circuit_breaker_error"] = str(e)
+        
+        # Overall health
+        health["healthy"] = (
+            health["openrouter_available"] and
+            health.get("cache_available", True) and
+            health.get("circuit_breaker_healthy", True)
+        )
+        
+        return health

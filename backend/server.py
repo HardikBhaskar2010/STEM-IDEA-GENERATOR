@@ -554,6 +554,67 @@ except ValueError as e:
 app = FastAPI(title="STEM Idea Generator API")
 api = APIRouter(prefix="/api")
 
+# ───────────────── STRUCTURED LOGGING MIDDLEWARE ─────────────────
+from backend.infrastructure.logging_middleware import LoggingMiddleware
+from backend.infrastructure.structured_logger import configure_log_aggregation
+
+# Configure log aggregation (CloudWatch, Datadog, etc.)
+configure_log_aggregation()
+
+# Add logging middleware to automatically log all requests/responses
+app.add_middleware(LoggingMiddleware)
+
+# ───────────────── MONITORING INFRASTRUCTURE ─────────────────
+# Initialize Sentry for error tracking
+from backend.infrastructure.sentry_config import init_sentry
+
+try:
+    init_sentry(
+        environment=os.getenv("ENVIRONMENT", "development"),
+        release="1.0.0",
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+        enable_tracing=os.getenv("ENABLE_TRACING", "true").lower() in ("1", "true", "yes")
+    )
+    logger.info("Sentry error tracking initialized")
+except Exception as e:
+    logger.warning(f"Sentry initialization skipped: {e}")
+
+# Initialize OpenTelemetry for distributed tracing
+from backend.infrastructure.tracing import init_tracing
+
+try:
+    init_tracing(
+        service_name="stem-project-generator",
+        service_version="1.0.0",
+        otlp_endpoint=os.getenv("OTLP_ENDPOINT"),
+        enable_console_export=os.getenv("ENABLE_CONSOLE_TRACING", "false").lower() in ("1", "true", "yes"),
+        sample_rate=float(os.getenv("TRACING_SAMPLE_RATE", "1.0"))
+    )
+    logger.info("OpenTelemetry distributed tracing initialized")
+except Exception as e:
+    logger.warning(f"OpenTelemetry initialization skipped: {e}")
+
+# Initialize monitoring service
+from backend.infrastructure.monitoring_service import initialize_monitoring_service
+from backend.infrastructure.monitoring_endpoints import monitoring_router
+from backend.infrastructure.metrics import metrics
+
+try:
+    # Note: db_pool and redis_client will be initialized later in the application lifecycle
+    # The monitoring service will be updated with these dependencies when they become available
+    monitoring_service = initialize_monitoring_service(
+        db_pool=None,  # Will be set later via dependency injection
+        redis_client=None,  # Will be set later via dependency injection
+        service_registry=None,  # Will be set later via dependency injection
+        metrics_collector=metrics
+    )
+    
+    # Register monitoring endpoints
+    app.include_router(monitoring_router)
+    logger.info("Monitoring infrastructure initialized - endpoints: /health, /health/detailed, /metrics")
+except Exception as e:
+    logger.error(f"Failed to initialize monitoring infrastructure: {e}")
+
 # ───────────────── MODELS ─────────────────
 class ProjectParams(BaseModel):
     projectType: str
