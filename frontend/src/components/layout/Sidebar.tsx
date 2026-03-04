@@ -11,8 +11,7 @@ import {
   User,
   Code,
   Trophy,
-  Shield,
-  Sparkles
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -96,7 +95,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   // Add admin panel for admin users only
   const adminNavItems = [
-    { path: '/motion-studio', label: 'Motion Studio', icon: Sparkles },
     { path: '/admin', label: 'Admin Panel', icon: Shield },
   ];
 
