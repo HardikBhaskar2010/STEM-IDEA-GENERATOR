@@ -1,335 +1,388 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Zap, Loader2, Save, Code } from "lucide-react";
-import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { CapsuleAnimation } from "@/components/ui/capsule-animation";
-import { HolographicCard } from "@/components/HolographicCard";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useCallback } from "react"
+import Layout from "@/components/layout/Layout"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
 
-import { projectService } from "@/services/projectService";
-import { useAuth } from "@/contexts/AuthContext";
-import { useAchievements } from "@/contexts/AchievementContext";
+import { Zap, Loader2, Save, Code } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { CapsuleAnimation } from "@/components/ui/capsule-animation"
+import { HolographicCard } from "@/components/HolographicCard"
+import { projectService } from "@/services/projectService"
+import { useNavigate } from "react-router-dom"
 
-type GeneratedProject = {
-  title: string;
-  description: string;
-  difficulty: string;
-  estimatedTime: string;
-  estimatedCost: string;
-  components: string[];
-  skills: string[];
-  steps: string[];
-};
+type Project = {
+  title: string
+  description: string
+  difficulty: string
+  estimatedTime: string
+  estimatedCost: string
+  components: string[]
+  skills: string[]
+  steps: string[]
+}
 
 type FormData = {
-  projectType: string;
-  skillLevel: string;
-  interests: string;
-  budget: string;
-  duration: string;
-};
+  projectType: string
+  skillLevel: string
+  interests: string
+  budget: string
+  duration: string
+}
 
 const Generator: React.FC = () => {
-  const navigate = useNavigate();
-  const { isGuest } = useAuth();
-  const { checkForNewAchievements } = useAchievements();
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState<FormData>({
     projectType: "",
     skillLevel: "",
     interests: "",
     budget: "",
-    duration: ""
-  });
+    duration: "",
+  })
 
-  const [generatedProject, setGeneratedProject] =
-    useState<GeneratedProject | null>(null);
-
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSynthesized, setIsSynthesized] = useState(false);
-  const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
+  const [project, setProject] = useState<Project | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(null)
 
   const API =
     import.meta.env.VITE_API_BASE_URL ||
     process.env.REACT_APP_BACKEND_URL ||
-    "";
-
-  /* ------------------------------
-     Backend Health Check
-  ------------------------------ */
-
-  useEffect(() => {
-    console.log("💎 STEM Project Lab AI Engine: Ready");
-  }, []);
-
-  /* ------------------------------
-     Generate Project
-  ------------------------------ */
+    ""
 
   const handleGenerate = useCallback(async () => {
     if (!formData.projectType || !formData.skillLevel) {
       toast({
-        title: "Missing Information",
-        description: "Select project type and skill level",
-        variant: "destructive"
-      });
-      return;
+        title: "Missing information",
+        description: "Please select project domain and skill level",
+        variant: "destructive",
+      })
+      return
     }
 
-    setIsGenerating(true);
-    setIsSynthesized(false);
+    setIsGenerating(true)
 
     try {
       const res = await fetch(`${API}/api/generate-project`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
-      });
+        body: JSON.stringify(formData),
+      })
 
-      const data = await res.json();
+      const data = await res.json()
 
       if (!res.ok || data.error) {
-        throw new Error(data.message || "AI generation failed");
+        throw new Error(data.message || "AI generation failed")
       }
 
-      setGeneratedProject(data);
-      setIsSynthesized(true);
+      const generated = data.project || data
+
+      setProject(generated)
 
       toast({
-        title: "Project Generated",
-        description: "Your STEM project architecture is ready."
-      });
-
-      if (!isGuest) {
-        await checkForNewAchievements();
-      }
-
+        title: "Project generated",
+        description: "Your AI architecture is ready.",
+      })
     } catch (err) {
-      console.error(err);
+      console.error(err)
 
       toast({
-        title: "Generation Failed",
+        title: "Generation failed",
         description:
           err instanceof Error
             ? err.message
             : "Unable to generate project",
-        variant: "destructive"
-      });
-
+        variant: "destructive",
+      })
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  }, [formData, isGuest, checkForNewAchievements]);
+  }, [formData])
 
-  /* ------------------------------
-     Save Project
-  ------------------------------ */
+  const handleSave = useCallback(async () => {
+    if (!project) return
 
-  const handleSaveProject = useCallback(async () => {
-    if (!generatedProject) return;
-
-    if (isGuest) {
-      toast({
-        title: "Login Required",
-        description: "Sign in to save projects",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSaving(true);
+    setIsSaving(true)
 
     try {
       const saved = await projectService.saveProject({
-        title: generatedProject.title,
-        description: generatedProject.description,
+        title: project.title,
+        description: project.description,
         project_type: formData.projectType,
-        difficulty: generatedProject.difficulty,
-        estimated_time: generatedProject.estimatedTime,
-        estimated_cost: generatedProject.estimatedCost,
-        components: generatedProject.components,
-        skills: generatedProject.skills,
-        steps: generatedProject.steps,
-        generated_from_params: formData as unknown as Record<string, string>
-      });
+        difficulty: project.difficulty,
+        estimated_time: project.estimatedTime,
+        estimated_cost: project.estimatedCost,
+        components: project.components,
+        skills: project.skills,
+        steps: project.steps,
+      })
 
-      if (!saved) throw new Error("Save failed");
-
-      setSavedProjectId(saved.id);
+      setSavedProjectId(saved.id)
 
       toast({
-        title: "Project Saved",
-        description: "Added to your library."
-      });
-
-      await checkForNewAchievements();
-
-      navigate("/library");
-
-    } catch (err) {
-      console.error(err);
-
+        title: "Project saved",
+        description: "Added to your library.",
+      })
+    } catch {
       toast({
-        title: "Save Failed",
+        title: "Save failed",
         description: "Could not save project",
-        variant: "destructive"
-      });
-
+        variant: "destructive",
+      })
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  }, [generatedProject, formData, isGuest, navigate]);
+  }, [project])
 
-  /* ------------------------------
-     Veronica Code Generator
-  ------------------------------ */
-
-  const handleGenerateWithVeronica = useCallback(async () => {
-    if (!generatedProject) return;
-
+  const openVeronica = () => {
     if (!savedProjectId) {
-      await handleSaveProject();
-      return;
+      toast({
+        title: "Save project first",
+        description: "Veronica needs a saved project.",
+      })
+      return
     }
 
-    navigate(`/code-generator?project=${savedProjectId}`);
-  }, [generatedProject, savedProjectId]);
-
-  /* ------------------------------
-     UI
-  ------------------------------ */
+    navigate(`/code-generator?project=${savedProjectId}`)
+  }
 
   return (
     <Layout>
+      <div className="container mx-auto max-w-7xl py-16">
 
-      <div className="container mx-auto py-16 max-w-6xl">
+        <h1 className="text-5xl font-bold text-gradient mb-12">
+          Project Lab
+        </h1>
 
-        <div className="flex flex-col gap-6">
+        <div className="grid lg:grid-cols-12 gap-8">
 
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className="bg-gradient-primary text-white"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 animate-spin" />
-                Synthesizing...
-              </>
-            ) : (
-              <>
-                <Zap className="mr-2" />
-                Generate Architecture
-              </>
-            )}
-          </Button>
+          {/* FORM PANEL */}
 
-          <CapsuleAnimation isOpen={isSynthesized && generatedProject !== null}>
+          <div className="lg:col-span-5">
+            <Card className="glass-effect border-primary/10">
+              <CardContent className="p-8 space-y-6">
 
-            {generatedProject && (
+                <h2 className="text-xl font-bold">Specifications</h2>
 
-              <HolographicCard
-                intensity="low"
-                enableTilt={false}
-              >
+                <div>
+                  <label className="text-sm">Domain</label>
 
-                <Card className="glass-effect border-primary/10 shadow-md">
+                  <Select
+                    value={formData.projectType}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, projectType: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose domain" />
+                    </SelectTrigger>
 
-                  <CardContent className="p-8 space-y-6">
+                    <SelectContent>
+                      <SelectItem value="robotics">Robotics</SelectItem>
+                      <SelectItem value="iot">IoT</SelectItem>
+                      <SelectItem value="electronics">
+                        Electronics
+                      </SelectItem>
+                      <SelectItem value="ai">AI / ML</SelectItem>
+                      <SelectItem value="web">Web Development</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    <h2 className="text-3xl font-bold">
-                      {generatedProject.title}
-                    </h2>
+                <div>
+                  <label className="text-sm">Skill Level</label>
 
-                    <p className="text-muted-foreground">
-                      {generatedProject.description}
-                    </p>
+                  <Select
+                    value={formData.skillLevel}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, skillLevel: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
 
-                    <div className="grid grid-cols-3 gap-4 text-sm">
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">
+                        Intermediate
+                      </SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                      <div>
-                        <strong>Difficulty</strong>
-                        <p>{generatedProject.difficulty}</p>
+                <div>
+                  <label className="text-sm">Idea / Goal</label>
+
+                  <Textarea
+                    value={formData.interests}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        interests: e.target.value,
+                      })
+                    }
+                    placeholder="What problem should this project solve?"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    placeholder="Budget"
+                    value={formData.budget}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        budget: e.target.value,
+                      })
+                    }
+                  />
+
+                  <Input
+                    placeholder="Timeline"
+                    value={formData.duration}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        duration: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  className="w-full h-14 text-lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 animate-spin" />
+                      Synthesizing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="mr-2" />
+                      Generate Architecture
+                    </>
+                  )}
+                </Button>
+
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RESULT PANEL */}
+
+          <div className="lg:col-span-7">
+
+            <CapsuleAnimation isOpen={project !== null}>
+
+              {project && (
+
+                <HolographicCard intensity="low" enableTilt={false}>
+
+                  <Card className="glass-effect border-primary/10">
+
+                    <CardContent className="p-10 space-y-6">
+
+                      <h2 className="text-3xl font-bold">
+                        {project.title}
+                      </h2>
+
+                      <p className="text-muted-foreground">
+                        {project.description}
+                      </p>
+
+                      <div className="grid grid-cols-3 gap-6">
+
+                        <div>
+                          <b>Difficulty</b>
+                          <p>{project.difficulty}</p>
+                        </div>
+
+                        <div>
+                          <b>Timeline</b>
+                          <p>{project.estimatedTime}</p>
+                        </div>
+
+                        <div>
+                          <b>Budget</b>
+                          <p>{project.estimatedCost}</p>
+                        </div>
+
                       </div>
 
                       <div>
-                        <strong>Timeline</strong>
-                        <p>{generatedProject.estimatedTime}</p>
+                        <h4 className="font-bold">Components</h4>
+
+                        <ul className="list-disc ml-6">
+                          {project.components.map((c, i) => (
+                            <li key={i}>{c}</li>
+                          ))}
+                        </ul>
                       </div>
 
                       <div>
-                        <strong>Budget</strong>
-                        <p>{generatedProject.estimatedCost}</p>
+                        <h4 className="font-bold">Steps</h4>
+
+                        <ol className="list-decimal ml-6">
+                          {project.steps.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ol>
                       </div>
 
-                    </div>
+                      <div className="flex gap-4 pt-6">
 
-                    <div>
-                      <h4 className="font-bold mb-2">Components</h4>
+                        <Button onClick={handleSave} disabled={isSaving}>
+                          {isSaving ? (
+                            <Loader2 className="animate-spin mr-2" />
+                          ) : (
+                            <Save className="mr-2" />
+                          )}
+                          Save Lab
+                        </Button>
 
-                      <ul className="list-disc ml-6">
-                        {generatedProject.components.map((c, i) => (
-                          <li key={i}>{c}</li>
-                        ))}
-                      </ul>
-                    </div>
+                        <Button
+                          onClick={openVeronica}
+                          className="bg-purple-600 text-white"
+                        >
+                          <Code className="mr-2" />
+                          Generate with Veronica
+                        </Button>
 
-                    <div>
-                      <h4 className="font-bold mb-2">Steps</h4>
+                      </div>
 
-                      <ol className="list-decimal ml-6">
-                        {generatedProject.steps.map((s, i) => (
-                          <li key={i}>{s}</li>
-                        ))}
-                      </ol>
-                    </div>
+                    </CardContent>
 
-                    <div className="flex gap-4 pt-4">
+                  </Card>
 
-                      <Button
-                        onClick={handleSaveProject}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? (
-                          <Loader2 className="animate-spin mr-2" />
-                        ) : (
-                          <Save className="mr-2" />
-                        )}
+                </HolographicCard>
 
-                        Save Lab
-                      </Button>
+              )}
 
-                      <Button
-                        onClick={handleGenerateWithVeronica}
-                        className="bg-purple-600 text-white"
-                      >
-                        <Code className="mr-2" />
-                        Generate with Veronica AI
-                      </Button>
+            </CapsuleAnimation>
 
-                    </div>
-
-                  </CardContent>
-
-                </Card>
-
-              </HolographicCard>
-
-            )}
-
-          </CapsuleAnimation>
+          </div>
 
         </div>
 
       </div>
-
     </Layout>
-  );
-};
+  )
+}
 
-export default Generator;
+export default Generator
