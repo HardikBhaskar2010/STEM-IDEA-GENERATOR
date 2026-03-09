@@ -14,7 +14,7 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
   children,
   className = '',
   intensity = 'medium',
-  enableTilt = true,
+  enableTilt = false,
   enableParticles = true,
   glowColor
 }) => {
@@ -170,16 +170,20 @@ export const HolographicCard: React.FC<HolographicCardProps> = ({
   return (
     <div
       ref={cardRef}
-      onMouseMove={handleMouseMove}
+      onMouseMove={enableTilt ? handleMouseMove : undefined}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={`relative ${className}`}
       style={{
         transform: enableTilt
           ? `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
-          : 'none',
-        transition: isHovering ? 'transform 0.1s ease-out' : 'transform 0.5s ease-out',
-        transformStyle: 'preserve-3d'
+          : isHovering 
+            ? 'translateY(-2px)' 
+            : 'translateY(0)',
+        transition: enableTilt 
+          ? (isHovering ? 'transform 0.1s ease-out' : 'transform 0.5s ease-out')
+          : 'transform 150ms ease',
+        transformStyle: enableTilt ? 'preserve-3d' : undefined
       }}
     >
       {/* Particle Canvas */}
