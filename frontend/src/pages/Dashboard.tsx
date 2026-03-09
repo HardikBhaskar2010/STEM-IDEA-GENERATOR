@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, BookOpen, TrendingUp, Plus, Eye, Trash2, BarChart3, CheckCircle, Clock, Lightbulb, Activity, RefreshCw } from 'lucide-react';
+import { 
+  Zap, BookOpen, TrendingUp, Plus, Eye, Trash2, BarChart3, 
+  CheckCircle, Clock, Lightbulb, Activity, RefreshCw, 
+  Sparkles, Code, Beaker, FileText 
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +18,9 @@ import { ProjectStatusChart } from '@/components/dashboard/ProjectStatusChart';
 import { ProjectDifficultyChart } from '@/components/dashboard/ProjectDifficultyChart';
 import { ProjectsOverTimeChart } from '@/components/dashboard/ProjectsOverTimeChart';
 import { ActivityBarChart } from '@/components/dashboard/ActivityBarChart';
-import { MiniLineChart } from '@/components/dashboard/MiniLineChart';
+import { SoftCard, EventCard, EventPreviewCard, CalendarWidget } from '@/components/theme';
+import { generateMockEvents, generateMockCalendarActivities } from '@/types/events';
+import type { EventType } from '@/components/theme';
 import { WebGLDebug } from '@/components/WebGLDebug';
 
 const Dashboard: React.FC = () => {
@@ -24,6 +30,18 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, planning: 0 });
+  const [selectedDate, setSelectedDate] = useState<string>();
+  
+  // Mock event data
+  const [recentEvents] = useState(generateMockEvents(10));
+  const [calendarActivities] = useState(generateMockCalendarActivities());
+  
+  // Upcoming events
+  const upcomingEvents = [
+    { type: 'prototype_started' as EventType, title: 'Arduino Project Due', timeRange: 'Tomorrow, 2:00 PM', countdown: 'in 1 day', icon: Beaker },
+    { type: 'project_completed' as EventType, title: 'Science Fair Submission', timeRange: 'Dec 20, 5:00 PM', countdown: 'in 5 days', icon: CheckCircle },
+    { type: 'experiment_logged' as EventType, title: 'Lab Report Review', timeRange: 'Dec 22, 10:00 AM', countdown: 'in 7 days', icon: FileText },
+  ];
   
   // Mock data for Daily Activity chart - Shows hourly activity throughout the day
   const dailyActivityData = [
@@ -52,6 +70,17 @@ const Dashboard: React.FC = () => {
     { time: '22:00', activity: 3 },
     { time: '23:00', activity: 2 },
   ];
+  
+  // Icon mapping for event types
+  const eventIconMap: Record<EventType, typeof Sparkles> = {
+    idea_generated: Sparkles,
+    ai_improved: Zap,
+    prototype_started: Code,
+    experiment_logged: Beaker,
+    component_viewed: Eye,
+    project_completed: CheckCircle,
+    system_alert: Activity
+  };
 
   useEffect(() => {
     loadProjects();
@@ -123,122 +152,295 @@ const Dashboard: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+        return 'bg-[hsl(var(--accent-green))]/10 text-[hsl(var(--accent-green))] border-[hsl(var(--accent-green))]/20';
       case 'in-progress':
-        return 'bg-sky-500/10 text-sky-500 border-sky-500/20';
+        return 'bg-[hsl(var(--accent-blue))]/10 text-[hsl(var(--accent-blue))] border-[hsl(var(--accent-blue))]/20';
       case 'planning':
-        return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+        return 'bg-[hsl(var(--accent-orange))]/10 text-[hsl(var(--accent-orange))] border-[hsl(var(--accent-orange))]/20';
+      case 'abandoned':
+        return 'bg-muted/50 text-muted-foreground border-border';
       default:
-        return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+        return 'bg-muted/50 text-muted-foreground border-border';
     }
   };
 
   return (
     <Layout>
-      <div className="relative min-h-screen p-8">
-        {/* Ambient background glow */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-[120px] pointer-events-none" />
-
-        <div className="container mx-auto relative z-10">
+      <div className="min-h-screen bg-background p-4 md:p-8">
+        <div className="container mx-auto max-w-7xl">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-primary">
-                <TrendingUp className="w-5 h-5" />
-                <span className="text-sm font-bold uppercase tracking-widest">Workspace</span>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <TrendingUp className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Dashboard</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gradient">
-                Command Center
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                Activity Feed
               </h1>
-              <p className="text-muted-foreground text-lg max-w-lg">
-                Manage your synthesis modules and track your innovation progress.
+              <p className="text-muted-foreground text-sm max-w-lg">
+                Track your projects, experiments, and progress all in one place.
               </p>
             </div>
             
             <Button 
               size="lg"
               onClick={() => navigate('/generator')}
-              className="bg-gradient-primary text-white shadow-glow hover:shadow-glow-lg transition-all duration-300 rounded-xl h-14 px-8 text-lg font-bold"
+              className="rounded-lg shadow-sm hover:shadow-md transition-all"
+              data-testid="new-project-button"
             >
-              <Plus className="w-6 h-6 mr-2" />
-              New Synthesis
+              <Plus className="w-5 h-5 mr-2" />
+              New Project
             </Button>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <ProjectStatsCard 
               title="Total Projects" 
               value={stats.total} 
               icon={Zap}
-              colorClass="text-primary"
+              colorClass="text-foreground"
               delay={0}
             />
             <ProjectStatsCard 
               title="Completion" 
               value={Math.round((stats.completed / (stats.total || 1)) * 100)} 
               icon={CheckCircle}
-              colorClass="text-emerald-500"
+              colorClass="text-[hsl(var(--accent-green))]"
               delay={100}
             />
             <ProjectStatsCard 
               title="In Progress" 
               value={stats.inProgress} 
               icon={Clock}
-              colorClass="text-sky-500"
+              colorClass="text-[hsl(var(--accent-blue))]"
               delay={200}
             />
             <ProjectStatsCard 
               title="Planning" 
               value={stats.planning} 
               icon={Lightbulb}
-              colorClass="text-amber-500"
+              colorClass="text-[hsl(var(--accent-orange))]"
               delay={300}
             />
           </div>
 
-          {/* Main Charts Section */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Large Chart - Projects Over Time */}
-            <Card className="lg:col-span-2 glass-effect border-white/5 overflow-hidden" data-testid="projects-over-time-card">
-              <CardHeader className="bg-white/5 pb-4">
-                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Projects Over Time
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="h-[300px]">
-                  <ProjectsOverTimeChart type="area" />
+          {/* Main Content Grid: Activity Timeline + Right Panel */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left: Activity Timeline + Charts */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Recent Activity Timeline */}
+              <SoftCard className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                      <Activity className="w-5 h-5" />
+                      Recent Activity
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">Your latest actions and updates</p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Activity Bar Chart */}
-            <Card className="glass-effect border-white/5 overflow-hidden" data-testid="activity-chart-card">
-              <CardHeader className="bg-white/5 pb-4">
-                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-secondary" />
-                  Daily Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="h-[300px]">
-                  <ActivityBarChart data={dailyActivityData} />
+                
+                <div className="space-y-3">
+                  {recentEvents.slice(0, 8).map((event) => {
+                    const Icon = eventIconMap[event.type];
+                    const timeAgo = new Date(event.timestamp).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    });
+                    
+                    return (
+                      <EventCard
+                        key={event.id}
+                        type={event.type}
+                        title={event.title}
+                        timestamp={timeAgo}
+                        icon={Icon}
+                      />
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </SoftCard>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Charts Section */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="glass-effect border-white/5 overflow-hidden">
-                <CardHeader className="bg-white/5 pb-2">
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-primary" />
-                    Synthesis Distribution
+              {/* Charts Section */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Projects Over Time */}
+                <Card className="border-border shadow-sm" data-testid="projects-over-time-card">
+                  <CardHeader className="bg-soft-bg pb-4">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Projects Over Time
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="h-[200px]">
+                      <ProjectsOverTimeChart type="area" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Activity Bar Chart */}
+                <Card className="border-border shadow-sm" data-testid="activity-chart-card">
+                  <CardHeader className="bg-soft-bg pb-4">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      Daily Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="h-[200px]">
+                      <ActivityBarChart data={dailyActivityData} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Projects Section */}
+              <SoftCard className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <BookOpen className="w-5 h-5" />
+                        Your Projects
+                      </h3>
+                      <TabsList className="bg-muted border border-border rounded-lg p-1">
+                        <TabsTrigger value="all" className="rounded-md px-3 py-1.5 text-xs font-medium">All</TabsTrigger>
+                        <TabsTrigger value="planning" className="rounded-md px-3 py-1.5 text-xs font-medium">Planning</TabsTrigger>
+                        <TabsTrigger value="in-progress" className="rounded-md px-3 py-1.5 text-xs font-medium">Active</TabsTrigger>
+                        <TabsTrigger value="completed" className="rounded-md px-3 py-1.5 text-xs font-medium">Done</TabsTrigger>
+                        <TabsTrigger value="abandoned" className="rounded-md px-3 py-1.5 text-xs font-medium">Archived</TabsTrigger>
+                      </TabsList>
+                    </div>
+                  </Tabs>
+                </div>
+
+                {isLoading ? (
+                  <div className="grid gap-3">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-24 bg-muted/50 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                ) : filteredProjects.length > 0 ? (
+                  <div className="grid gap-3">
+                    {filteredProjects.map((project) => (
+                      <SoftCard key={project.id} variant="hover" className="p-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={`${getStatusColor(project.status)} border text-xs`}>
+                                {project.status}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {new Date(project.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <h4 className="font-semibold text-sm">{project.title}</h4>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{project.description}</p>
+                            
+                            <div className="pt-1">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-medium text-muted-foreground">Progress</span>
+                                <span className="text-xs font-semibold">{project.progress}%</span>
+                              </div>
+                              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                <div className="h-full bg-foreground" style={{ width: `${project.progress}%` }} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            {project.status === 'abandoned' ? (
+                              <Button 
+                                variant="default" 
+                                size="sm"
+                                className="rounded-lg"
+                                onClick={(e) => handleReviveProject(project.id, e)}
+                                data-testid={`revive-project-${project.id}`}
+                              >
+                                <RefreshCw className="w-4 h-4 mr-1" />
+                                Revive
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="rounded-lg"
+                                onClick={() => navigate(`/project/${project.id}`)}
+                                data-testid={`view-project-${project.id}`}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="rounded-lg text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteProject(project.id)}
+                              data-testid={`delete-project-${project.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </SoftCard>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Zap className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h4 className="font-semibold mb-2">No Projects Found</h4>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+                      You haven't created any projects in this category yet.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/generator')}
+                      className="rounded-lg"
+                    >
+                      Create Your First Project
+                    </Button>
+                  </div>
+                )}
+              </SoftCard>
+            </div>
+
+            {/* Right Panel: Calendar + Upcoming Events + Charts */}
+            <div className="space-y-6">
+              {/* Calendar Widget */}
+              <CalendarWidget
+                activities={calendarActivities}
+                selectedDate={selectedDate}
+                onDateSelect={setSelectedDate}
+              />
+
+              {/* Upcoming Events */}
+              <SoftCard className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Upcoming</h3>
+                <div className="space-y-3">
+                  {upcomingEvents.map((event, idx) => (
+                    <EventPreviewCard
+                      key={idx}
+                      type={event.type}
+                      title={event.title}
+                      timeRange={event.timeRange}
+                      countdown={event.countdown}
+                      icon={event.icon}
+                    />
+                  ))}
+                </div>
+              </SoftCard>
+
+              {/* Stats Charts */}
+              <Card className="border-border shadow-sm">
+                <CardHeader className="bg-soft-bg pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4" />
+                    Project Distribution
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -246,127 +448,17 @@ const Dashboard: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Card className="glass-effect border-white/5 overflow-hidden">
-                <CardHeader className="bg-white/5 pb-2">
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-secondary" />
-                    Complexity Index
+              <Card className="border-border shadow-sm">
+                <CardHeader className="bg-soft-bg pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    Complexity
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <ProjectDifficultyChart projects={projects} />
                 </CardContent>
               </Card>
-            </div>
-
-            {/* Recent Projects List */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-6">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <div className="flex items-center justify-between flex-wrap gap-4">
-                    <h3 className="text-xl font-bold flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-primary" />
-                      Project Modules
-                    </h3>
-                    <TabsList className="bg-white/5 border border-white/10 rounded-xl p-1">
-                      <TabsTrigger value="all" className="rounded-lg px-4 py-1.5 text-xs font-bold">ALL</TabsTrigger>
-                      <TabsTrigger value="planning" className="rounded-lg px-4 py-1.5 text-xs font-bold">PLANNING</TabsTrigger>
-                      <TabsTrigger value="in-progress" className="rounded-lg px-4 py-1.5 text-xs font-bold">ACTIVE</TabsTrigger>
-                      <TabsTrigger value="completed" className="rounded-lg px-4 py-1.5 text-xs font-bold">DONE</TabsTrigger>
-                      <TabsTrigger value="abandoned" className="rounded-lg px-4 py-1.5 text-xs font-bold">ABANDONED</TabsTrigger>
-                    </TabsList>
-                  </div>
-                </Tabs>
-              </div>
-
-              {isLoading ? (
-                <div className="grid gap-4">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="h-32 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
-                  ))}
-                </div>
-              ) : filteredProjects.length > 0 ? (
-                <div className="grid gap-4">
-                  {filteredProjects.map((project, index) => (
-                    <Card key={project.id} className="glass-effect border-white/5 hover:border-primary/30 transition-all group overflow-hidden" enableAnimation={true} animationDelay={index * 50} enableHover={true}>
-                      <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Badge variant="outline" className={`${getStatusColor(project.status)} border px-2 py-0 font-bold uppercase text-[10px]`}>
-                              {project.status}
-                            </Badge>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {new Date(project.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <h4 className="text-xl font-bold group-hover:text-primary transition-colors">{project.title}</h4>
-                          <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
-                          
-                          <div className="pt-2">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase">Progress</span>
-                              <span className="text-xs font-bold">{project.progress}%</span>
-                            </div>
-                            <div className="w-full bg-white/5 rounded-full h-1 overflow-hidden">
-                              <div className="h-full bg-gradient-primary" style={{ width: `${project.progress}%` }} />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          {project.status === 'abandoned' ? (
-                            <Button 
-                              variant="default" 
-                              size="sm"
-                              className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white gap-2"
-                              onClick={(e) => handleReviveProject(project.id, e)}
-                              data-testid={`revive-project-${project.id}`}
-                            >
-                              <RefreshCw className="w-4 h-4" />
-                              Revive
-                            </Button>
-                          ) : (
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="rounded-xl hover:bg-primary/20 hover:text-primary transition-all"
-                              onClick={() => navigate(`/project/${project.id}`)}
-                              data-testid={`view-project-${project.id}`}
-                            >
-                              <Eye className="w-5 h-5" />
-                            </Button>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
-                            onClick={() => handleDeleteProject(project.id)}
-                            data-testid={`delete-project-${project.id}`}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card className="glass-effect border-dashed border-white/10 p-12 text-center rounded-3xl">
-                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                    <Zap className="w-10 h-10 text-muted-foreground" />
-                  </div>
-                  <h4 className="text-lg font-bold mb-2 text-gradient">No Synthesis Modules</h4>
-                  <p className="text-muted-foreground mb-8 max-w-xs mx-auto text-sm leading-relaxed">
-                    You haven't initialized any projects in this category. Start your first synthesis to see them here.
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/generator')}
-                    className="bg-white text-black hover:bg-white/90 rounded-xl px-8 font-bold"
-                  >
-                    Initialize Lab
-                  </Button>
-                </Card>
-              )}
             </div>
           </div>
 
@@ -384,3 +476,4 @@ const Dashboard: React.FC = () => {
 
 
 export default Dashboard;
+
