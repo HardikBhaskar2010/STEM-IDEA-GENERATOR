@@ -10,7 +10,7 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 interface FloatingDockProps {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: { title: string; icon: React.ReactNode; href: string; onClick?: () => void; type?: "item" | "divider" }[];
   desktopClassName?: string;
   mobileClassName?: string;
   iconColorClassName?: string;
@@ -35,7 +35,7 @@ const FloatingDockMobile = ({
   className,
   iconColorClassName,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: { title: string; icon: React.ReactNode; href: string; onClick?: () => void; type?: "item" | "divider" }[];
   className?: string;
   iconColorClassName?: string;
 }) => {
@@ -48,7 +48,7 @@ const FloatingDockMobile = ({
             layoutId="nav"
             className="absolute bottom-full mb-2 inset-x-0 flex flex-col gap-2"
           >
-            {items.map((item, idx) => (
+            {items.filter((item) => item.type !== "divider").map((item, idx) => (
               <motion.div
                 key={item.title}
                 initial={{ opacity: 0, y: 10 }}
@@ -69,7 +69,13 @@ const FloatingDockMobile = ({
                   to={item.href}
                   key={item.title}
                   className="h-10 w-10 rounded-full bg-gray-50 dark:bg-neutral-900 flex items-center justify-center"
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => {
+                    item.onClick?.();
+                    if (item.onClick) {
+                      e.preventDefault();
+                    }
+                    setOpen(false);
+                  }}
                 >
                   <div className="h-4 w-4">{item.icon}</div>
                 </Link>
@@ -110,7 +116,7 @@ const FloatingDockDesktop = ({
   className,
   iconColorClassName,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: { title: string; icon: React.ReactNode; href: string; onClick?: () => void; type?: "item" | "divider" }[];
   className?: string;
   iconColorClassName?: string;
 }) => {
@@ -120,13 +126,17 @@ const FloatingDockDesktop = ({
       onMouseMove={(e) => mouseX.set(e.pageX)}
       onMouseLeave={() => mouseX.set(Infinity)}
       className={cn(
-        "mx-auto hidden md:flex h-16 gap-4 items-end rounded-2xl bg-gray-50 dark:bg-neutral-900 px-4 pb-3",
+        "mx-auto hidden md:flex h-16 gap-3 items-end rounded-2xl bg-gray-50 dark:bg-neutral-900 px-4 pb-3",
         className
       )}
     >
-      {items.map((item) => (
-        <IconContainer mouseX={mouseX} key={item.title} {...item} iconColorClassName={iconColorClassName} />
-      ))}
+      {items.map((item) =>
+        item.type === "divider" ? (
+          <div key={item.title} className="w-px h-5 bg-neutral-500/30 dark:bg-neutral-300/30 mb-2 mx-1" aria-hidden="true" />
+        ) : (
+          <IconContainer mouseX={mouseX} key={item.title} {...item} iconColorClassName={iconColorClassName} />
+        )
+      )}
     </motion.div>
   );
 };
@@ -136,12 +146,14 @@ function IconContainer({
   title,
   icon,
   href,
+  onClick,
   iconColorClassName,
 }: {
   mouseX: any;
   title: string;
   icon: React.ReactNode;
   href: string;
+  onClick?: () => void;
   iconColorClassName?: string;
 }) {
   let ref = useRef<HTMLDivElement>(null);
@@ -185,8 +197,7 @@ function IconContainer({
 
   const [hovered, setHovered] = useState(false);
 
-  return (
-    <Link to={href}>
+  const dockIcon = (
       <motion.div
         ref={ref}
         style={{ width, height }}
@@ -213,6 +224,19 @@ function IconContainer({
           {icon}
         </motion.div>
       </motion.div>
+  );
+
+  return (
+    <Link
+      to={href}
+      onClick={(e) => {
+        onClick?.();
+        if (onClick) {
+          e.preventDefault();
+        }
+      }}
+    >
+      {dockIcon}
     </Link>
   );
 }

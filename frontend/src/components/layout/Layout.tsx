@@ -1,7 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FloatingNav } from './FloatingNav';
-import { FloatingSettings } from './FloatingSettings';
 import FooterAbout from './FooterAbout';
 import { UniversalChat } from '@/components/UniversalChat';
 
@@ -25,7 +24,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       
       {/* Floating Navigation Docks */}
       <FloatingNav />
-      <FloatingSettings />
       
       {/* Universal Chat Widget - Available on all pages */}
       <UniversalChat />
