@@ -1,4 +1,4 @@
-"import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Zap, BookOpen, TrendingUp, Plus, Eye, Trash2, BarChart3, 
@@ -525,4 +525,3 @@ const Dashboard: React.FC = () => {
 
 
 export default Dashboard;
-"
