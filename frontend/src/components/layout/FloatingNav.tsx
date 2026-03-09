@@ -1,11 +1,13 @@
 /**
  * Main Navigation Floating Dock
- * Contains primary navigation items
+ * Contains primary navigation items with adaptive theming
  */
 
 import { FloatingDock } from "@/components/ui/floating-dock";
+import { AdaptiveFloatingContainer } from "@/components/layout/AdaptiveFloatingContainer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompetition } from "@/contexts/CompetitionContext";
+import { useTheme } from "@/hooks/useTheme";
 import { useLocation } from "react-router-dom";
 import {
   Home,
@@ -24,6 +26,7 @@ import {
 export const FloatingNav = () => {
   const { isGuest, isAdmin } = useAuth();
   const { isCompetitionMode } = useCompetition();
+  const { isDark } = useTheme();
   const location = useLocation();
 
   // Base navigation items
@@ -96,14 +99,19 @@ export const FloatingNav = () => {
     });
   }
 
+  // Adaptive classes based on theme
+  const dockClassName = isDark
+    ? "bg-black/80 backdrop-blur-xl border border-white/10"
+    : "bg-white/80 backdrop-blur-xl border border-gray-200/30";
+
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+    <AdaptiveFloatingContainer selector="body">
       <FloatingDock
         items={items}
-        desktopClassName="bg-black/80 backdrop-blur-xl border border-white/10"
+        desktopClassName={dockClassName}
         mobileClassName=""
       />
-    </div>
+    </AdaptiveFloatingContainer>
   );
 };
 
