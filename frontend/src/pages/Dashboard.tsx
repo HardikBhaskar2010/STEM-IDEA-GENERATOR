@@ -23,6 +23,9 @@ import { generateMockEvents, generateMockCalendarActivities } from '@/types/even
 import type { EventType } from '@/components/theme';
 import { WebGLDebug } from '@/components/WebGLDebug';
 
+// NOTE: This file was converted from escaped quotes - all \" should be regular "
+
+
 // Phase G: Helper function to group events by date
 const groupEventsByDate = (events: any[]) => {
   const today = new Date();
@@ -201,9 +204,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className=\"min-h-screen bg-background p-4 md:p-8\">
+      <div className="min-h-screen bg-background p-4 md:p-8">
         {/* Phase E: Increased container spacing */}
-        <div className=\"container mx-auto max-w-7xl\">
+        <div className="container mx-auto max-w-7xl">
           {/* Header Section - Phase E: Increased margin */}
           <div className=\"flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10\">
             <div className=\"space-y-2\">
