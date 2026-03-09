@@ -20,14 +20,49 @@ interface EventCardProps {
   className?: string;
 }
 
-const eventTypeConfig: Record<EventType, { color: 'purple' | 'green' | 'blue' | 'orange' | 'red' | 'yellow' | 'teal'; bgClass: string }> = {
-  idea_generated: { color: 'purple', bgClass: 'bg-[hsl(var(--accent-purple))]/10' },
-  ai_improved: { color: 'blue', bgClass: 'bg-[hsl(var(--accent-blue))]/10' },
-  prototype_started: { color: 'green', bgClass: 'bg-[hsl(var(--accent-green))]/10' },
-  experiment_logged: { color: 'teal', bgClass: 'bg-[hsl(var(--accent-teal))]/10' },
-  component_viewed: { color: 'orange', bgClass: 'bg-[hsl(var(--accent-orange))]/10' },
-  project_completed: { color: 'green', bgClass: 'bg-[hsl(var(--accent-green))]/10' },
-  system_alert: { color: 'red', bgClass: 'bg-[hsl(var(--accent-red))]/10' }
+const eventTypeConfig: Record<EventType, { color: 'purple' | 'green' | 'blue' | 'orange' | 'red' | 'yellow' | 'teal'; bgClass: string; borderColor: string; tintBg: string }> = {
+  idea_generated: { 
+    color: 'purple', 
+    bgClass: 'bg-[hsl(var(--accent-purple))]/10',
+    borderColor: 'hsl(var(--accent-purple))',
+    tintBg: 'bg-[hsl(var(--accent-purple))]/6'
+  },
+  ai_improved: { 
+    color: 'blue', 
+    bgClass: 'bg-[hsl(var(--accent-blue))]/10',
+    borderColor: 'hsl(var(--accent-blue))',
+    tintBg: 'bg-[hsl(var(--accent-blue))]/6'
+  },
+  prototype_started: { 
+    color: 'green', 
+    bgClass: 'bg-[hsl(var(--accent-green))]/10',
+    borderColor: 'hsl(var(--accent-green))',
+    tintBg: 'bg-[hsl(var(--accent-green))]/6'
+  },
+  experiment_logged: { 
+    color: 'teal', 
+    bgClass: 'bg-[hsl(var(--accent-teal))]/10',
+    borderColor: 'hsl(var(--accent-teal))',
+    tintBg: 'bg-[hsl(var(--accent-teal))]/6'
+  },
+  component_viewed: { 
+    color: 'orange', 
+    bgClass: 'bg-[hsl(var(--accent-orange))]/10',
+    borderColor: 'hsl(var(--accent-orange))',
+    tintBg: 'bg-[hsl(var(--accent-orange))]/6'
+  },
+  project_completed: { 
+    color: 'green', 
+    bgClass: 'bg-[hsl(var(--accent-green))]/10',
+    borderColor: 'hsl(var(--accent-green))',
+    tintBg: 'bg-[hsl(var(--accent-green))]/6'
+  },
+  system_alert: { 
+    color: 'red', 
+    bgClass: 'bg-[hsl(var(--accent-red))]/10',
+    borderColor: 'hsl(var(--accent-red))',
+    tintBg: 'bg-[hsl(var(--accent-red))]/6'
+  }
 };
 
 const accentColorMap = {
@@ -51,20 +86,39 @@ export const EventCard: React.FC<EventCardProps> = ({
   const colorClass = accentColorMap[config.color];
 
   return (
-    <SoftCard variant="hover" className={cn('p-4', className)} data-testid={`event-card-${type}`}>
-      <div className="flex items-start gap-3">
-        {/* Icon Bubble */}
-        <div className={cn('flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center', config.bgClass)}>
-          <Icon className={cn('w-5 h-5', colorClass)} />
+    <div 
+      className={cn('relative overflow-hidden rounded-xl', className)} 
+      data-testid={`event-card-${type}`}
+    >
+      {/* Phase C: Subtle tinted background */}
+      <div className={cn('absolute inset-0', config.tintBg)} />
+      
+      <SoftCard 
+        variant="hover" 
+        className="p-4 relative"
+        style={{
+          // Phase C: Accent border for visual anchoring
+          borderLeft: `3px solid ${config.borderColor}`
+        }}
+      >
+        <div className="flex items-start gap-3">
+          {/* Phase F: Icon with hover scale */}
+          <div className={cn(
+            'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
+            'transition-transform duration-150 hover:scale-110',
+            config.bgClass
+          )}>
+            <Icon className={cn('w-5 h-5', colorClass)} />
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-semibold text-foreground truncate">{title}</h4>
+            <p className="text-xs text-muted-foreground mt-0.5">{timestamp}</p>
+          </div>
         </div>
-        
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-foreground truncate">{title}</h4>
-          <p className="text-xs text-muted-foreground mt-0.5">{timestamp}</p>
-        </div>
-      </div>
-    </SoftCard>
+      </SoftCard>
+    </div>
   );
 };
 
