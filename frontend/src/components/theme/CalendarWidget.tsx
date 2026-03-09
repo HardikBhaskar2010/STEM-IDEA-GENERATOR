@@ -108,21 +108,21 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
               onClick={() => onDateSelect?.(date)}
               className={cn(
                 'aspect-square rounded-lg text-xs font-medium',
-                // Phase D & F: Enhanced hover and selection states
+                // Priority 6: Enhanced calendar interactions
                 'transition-all duration-150',
-                'hover:bg-muted hover:scale-105 cursor-pointer',
-                'focus:outline-none focus:ring-2 focus:ring-ring',
-                // Phase D: Enhanced selected day emphasis
-                isSelected && 'bg-primary text-primary-foreground scale-105 shadow-md',
+                'hover:bg-muted hover:scale-[1.08] cursor-pointer',
+                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+                // Priority 6: Stronger selected day emphasis
+                isSelected && 'bg-primary text-primary-foreground scale-[1.08] shadow-lg ring-2 ring-primary/20',
                 !isSelected && 'text-foreground'
               )}
               data-testid={`calendar-day-${date}`}
             >
               <div className="flex flex-col items-center justify-center h-full gap-1">
                 <span>{dayNumber}</span>
-                {/* Phase D: Activity dots with proper spacing */}
+                {/* Priority 6: Activity dots with improved spacing and wrapping */}
                 {activity && activity.events.length > 0 && (
-                  <div className="flex gap-1 flex-wrap justify-center">
+                  <div className="flex gap-1 flex-wrap justify-center max-w-full px-0.5">
                     {activity.events.slice(0, 3).map((event, idx) => (
                       <div
                         key={idx}
@@ -156,3 +156,5 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
 };
 
 export default CalendarWidget;
+
+
