@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '@/services/authService';
+import { authService, type AuthProvider } from '@/services/authService';
 import { User } from '@supabase/supabase-js';
 import { GuestUser } from '@/services/guestService';
 
@@ -8,7 +8,7 @@ const OWNER_EMAIL = 'hardik.bhaskar2010@gmail.com';
 
 // Auth modes
 export type AuthMode = 'unauthenticated' | 'guest' | 'authenticated';
-export type AuthProvider = 'guest' | 'google' | 'email' | null;
+export type { AuthProvider } from '@/services/authService';
 
 interface AuthContextType {
   user: User | GuestUser | null;
