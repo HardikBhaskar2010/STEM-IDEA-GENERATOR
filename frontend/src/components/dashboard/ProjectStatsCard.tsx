@@ -20,28 +20,30 @@ export const ProjectStatsCard: React.FC<ProjectStatsCardProps> = ({
 }) => {
   return (
     <Card 
-      className="glass-effect border-border/50 animate-fade-in transition-all duration-300 hover:shadow-[0px_2px_4px_rgba(0,0,0,0.06),0px_12px_32px_rgba(0,0,0,0.1)] hover:scale-[1.02]"
+      className="glass-effect border-border/50 animate-fade-in transition-all duration-300 hover:shadow-[0px_2px_4px_rgba(0,0,0,0.06),0px_14px_36px_rgba(0,0,0,0.12)] hover:scale-[1.02] hover:-translate-y-1"
       style={{ animationDelay: `${delay}ms` }}
     >
       <CardContent className="pt-6">
-        {/* Phase B: Visual hierarchy - ICON → BIG NUMBER → LABEL */}
-        <div className="text-center space-y-2">
-          {/* ICON: Slightly larger with hover effect */}
+        {/* Priority 4: Enhanced visual hierarchy - ICON → BIG NUMBER → LABEL */}
+        <div className="text-center space-y-3">
+          {/* ICON: Larger size (28-32px) with hover effect */}
           {Icon && (
-            <div className="flex justify-center mb-2">
+            <div className="flex justify-center mb-3">
               <Icon className={`w-8 h-8 ${colorClass} transition-transform duration-150 hover:scale-110`} />
             </div>
           )}
           
-          {/* BIG NUMBER: Primary focus */}
-          <p className={`text-4xl font-bold ${colorClass}`}>
+          {/* BIG NUMBER: Primary focus - Larger, bolder */}
+          <p className={`text-5xl font-bold tracking-tight ${colorClass}`}>
             <CounterAnimation end={value} duration={2000} />
           </p>
           
-          {/* LABEL: Smaller, secondary */}
-          <p className="text-sm text-muted-foreground">{title}</p>
+          {/* LABEL: Smaller, subdued - Secondary information */}
+          <p className="text-sm text-muted-foreground/70 font-medium">{title}</p>
         </div>
       </CardContent>
     </Card>
   );
 };
+
+
