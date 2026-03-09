@@ -99,10 +99,10 @@ export const FloatingNav = () => {
     });
   }
 
-  // Adaptive classes based on theme
+  // Priority 2: Enhanced floating dock depth with stronger elevation
   const dockClassName = isDark
-    ? "bg-black/80 backdrop-blur-xl border border-white/10"
-    : "bg-white/80 backdrop-blur-xl border border-gray-200/30";
+    ? "bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0px_10px_40px_rgba(0,0,0,0.5),0px_2px_8px_rgba(0,0,0,0.3)]"
+    : "bg-white/85 backdrop-blur-2xl border border-gray-200/40 shadow-[0px_10px_40px_rgba(0,0,0,0.15),0px_2px_8px_rgba(0,0,0,0.08)]";
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
@@ -116,4 +116,6 @@ export const FloatingNav = () => {
     </div>
   );
 };
+
+
 
