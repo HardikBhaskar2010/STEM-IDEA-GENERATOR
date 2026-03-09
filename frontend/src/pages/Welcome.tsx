@@ -44,63 +44,32 @@ const Welcome: React.FC = () => {
         <div className={`text-center space-y-6 transition-all duration-1000 relative z-10 ${
           isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
         }`}>
-          {/* Main title with stunning animation + Effects Engine integration */}
+          {/* Main title with stunning animation */}
           <div className="space-y-4">
-            {textEffect && textEffect.type === 'text' ? (
-              <textEffect.component settings={activeTextSettings} isPreview={false}>
-                <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight drop-shadow-2xl">
-                  <span 
-                    className="inline-block bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: 'linear-gradient(to right, #ffffff, #e0e7ff, #c7d2fe)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    STEM
-                  </span>
-                </h1>
-                <h2 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight drop-shadow-2xl">
-                  <span 
-                    className="inline-block bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: 'linear-gradient(to right, #ddd6fe, #ffffff, #c7d2fe)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    Idea Adventure
-                  </span>
-                </h2>
-              </textEffect.component>
-            ) : (
-              <>
-                <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight drop-shadow-2xl">
-                  <span 
-                    className="inline-block bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: 'linear-gradient(to right, #ffffff, #e0e7ff, #c7d2fe)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    STEM
-                  </span>
-                </h1>
-                <h2 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight drop-shadow-2xl">
-                  <span 
-                    className="inline-block bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: 'linear-gradient(to right, #ddd6fe, #ffffff, #c7d2fe)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    Idea Adventure
-                  </span>
-                </h2>
-              </>
-            )}
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight drop-shadow-2xl">
+              <span 
+                className="inline-block bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: 'linear-gradient(to right, #ffffff, #e0e7ff, #c7d2fe)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                STEM
+              </span>
+            </h1>
+            <h2 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight drop-shadow-2xl">
+              <span 
+                className="inline-block bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: 'linear-gradient(to right, #ddd6fe, #ffffff, #c7d2fe)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Idea Adventure
+              </span>
+            </h2>
           </div>
 
           {/* Subtitle */}
@@ -324,5 +293,6 @@ const Welcome: React.FC = () => {
 };
 
 export default Welcome;
+
 
 
