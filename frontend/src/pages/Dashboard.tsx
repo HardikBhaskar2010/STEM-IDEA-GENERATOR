@@ -204,8 +204,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background p-4 md:p-8">
-        {/* Phase E: Increased container spacing */}
+      {/* Priority 7: Subtle UI depth layer for premium SaaS feel */}
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
+        {/* Priority 5: Increased container spacing */}
         <div className="container mx-auto max-w-7xl">
           {/* Header Section - Phase E: Increased margin */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -265,9 +266,9 @@ const Dashboard: React.FC = () => {
             />
           </div>
 
-          {/* Main Content Grid: Activity Timeline + Right Panel - Phase E: Increased gap */}
+          {/* Main Content Grid: Activity Timeline + Right Panel - Priority 5: Enhanced spacing */}
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left: Activity Timeline + Charts - Phase E: Increased spacing */}
+            {/* Left: Activity Timeline + Charts - Priority 5: Optimized spacing */}
             <div className="lg:col-span-2 space-y-8">
               {/* Recent Activity Timeline - Phase G: Grouped by date */}
               <SoftCard className="p-6">
@@ -281,16 +282,19 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Phase G: Activity feed grouped by date */}
+                {/* Priority 4 & 5: Activity feed with enhanced date headers and spacing */}
                 <div className="space-y-6">
                   {Object.entries(groupedEvents).map(([dateLabel, events]) => (
                     <div key={dateLabel}>
-                      {/* Date header */}
-                      <h3 className="text-xs uppercase font-semibold text-muted-foreground/70 mb-3 tracking-wider">
-                        {dateLabel}
-                      </h3>
-                      {/* Phase E: Events with 12px spacing */}
-                      <div className="space-y-3">
+                      {/* Priority 4: Enhanced date header with stronger typography */}
+                      <div className="mb-4">
+                        <h3 className="text-xs uppercase font-semibold text-muted-foreground/80 tracking-wider">
+                          {dateLabel}
+                        </h3>
+                        <div className="mt-1.5 h-px bg-border/50" />
+                      </div>
+                      {/* Priority 5: Refined spacing between EventCards (14px / space-y-3.5) */}
+                      <div className="space-y-3.5">
                         {events.map((event) => {
                           const Icon = eventIconMap[event.type];
                           const timeAgo = new Date(event.timestamp).toLocaleString('en-US', {
@@ -472,8 +476,8 @@ const Dashboard: React.FC = () => {
               {/* Upcoming Events */}
               <SoftCard className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Upcoming</h3>
-                {/* Phase E: 12px spacing between cards */}
-                <div className="space-y-3">
+                {/* Priority 5: Consistent spacing (14px / space-y-3.5) */}
+                <div className="space-y-3.5">
                   {upcomingEvents.map((event, idx) => (
                     <EventPreviewCard
                       key={idx}
@@ -487,7 +491,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </SoftCard>
 
-              {/* Stats Charts - Phase E: Increased spacing */}
+              {/* Stats Charts - Priority 5: Consistent spacing */}
               <Card className="border-border">
                 <CardHeader className="bg-soft-bg pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -528,3 +532,4 @@ const Dashboard: React.FC = () => {
 
 
 export default Dashboard;
+
