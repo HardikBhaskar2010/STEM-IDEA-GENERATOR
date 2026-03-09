@@ -1,534 +1,705 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Zap, BookOpen, TrendingUp, Plus, Eye, Trash2, BarChart3, 
-  CheckCircle, Clock, Lightbulb, Activity, RefreshCw, 
-  Sparkles, Code, Beaker, FileText 
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Zap, Loader2, Save, Target, Clock, ChevronDown, ChevronUp, Sparkles, Code, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Layout from '@/components/layout/Layout';
-import { useAuth } from '@/contexts/AuthContext';
-import { projectService, type SavedProject } from '@/services/projectService';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { HelpTooltip } from '@/components/ui/enhanced-tooltip';
 import { toast } from '@/hooks/use-toast';
-import { ProjectStatsCard } from '@/components/dashboard/ProjectStatsCard';
-import { ProjectStatusChart } from '@/components/dashboard/ProjectStatusChart';
-import { ProjectDifficultyChart } from '@/components/dashboard/ProjectDifficultyChart';
-import { ProjectsOverTimeChart } from '@/components/dashboard/ProjectsOverTimeChart';
-import { ActivityBarChart } from '@/components/dashboard/ActivityBarChart';
-import { SoftCard, EventCard, EventPreviewCard, CalendarWidget } from '@/components/theme';
-import { generateMockEvents, generateMockCalendarActivities } from '@/types/events';
-import type { EventType } from '@/components/theme';
-import { WebGLDebug } from '@/components/WebGLDebug';
+import { generateProject, healthCheck, type ProjectParams } from '@/services/apiService';
+import { projectService } from '@/services/projectService';
+import { useNavigate } from 'react-router-dom';
+import { CapsuleAnimation } from '@/components/ui/capsule-animation';
+import { NeuralNetworkVisualizer } from '@/components/NeuralNetworkVisualizer';
+import { HolographicCard } from '@/components/HolographicCard';
+import CodeGenerationModal from '@/components/CodeGenerationModal';
+import { useCompetition } from '@/contexts/CompetitionContext';
+import { CompetitionSubmissionModal } from '@/components/competition/CompetitionSubmissionModal';
+import { SuccessAnimation } from '@/components/competition/SuccessAnimation';
+import { LoginModal } from '@/components/auth/LoginModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAchievements } from '@/contexts/AchievementContext';
 
-// NOTE: This file was converted from escaped quotes - all " should be regular "
-
-
-// Phase G: Helper function to group events by date
-const groupEventsByDate = (events: any[]) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  const groups: { [key: string]: any[] } = {};
-  
-  events.forEach(event => {
-    const eventDate = new Date(event.timestamp);
-    eventDate.setHours(0, 0, 0, 0);
-    
-    let groupKey: string;
-    if (eventDate.getTime() === today.getTime()) {
-      groupKey = 'Today';
-    } else if (eventDate.getTime() === yesterday.getTime()) {
-      groupKey = 'Yesterday';
-    } else {
-      groupKey = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-    
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
-    groups[groupKey].push(event);
-  });
-  
-  return groups;
-};
-
-const Dashboard: React.FC = () => {
+const Generator: React.FC = () => {
   const navigate = useNavigate();
-  const { user: _user } = useAuth();
-  const [projects, setProjects] = useState<SavedProject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
-  const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, planning: 0 });
-  const [selectedDate, setSelectedDate] = useState<string>();
-  
-  // Mock event data
-  const [recentEvents] = useState(generateMockEvents(10));
-  const [calendarActivities] = useState(generateMockCalendarActivities());
-  
-  // Phase G: Group events by date
-  const groupedEvents = useMemo(() => groupEventsByDate(recentEvents.slice(0, 8)), [recentEvents]);
-  
-  // Upcoming events
-  const upcomingEvents = [
-    { type: 'prototype_started' as EventType, title: 'Arduino Project Due', timeRange: 'Tomorrow, 2:00 PM', countdown: 'in 1 day', icon: Beaker },
-    { type: 'project_completed' as EventType, title: 'Science Fair Submission', timeRange: 'Dec 20, 5:00 PM', countdown: 'in 5 days', icon: CheckCircle },
-    { type: 'experiment_logged' as EventType, title: 'Lab Report Review', timeRange: 'Dec 22, 10:00 AM', countdown: 'in 7 days', icon: FileText },
-  ];
-  
-  // Mock data for Daily Activity chart - Shows hourly activity throughout the day
-  const dailyActivityData = [
-    { time: '00:00', activity: 2 },
-    { time: '01:00', activity: 1 },
-    { time: '02:00', activity: 1 },
-    { time: '03:00', activity: 0 },
-    { time: '04:00', activity: 1 },
-    { time: '05:00', activity: 2 },
-    { time: '06:00', activity: 3 },
-    { time: '07:00', activity: 5 },
-    { time: '08:00', activity: 8 },
-    { time: '09:00', activity: 12 },
-    { time: '10:00', activity: 15 },
-    { time: '11:00', activity: 14 },
-    { time: '12:00', activity: 18 },
-    { time: '13:00', activity: 16 },
-    { time: '14:00', activity: 14 },
-    { time: '15:00', activity: 13 },
-    { time: '16:00', activity: 12 },
-    { time: '17:00', activity: 10 },
-    { time: '18:00', activity: 8 },
-    { time: '19:00', activity: 6 },
-    { time: '20:00', activity: 5 },
-    { time: '21:00', activity: 4 },
-    { time: '22:00', activity: 3 },
-    { time: '23:00', activity: 2 },
-  ];
-  
-  // Icon mapping for event types
-  const eventIconMap: Record<EventType, typeof Sparkles> = {
-    idea_generated: Sparkles,
-    ai_improved: Zap,
-    prototype_started: Code,
-    experiment_logged: Beaker,
-    component_viewed: Eye,
-    project_completed: CheckCircle,
-    system_alert: Activity
-  };
+  const { isCompetitionMode } = useCompetition();
+  const { isGuest } = useAuth();
+  const { checkForNewAchievements } = useAchievements();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSynthesized, setIsSynthesized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
+  const [showCodeGenModal, setShowCodeGenModal] = useState(false);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [successAnimationType, setSuccessAnimationType] = useState<'submission' | 'levelup'>('submission');
+  const [successPoints, setSuccessPoints] = useState(10);
+  const [successNewLevel, setSuccessNewLevel] = useState<string | undefined>(undefined);
+  const [generatedProject, setGeneratedProject] = useState<{
+    title: string;
+    description: string;
+    difficulty: string;
+    estimatedTime: string;
+    estimatedCost: string;
+    components: string[];
+    skills: string[];
+    steps: string[];
+  } | null>(null);
+  const [formData, setFormData] = useState<ProjectParams>({
+    projectType: '',
+    skillLevel: '',
+    interests: '',
+    budget: '',
+    duration: ''
+  });
 
+  // Selected type display
+  const projectTypeDisplay = useMemo(() => {
+    return formData.projectType.toUpperCase();
+  }, [formData.projectType]);
+
+  // Check backend connection on mount and load pre-filled data if available
   useEffect(() => {
-    loadProjects();
+    const checkBackend = async () => {
+      try {
+        await healthCheck();
+        setBackendStatus('connected');
+        console.log('✅ Backend connected successfully');
+      } catch (error) {
+        setBackendStatus('disconnected');
+        console.error('❌ Backend connection failed:', error);
+      }
+    };
+    
+    // Check for pre-filled form data from voice/chat navigation
+    const prefilledData = sessionStorage.getItem('generatorFormData');
+    console.log('🔍 Generator - Raw sessionStorage data:', prefilledData);
+    if (prefilledData) {
+      try {
+        const parsedData = JSON.parse(prefilledData);
+        console.log('🔍 Generator - Parsed data:', parsedData);
+        console.log('🔍 Generator - Current formData before merge:', formData);
+        setFormData(prev => {
+          const newFormData = { ...prev, ...parsedData };
+          console.log('🔍 Generator - New formData after merge:', newFormData);
+          return newFormData;
+        });
+        sessionStorage.removeItem('generatorFormData'); // Clear after loading
+        
+        toast({
+          title: '✨ Form Pre-filled',
+          description: 'Your project details have been filled in from your conversation!',
+        });
+      } catch (error) {
+        console.error('Error parsing pre-filled data:', error);
+      }
+    } else {
+      console.log('🔍 Generator - No pre-filled data found in sessionStorage');
+    }
+    
+    // Diagnostic log for the Project Lab AI Engine
+    if (typeof window !== 'undefined') {
+      console.log('💎 STEM Project Lab AI Engine: OPERATIONAL ✨ (Powered by Backend AI)');
+    }
+    
+    checkBackend();
   }, []);
 
-  const loadProjects = async () => {
-    setIsLoading(true);
-    const userProjects = await projectService.getProjects();
+  // Animation refs
+  const formCardRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeIn', delay: 100 });
+  const resultCardRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeIn', delay: 200 });
+
+  const handleGenerate = useCallback(async () => {
+    // Validate form
+    if (!formData.projectType || !formData.skillLevel) {
+      toast({
+        title: "Missing Information",
+        description: "Please select both project type and skill level.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setIsSynthesized(false);
     
-    // Ensure backward compatibility - add completed_steps if missing
-    const projectsWithCompletedSteps = userProjects.map(p => ({
-      ...p,
-      completed_steps: p.completed_steps || []
-    }));
+    try {
+      // Use standard generation (streaming not implemented for project generation)
+      const project = await generateProject(formData);
+      
+      setGeneratedProject(project);
+      setIsSynthesized(true);
+      toast({
+        title: "Project Generated!",
+        description: "Your personalized STEM project is ready.",
+      });
+      
+      // Check for achievement unlocks after generating
+      if (!isGuest) {
+        await checkForNewAchievements();
+      }
+    } catch (error) {
+      console.error('Generation failed:', error);
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Unable to generate project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [formData]);
+
+  const handleSaveProject = useCallback(async () => {
+    if (!generatedProject) {
+      toast({
+        title: "Error",
+        description: "No project to save",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user is guest - show login modal
+    if (isGuest) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Save to Supabase using projectService
+      const savedProject = await projectService.saveProject({
+        title: generatedProject.title,
+        description: generatedProject.description,
+        project_type: formData.projectType,
+        difficulty: generatedProject.difficulty,
+        estimated_time: generatedProject.estimatedTime,
+        estimated_cost: generatedProject.estimatedCost,
+        components: generatedProject.components,
+        skills: generatedProject.skills,
+        steps: generatedProject.steps,
+        generated_from_params: formData as unknown as Record<string, string>,
+      });
+
+      if (savedProject) {
+        setSavedProjectId(savedProject.id);
+        toast({
+          title: "Project Saved!",
+          description: "Your project has been added to your library.",
+        });
+        
+        // Check for achievement unlocks after saving
+        await checkForNewAchievements();
+        
+        // Navigate to library to see the saved project
+        navigate('/library');
+      } else {
+        throw new Error('Failed to save project');
+      }
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [generatedProject, formData, navigate]);
+
+  const handleGenerateWithVeronica = useCallback(async () => {
+    if (!generatedProject) {
+      toast({
+        title: "Error",
+        description: "No project to generate code for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // First, save the project if not already saved
+    if (!savedProjectId) {
+      setIsSaving(true);
+      try {
+        const savedProject = await projectService.saveProject({
+          title: generatedProject.title,
+          description: generatedProject.description,
+          project_type: formData.projectType,
+          difficulty: generatedProject.difficulty,
+          estimated_time: generatedProject.estimatedTime,
+          estimated_cost: generatedProject.estimatedCost,
+          components: generatedProject.components,
+          skills: generatedProject.skills,
+          steps: generatedProject.steps,
+          generated_from_params: formData as unknown as Record<string, string>,
+        });
+
+        if (savedProject) {
+          setSavedProjectId(savedProject.id);
+          toast({
+            title: "✨ Project Saved!",
+            description: "Opening Veronica AI workspace...",
+          });
+          
+          // Check for achievement unlocks after saving
+          await checkForNewAchievements();
+          
+          // Small delay to show the toast
+          setTimeout(() => {
+            navigate(`/code-generator?project=${savedProject.id}`);
+          }, 1000);
+        } else {
+          throw new Error('Failed to save project');
+        }
+      } catch (error) {
+        console.error('Error saving project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save project. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      // Project already saved, just navigate
+      navigate(`/code-generator?project=${savedProjectId}`);
+    }
+  }, [generatedProject, savedProjectId, formData, navigate]);
+
+  const handleSubmissionSuccess = useCallback((pointsAwarded: number, newLevel?: string) => {
+    setSuccessPoints(pointsAwarded);
     
-    setProjects(projectsWithCompletedSteps);
-
-    const projectStats = await projectService.getProjectStats();
-    if (projectStats) {
-      setStats(projectStats);
-    }
-    setIsLoading(false);
-  };
-
-  const handleDeleteProject = async (id: string) => {
-    const success = await projectService.deleteProject(id);
-    if (success) {
-      toast({
-        title: 'Project deleted',
-        description: 'The project has been removed',
-      });
-      await loadProjects();
+    if (newLevel) {
+      // Level up!
+      setSuccessNewLevel(newLevel);
+      setSuccessAnimationType('levelup');
     } else {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete project',
-        variant: 'destructive',
-      });
+      // Just points
+      setSuccessAnimationType('submission');
     }
-  };
+    
+    setShowSuccessAnimation(true);
+    
+    toast({
+      title: "🎉 Submitted Successfully!",
+      description: `You earned ${pointsAwarded} points!${newLevel ? ` Level up: ${newLevel}` : ''}`,
+    });
+  }, [toast]);
 
-  const handleReviveProject = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = await projectService.reviveProject(id);
-    if (updated) {
-      toast({
-        title: 'Project revived',
-        description: `Project status updated to "${updated.status}"`,
-      });
-      await loadProjects();
-    } else {
-      toast({
-        title: 'Error',
-        description: 'Failed to revive project',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const filteredProjects = projects.filter(project => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'completed') return project.status === 'completed';
-    if (activeTab === 'in-progress') return project.status === 'in-progress';
-    if (activeTab === 'planning') return project.status === 'planning';
-    if (activeTab === 'abandoned') return project.status === 'abandoned';
-    return true;
-  });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-[hsl(var(--accent-green))]/10 text-[hsl(var(--accent-green))] border-[hsl(var(--accent-green))]/20';
-      case 'in-progress':
-        return 'bg-[hsl(var(--accent-blue))]/10 text-[hsl(var(--accent-blue))] border-[hsl(var(--accent-blue))]/20';
-      case 'planning':
-        return 'bg-[hsl(var(--accent-orange))]/10 text-[hsl(var(--accent-orange))] border-[hsl(var(--accent-orange))]/20';
-      case 'abandoned':
-        return 'bg-muted/50 text-muted-foreground border-border';
-      default:
-        return 'bg-muted/50 text-muted-foreground border-border';
-    }
-  };
+  const handleAnimationComplete = useCallback(() => {
+    setShowSuccessAnimation(false);
+  }, []);
 
   return (
     <Layout>
-      {/* Priority 7: Subtle UI depth layer for premium SaaS feel */}
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
-        {/* Priority 5: Increased container spacing */}
-        <div className="container mx-auto max-w-7xl">
-          {/* Header Section - Phase E: Increased margin */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-xs font-semibold uppercase tracking-wider">Dashboard</span>
+      <div className="relative bg-gradient-to-b from-primary/5 via-background to-background pt-16">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto py-12 mb-16">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+              <div className="space-y-2">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gradient">
+                  Project Lab
+                </h1>
+                <div className="flex items-center gap-3 text-muted-foreground text-lg">
+                  <p>Design your next STEM masterpiece with AI.</p>
+                  {backendStatus === 'connected' ? (
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-2 py-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                      Live
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 px-2 py-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5" />
+                      Offline
+                    </Badge>
+                  )}
+                </div>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Activity Feed
-              </h1>
-              <p className="text-muted-foreground text-sm max-w-lg">
-                Track your projects, experiments, and progress all in one place.
-              </p>
             </div>
-            
-            <Button 
-              size="lg"
-              onClick={() => navigate('/generator')}
-              className="rounded-lg shadow-sm hover:shadow-md transition-all duration-150 hover:scale-[1.02]"
-              data-testid="new-project-button"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              New Project
-            </Button>
-          </div>
 
-          {/* Stats Grid - Phase E: Increased gap and margin */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <ProjectStatsCard 
-              title="Total Projects" 
-              value={stats.total} 
-              icon={Zap}
-              colorClass="text-foreground"
-              delay={0}
-            />
-            <ProjectStatsCard 
-              title="Completion" 
-              value={Math.round((stats.completed / (stats.total || 1)) * 100)} 
-              icon={CheckCircle}
-              colorClass="text-[hsl(var(--accent-green))]"
-              delay={100}
-            />
-            <ProjectStatsCard 
-              title="In Progress" 
-              value={stats.inProgress} 
-              icon={Clock}
-              colorClass="text-[hsl(var(--accent-blue))]"
-              delay={200}
-            />
-            <ProjectStatsCard 
-              title="Planning" 
-              value={stats.planning} 
-              icon={Lightbulb}
-              colorClass="text-[hsl(var(--accent-orange))]"
-              delay={300}
-            />
-          </div>
-
-          {/* Main Content Grid: Activity Timeline + Right Panel - Priority 5: Enhanced spacing */}
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left: Activity Timeline + Charts - Priority 5: Optimized spacing */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Recent Activity Timeline - Phase G: Grouped by date */}
-              <SoftCard className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-lg font-semibold flex items-center gap-2">
-                      <Activity className="w-5 h-5" />
-                      Recent Activity
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-1">Your latest actions and updates</p>
+            <div className="grid lg:grid-cols-12 gap-8 items-start">
+              {/* Input Form */}
+              <div className="lg:col-span-5">
+                <Card 
+                  ref={formCardRef.ref}
+                  className="glass-effect border-primary/5 shadow-sm overflow-hidden"
+                  data-tutorial="project-form"
+                >
+                  <div className="bg-primary/5 p-6 border-b border-primary/10">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                      <Target className="w-5 h-5 text-primary" />
+                      Specifications
+                    </h3>
                   </div>
-                </div>
-                
-                {/* Priority 4 & 5: Activity feed with enhanced date headers and spacing */}
-                <div className="space-y-6">
-                  {Object.entries(groupedEvents).map(([dateLabel, events]) => (
-                    <div key={dateLabel}>
-                      {/* Priority 4: Enhanced date header with stronger typography */}
-                      <div className="mb-4">
-                        <h3 className="text-xs uppercase font-semibold text-muted-foreground/80 tracking-wider">
-                          {dateLabel}
-                        </h3>
-                        <div className="mt-1.5 h-px bg-border/50" />
-                      </div>
-                      {/* Priority 5: Refined spacing between EventCards (14px / space-y-3.5) */}
-                      <div className="space-y-3.5">
-                        {events.map((event) => {
-                          const Icon = eventIconMap[event.type];
-                          const timeAgo = new Date(event.timestamp).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit'
-                          });
-                          
-                          return (
-                            <EventCard
-                              key={event.id}
-                              type={event.type}
-                              title={event.title}
-                              timestamp={timeAgo}
-                              icon={Icon}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </SoftCard>
-
-              {/* Charts Section - Phase E: Increased gap */}
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Projects Over Time */}
-                <Card className="border-border" data-testid="projects-over-time-card">
-                  <CardHeader className="bg-soft-bg pb-4">
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      Projects Over Time
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="h-[200px]">
-                      <ProjectsOverTimeChart type="area" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Activity Bar Chart */}
-                <Card className="border-border" data-testid="activity-chart-card">
-                  <CardHeader className="bg-soft-bg pb-4">
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4" />
-                      Daily Activity
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="h-[200px]">
-                      <ActivityBarChart data={dailyActivityData} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Projects Section */}
-              <SoftCard className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <BookOpen className="w-5 h-5" />
-                        Your Projects
-                      </h3>
-                      <TabsList className="bg-muted border border-border rounded-lg p-1">
-                        <TabsTrigger value="all" className="rounded-md px-3 py-1.5 text-xs font-medium">All</TabsTrigger>
-                        <TabsTrigger value="planning" className="rounded-md px-3 py-1.5 text-xs font-medium">Planning</TabsTrigger>
-                        <TabsTrigger value="in-progress" className="rounded-md px-3 py-1.5 text-xs font-medium">Active</TabsTrigger>
-                        <TabsTrigger value="completed" className="rounded-md px-3 py-1.5 text-xs font-medium">Done</TabsTrigger>
-                        <TabsTrigger value="abandoned" className="rounded-md px-3 py-1.5 text-xs font-medium">Archived</TabsTrigger>
-                      </TabsList>
-                    </div>
-                  </Tabs>
-                </div>
-
-                {isLoading ? (
-                  <div className="grid gap-3">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="h-24 bg-muted/50 rounded-lg animate-pulse" />
-                    ))}
-                  </div>
-                ) : filteredProjects.length > 0 ? (
-                  <div className="grid gap-3">
-                    {filteredProjects.map((project) => (
-                      <SoftCard key={project.id} variant="hover" className="p-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className={`${getStatusColor(project.status)} border text-xs`}>
-                                {project.status}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {new Date(project.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <h4 className="font-semibold text-sm">{project.title}</h4>
-                            <p className="text-xs text-muted-foreground line-clamp-1">{project.description}</p>
-                            
-                            <div className="pt-1">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-medium text-muted-foreground">Progress</span>
-                                <span className="text-xs font-semibold">{project.progress}%</span>
-                              </div>
-                              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                                <div className="h-full bg-foreground" style={{ width: `${project.progress}%` }} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 w-full sm:w-auto">
-                            {project.status === 'abandoned' ? (
-                              <Button 
-                                variant="default" 
-                                size="sm"
-                                className="rounded-lg transition-transform duration-150 hover:scale-[1.02]"
-                                onClick={(e) => handleReviveProject(project.id, e)}
-                                data-testid={`revive-project-${project.id}`}
-                              >
-                                <RefreshCw className="w-4 h-4 mr-1" />
-                                Revive
-                              </Button>
-                            ) : (
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="rounded-lg transition-transform duration-150 hover:scale-105"
-                                onClick={() => navigate(`/project/${project.id}`)}
-                                data-testid={`view-project-${project.id}`}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            )}
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="rounded-lg text-destructive hover:bg-destructive/10 transition-transform duration-150 hover:scale-105"
-                              onClick={() => handleDeleteProject(project.id)}
-                              data-testid={`delete-project-${project.id}`}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="projectType" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Domain</Label>
+                          <HelpTooltip content="Choose the type of project you want to build." />
                         </div>
-                      </SoftCard>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Zap className="w-8 h-8 text-muted-foreground" />
+                        <Select 
+                          value={formData.projectType} 
+                          onValueChange={(value) => setFormData({...formData, projectType: value})}
+                        >
+                          <SelectTrigger id="projectType" className="rounded-xl border-primary/10 bg-background/50 h-12">
+                            <SelectValue placeholder="Select type..." />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="robotics">Robotics & Mechatronics</SelectItem>
+                            <SelectItem value="iot">Internet of Things</SelectItem>
+                            <SelectItem value="electronics">Analog/Digital Electronics</SelectItem>
+                            <SelectItem value="automation">Smart Automation</SelectItem>
+                            <SelectItem value="sensors">Data & Monitoring</SelectItem>
+                            <SelectItem value="web-development">Web Development</SelectItem>
+                            <SelectItem value="mobile-apps">Mobile Applications</SelectItem>
+                            <SelectItem value="desktop-software">Desktop Software</SelectItem>
+                            <SelectItem value="game-development">Game Development</SelectItem>
+                            <SelectItem value="ai-ml">AI & Machine Learning</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="skillLevel" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Expertise</Label>
+                          <HelpTooltip content="Your current skill level." />
+                        </div>
+                        <Select 
+                          value={formData.skillLevel} 
+                          onValueChange={(value) => setFormData({...formData, skillLevel: value})}
+                        >
+                          <SelectTrigger id="skillLevel" className="rounded-xl border-primary/10 bg-background/50 h-12">
+                            <SelectValue placeholder="Select level..." />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="beginner">Beginner (Curious)</SelectItem>
+                            <SelectItem value="intermediate">Intermediate (Maker)</SelectItem>
+                            <SelectItem value="advanced">Advanced (Engineer)</SelectItem>
+                            <SelectItem value="expert">Expert (Innovator)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="interests" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">The Vision</Label>
+                          <HelpTooltip content="What's your goal?" />
+                        </div>
+                        <Textarea
+                          id="interests"
+                          placeholder="What problem are we solving? e.g. An automated plant watering system for my dorm room..."
+                          value={formData.interests}
+                          onChange={(e) => setFormData({...formData, interests: e.target.value})}
+                          className="min-h-[120px] rounded-xl border-primary/10 bg-background/50 resize-none p-4"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="budget" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Budget</Label>
+                          <Input
+                            id="budget"
+                            placeholder="e.g. $50"
+                            value={formData.budget}
+                            onChange={(e) => setFormData({...formData, budget: e.target.value})}
+                            className="rounded-xl border-primary/10 bg-background/50 h-12"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="duration" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Timeline</Label>
+                          <Input
+                            id="duration"
+                            placeholder="e.g. 1 week"
+                            value={formData.duration}
+                            onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                            className="rounded-xl border-primary/10 bg-background/50 h-12"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <h4 className="font-semibold mb-2">No Projects Found</h4>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
-                      You haven't created any projects in this category yet.
-                    </p>
+
                     <Button 
-                      onClick={() => navigate('/generator')}
-                      className="rounded-lg transition-transform duration-150 hover:scale-[1.02]"
+                      onClick={handleGenerate}
+                      disabled={isGenerating}
+                      className="w-full bg-gradient-primary text-white shadow-glow hover:shadow-glow-lg transition-all duration-300 rounded-xl h-14 text-lg font-bold"
+                      ripple={true}
+                      data-tutorial="generate-button"
                     >
-                      Create Your First Project
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                          Synthesizing...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="mr-2 h-6 w-6" />
+                          Generate Architecture
+                        </>
+                      )}
                     </Button>
-                  </div>
-                )}
-              </SoftCard>
-            </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-            {/* Right Panel: Calendar + Upcoming Events + Charts - Phase E: Increased spacing */}
-            <div className="space-y-6">
-              {/* Calendar Widget */}
-              <CalendarWidget
-                activities={calendarActivities}
-                selectedDate={selectedDate}
-                onDateSelect={setSelectedDate}
-              />
+              <div className="lg:col-span-7">
+                <div ref={resultCardRef.ref} className="pb-8 space-y-6">
+                  {/* Neural Network Visualizer - Shows when AI is thinking */}
+                  <NeuralNetworkVisualizer 
+                    isActive={isGenerating}
+                    message="AI Generating Project..."
+                    className="mb-6"
+                  />
+                  
+                  {/* Traditional Project Display */}
+                  <CapsuleAnimation isOpen={isSynthesized && generatedProject !== null}>
+                    {generatedProject && (
+                      <HolographicCard intensity="low" enableTilt={true}>
+                        <Card className="glass-effect border-primary/10 shadow-md overflow-hidden">
+                          <div className="bg-gradient-to-r from-primary/10 to-transparent p-8 border-b border-primary/10">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-2">
+                                <Badge className="bg-primary/20 text-primary border-primary/20 hover:bg-primary/30 rounded-lg px-3 mb-2">
+                                  {projectTypeDisplay}
+                                </Badge>
+                                <h2 className="text-3xl font-black text-gradient leading-tight">
+                                  {generatedProject.title}
+                                </h2>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => setIsExpanded(!isExpanded)}
+                                  variant="outline"
+                                  size="icon"
+                                  className="rounded-xl border-primary/20"
+                                >
+                                  {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                </Button>
+                                <Button
+                                  onClick={handleSaveProject}
+                                  disabled={isSaving}
+                                  size="lg"
+                                  className="bg-primary text-white rounded-xl h-12 px-6 shadow-sm hover:shadow-md transition-all"
+                                  data-tutorial="save-button"
+                                >
+                                  {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 mr-2" />}
+                                  {isSaving ? 'Saving...' : 'Save Lab'}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
 
-              {/* Upcoming Events */}
-              <SoftCard className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Upcoming</h3>
-                {/* Priority 5: Consistent spacing (14px / space-y-3.5) */}
-                <div className="space-y-3.5">
-                  {upcomingEvents.map((event, idx) => (
-                    <EventPreviewCard
-                      key={idx}
-                      type={event.type}
-                      title={event.title}
-                      timeRange={event.timeRange}
-                      countdown={event.countdown}
-                      icon={event.icon}
-                    />
-                  ))}
+                        {isExpanded && (
+                          <CardContent className="p-8 space-y-10">
+                            <div className="space-y-4">
+                              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-l-2 border-primary pl-3">Executive Summary</h4>
+                              <p className="text-lg leading-relaxed text-foreground/80">
+                                {generatedProject.description}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                              <div className="space-y-1.5">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Difficulty</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="bg-sky-500/10 text-sky-500 border-sky-500/20 px-2.5 py-1 text-sm font-bold uppercase">
+                                    {generatedProject.difficulty}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Timeline</span>
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-primary" />
+                                  <span className="text-sm font-bold">{generatedProject.estimatedTime}</span>
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Budget</span>
+                                <div className="flex items-center gap-2">
+                                  <Zap className="w-4 h-4 text-amber-500" />
+                                  <span className="text-sm font-bold">{generatedProject.estimatedCost}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                              <div className="space-y-4 mb-6">
+                                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-l-2 border-primary pl-3">BOM (Bill of Materials)</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {generatedProject.components.map((component: string, index: number) => (
+                                    <Badge 
+                                      key={index}
+                                      variant="outline"
+                                      className="rounded-lg py-1.5 px-3 border-primary/10 bg-primary/5 text-primary-foreground/90 font-medium"
+                                    >
+                                      {component}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="space-y-4 mb-6">
+                                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-l-2 border-secondary pl-3">Learning Outcomes</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {generatedProject.skills.map((skill: string, index: number) => (
+                                    <Badge 
+                                      key={index}
+                                      className="rounded-lg py-1.5 px-3 bg-secondary/10 text-secondary hover:bg-secondary/20 border-none font-medium"
+                                    >
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-6 pt-4">
+                              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground border-l-2 border-accent pl-3">Implementation Roadmap</h4>
+                              <div className="space-y-4">
+                                {generatedProject.steps.map((step: string, index: number) => (
+                                  <div key={index} className="flex gap-4 group">
+                                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-muted group-hover:bg-primary/20 group-hover:text-primary transition-colors flex items-center justify-center text-xs font-black">
+                                      {String(index + 1).padStart(2, '0')}
+                                    </span>
+                                    <div className="space-y-1">
+                                      <p className="text-sm leading-relaxed text-foreground/90 group-hover:text-foreground transition-colors">
+                                        {step}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Generate with Veronica Button */}
+                            <div className="pt-8 border-t border-primary/10">
+                              <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-purple-500/10 rounded-2xl p-6 border border-purple-500/20">
+                                <div className="flex items-start gap-4">
+                                  <div className="flex-shrink-0 p-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600">
+                                    <Sparkles className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                      Ready to Build This Project?
+                                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none">
+                                        AI Powered
+                                      </Badge>
+                                    </h3>
+                                    <p className="text-sm text-white/70 mb-4">
+                                      Let Veronica AI generate complete, production-ready code for your project. Get a full-stack application with proper structure, best practices, and documentation.
+                                    </p>
+                                    <Button
+                                      onClick={handleGenerateWithVeronica}
+                                      disabled={isSaving}
+                                      size="lg"
+                                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl h-12 px-8 shadow-lg hover:shadow-xl transition-all"
+                                    >
+                                      {isSaving ? (
+                                        <>
+                                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                          Preparing Workspace...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Code className="h-5 w-5 mr-2" />
+                                          Generate with Veronica AI
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Competition Submission Button */}
+                            {isCompetitionMode && (
+                              <div className="pt-6">
+                                <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-2xl p-6 border-2 border-blue-500/30">
+                                  <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0 p-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600">
+                                      <Trophy className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+                                        Submit to Competition
+                                        <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30">
+                                          +10 XP
+                                        </Badge>
+                                      </h3>
+                                      <p className="text-sm text-muted-foreground mb-4">
+                                        Share your idea with your team and earn points! Your submission will appear on the leaderboard and peers can upvote it.
+                                      </p>
+                                      <Button
+                                        onClick={() => setShowSubmissionModal(true)}
+                                        size="lg"
+                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl h-12 px-8 shadow-lg hover:shadow-xl transition-all"
+                                        data-testid="submit-to-competition-button"
+                                      >
+                                        <Trophy className="h-5 w-5 mr-2" />
+                                        Submit to Competition
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        )}
+                      </Card>
+                    </HolographicCard>
+                    )}
+                  </CapsuleAnimation>
                 </div>
-              </SoftCard>
-
-              {/* Stats Charts - Priority 5: Consistent spacing */}
-              <Card className="border-border">
-                <CardHeader className="bg-soft-bg pb-2">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    Project Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <ProjectStatusChart stats={stats} />
-                </CardContent>
-              </Card>
-
-              <Card className="border-border">
-                <CardHeader className="bg-soft-bg pb-2">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Complexity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <ProjectDifficultyChart projects={projects} />
-                </CardContent>
-              </Card>
+              </div>
             </div>
           </div>
-
-          {/* WebGL Debug Info - Development Only */}
-          {import.meta.env.DEV && (
-            <div className="mt-8">
-              <WebGLDebug />
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Competition Submission Modal */}
+      {isCompetitionMode && generatedProject && (
+        <CompetitionSubmissionModal
+          open={showSubmissionModal}
+          onClose={() => setShowSubmissionModal(false)}
+          onSuccess={handleSubmissionSuccess}
+          project={{
+            title: generatedProject.title,
+            description: generatedProject.description,
+            projectType: formData.projectType,
+          }}
+        />
+      )}
+
+      {/* Success Animations */}
+      <SuccessAnimation
+        show={showSuccessAnimation}
+        type={successAnimationType}
+        points={successPoints}
+        newLevel={successNewLevel}
+        onComplete={handleAnimationComplete}
+      />
+
+      {/* Login Modal for Guest Users */}
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        feature="save projects"
+        message="Sign in to save your projects and access them anytime from your library."
+      />
     </Layout>
   );
 };
 
-
-export default Dashboard;
+export default Generator;
