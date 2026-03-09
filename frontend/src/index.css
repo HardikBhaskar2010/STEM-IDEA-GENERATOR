@@ -261,12 +261,12 @@
     animation: slide-up 0.4s ease-out;
   }
   
-  /* Floating container positioning */
+  /* Floating container positioning - centered */
   .floating-centered {
     @apply bottom-6 left-1/2 -translate-x-1/2;
   }
   
-  /* Responsive floating positioning */
+  /* Responsive floating positioning for centered island */
   @screen sm {
     .floating-centered-sm {
       @apply bottom-8 left-1/2 -translate-x-1/2;
@@ -285,9 +285,57 @@
     }
   }
   
+  /* Floating island offset positioning - with anti-overlap spacing */
+  .floating-offset-right-sm {
+    @apply bottom-6 left-1/2 translate-x-[240px];
+  }
+  
+  @screen md {
+    .floating-offset-right-md {
+      @apply bottom-8 left-1/2 translate-x-[340px];
+    }
+  }
+  
+  @screen lg {
+    .floating-offset-right-lg {
+      @apply bottom-10 left-1/2 translate-x-[420px];
+    }
+  }
+  
+  /* Floating island offset positioning - with optimal spacing to prevent overlap */
+  .floating-offset-right-optimal {
+    @apply bottom-6 left-1/2;
+    @apply translate-x-[260px];
+  }
+  
+  @screen md {
+    .floating-offset-right-optimal {
+      @apply translate-x-[380px];
+    }
+  }
+  
+  @screen lg {
+    .floating-offset-right-optimal {
+      @apply translate-x-[420px];
+    }
+  }
+  
   /* Theme transition helper */
   .theme-transition {
     transition: var(--transition-theme);
+  }
+  
+  /* Floating island gap spacing */
+  .floating-gap-sm {
+    gap: 0.75rem;
+  }
+  
+  .floating-gap-md {
+    gap: 1rem;
+  }
+  
+  .floating-gap-lg {
+    gap: 1.5rem;
   }
 }
 /* Chat Markdown Styling */
