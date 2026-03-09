@@ -26,11 +26,11 @@ export const SoftCard: React.FC<SoftCardProps> = ({
 }) => {
   const baseStyles = 'rounded-xl border transition-all duration-150';
   
-  // Phase A: Enhanced layered shadow for depth
+  // Priority 1: Production-grade layered shadow system for depth & elevation
   const variantStyles = {
     default: 'bg-card border-border shadow-[0px_1px_2px_rgba(0,0,0,0.05),0px_8px_24px_rgba(0,0,0,0.08)]',
     accent: 'bg-card border-border shadow-[0px_1px_2px_rgba(0,0,0,0.05),0px_8px_24px_rgba(0,0,0,0.08)]',
-    hover: 'bg-card border-border shadow-[0px_1px_2px_rgba(0,0,0,0.05),0px_8px_24px_rgba(0,0,0,0.08)] hover:shadow-[0px_2px_4px_rgba(0,0,0,0.06),0px_12px_32px_rgba(0,0,0,0.1)] hover:-translate-y-0.5'
+    hover: 'bg-card border-border shadow-[0px_1px_2px_rgba(0,0,0,0.05),0px_8px_24px_rgba(0,0,0,0.08)] hover:shadow-[0px_2px_4px_rgba(0,0,0,0.06),0px_14px_36px_rgba(0,0,0,0.12)] hover:-translate-y-1'
   };
 
   const style = accentColor && variant === 'accent' ? {
@@ -49,3 +49,5 @@ export const SoftCard: React.FC<SoftCardProps> = ({
 };
 
 export default SoftCard;
+
+
