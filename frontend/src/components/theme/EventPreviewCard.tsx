@@ -70,14 +70,18 @@ export const EventPreviewCard: React.FC<EventPreviewCardProps> = ({
       <div className="relative space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
-            <Icon className={cn('w-4 h-4 flex-shrink-0', colorClass)} />
+            {/* Phase F: Icon with hover scale */}
+            <Icon className={cn(
+              'w-4 h-4 flex-shrink-0 transition-transform duration-120 hover:scale-110', 
+              colorClass
+            )} />
             <h4 className="text-sm font-semibold text-foreground truncate">{title}</h4>
           </div>
           {onAction && (
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-6 w-6 -mr-1" 
+              className="h-6 w-6 -mr-1 transition-transform duration-150 hover:scale-105" 
               onClick={onAction}
             >
               <MoreVertical className="w-4 h-4" />
