@@ -208,6 +208,49 @@
   }
 }
 
+/* Theme Transition Variables */
+@layer base {
+  :root {
+    --transition-theme: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .dark {
+    --transition-theme: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* Glass-Morphism Utilities */
+@layer components {
+  /* Light mode glass effect */
+  .glass-light {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg;
+  }
+  
+  /* Dark mode glass effect */
+  .glass-dark {
+    @apply bg-black/10 backdrop-blur-lg border border-black/10 shadow-lg;
+  }
+  
+  /* Responsive glass that adapts to background */
+  .glass-adaptive {
+    @apply backdrop-blur-lg transition-all duration-300;
+  }
+  
+  /* Glass hover states */
+  .glass-light-hover {
+    @apply glass-light hover:bg-white/15 hover:border-white/30;
+  }
+  
+  .glass-dark-hover {
+    @apply glass-dark hover:bg-black/15 hover:border-black/20;
+  }
+  
+  /* Floating container base */
+  .floating-container-base {
+    @apply fixed z-50 rounded-full backdrop-blur-lg transition-all duration-300 w-fit;
+  }
+}
+
 /* Utility Classes */
 @layer utilities {
   .animate-fade-in {
@@ -216,6 +259,35 @@
   
   .animate-slide-up {
     animation: slide-up 0.4s ease-out;
+  }
+  
+  /* Floating container positioning */
+  .floating-centered {
+    @apply bottom-6 left-1/2 -translate-x-1/2;
+  }
+  
+  /* Responsive floating positioning */
+  @screen sm {
+    .floating-centered-sm {
+      @apply bottom-8 left-1/2 -translate-x-1/2;
+    }
+  }
+  
+  @screen md {
+    .floating-centered-md {
+      @apply bottom-8 left-1/2 -translate-x-1/2;
+    }
+  }
+  
+  @screen lg {
+    .floating-centered-lg {
+      @apply bottom-10 left-1/2 -translate-x-1/2;
+    }
+  }
+  
+  /* Theme transition helper */
+  .theme-transition {
+    transition: var(--transition-theme);
   }
 }
 /* Chat Markdown Styling */

@@ -9,19 +9,23 @@ import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+interface FloatingDockProps {
+  items: { title: string; icon: React.ReactNode; href: string }[];
+  desktopClassName?: string;
+  mobileClassName?: string;
+  iconColorClassName?: string;
+}
+
 export const FloatingDock = ({
   items,
   desktopClassName,
   mobileClassName,
-}: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
-  desktopClassName?: string;
-  mobileClassName?: string;
-}) => {
+  iconColorClassName = "text-neutral-500 dark:text-neutral-300",
+}: FloatingDockProps) => {
   return (
     <>
-      <FloatingDockDesktop items={items} className={desktopClassName} />
-      <FloatingDockMobile items={items} className={mobileClassName} />
+      <FloatingDockDesktop items={items} className={desktopClassName} iconColorClassName={iconColorClassName} />
+      <FloatingDockMobile items={items} className={mobileClassName} iconColorClassName={iconColorClassName} />
     </>
   );
 };
@@ -29,9 +33,11 @@ export const FloatingDock = ({
 const FloatingDockMobile = ({
   items,
   className,
+  iconColorClassName,
 }: {
   items: { title: string; icon: React.ReactNode; href: string }[];
   className?: string;
+  iconColorClassName?: string;
 }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -102,9 +108,11 @@ const FloatingDockMobile = ({
 const FloatingDockDesktop = ({
   items,
   className,
+  iconColorClassName,
 }: {
   items: { title: string; icon: React.ReactNode; href: string }[];
   className?: string;
+  iconColorClassName?: string;
 }) => {
   let mouseX = useMotionValue(Infinity);
   return (
@@ -117,7 +125,7 @@ const FloatingDockDesktop = ({
       )}
     >
       {items.map((item) => (
-        <IconContainer mouseX={mouseX} key={item.title} {...item} />
+        <IconContainer mouseX={mouseX} key={item.title} {...item} iconColorClassName={iconColorClassName} />
       ))}
     </motion.div>
   );
@@ -128,11 +136,13 @@ function IconContainer({
   title,
   icon,
   href,
+  iconColorClassName,
 }: {
   mouseX: any;
   title: string;
   icon: React.ReactNode;
   href: string;
+  iconColorClassName?: string;
 }) {
   let ref = useRef<HTMLDivElement>(null);
 
