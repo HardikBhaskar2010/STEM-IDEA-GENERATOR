@@ -95,17 +95,18 @@ export const EventCard: React.FC<EventCardProps> = ({
       
       <SoftCard 
         variant="hover" 
-        className="p-4 relative"
+        className="p-4 relative transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0px_2px_4px_rgba(0,0,0,0.06),0px_14px_36px_rgba(0,0,0,0.12)]"
         style={{
-          // Phase C: Accent border for visual anchoring
-          borderLeft: `3px solid ${config.borderColor}`
+          // Priority 2: Enhanced 4px accent border for stronger visual anchoring
+          borderLeft: `4px solid ${config.borderColor}`,
+          borderTopLeftRadius: '0.5rem'
         }}
       >
         <div className="flex items-start gap-3">
-          {/* Phase F: Icon with hover scale */}
+          {/* Priority 3: Icon with consistent micro-interaction */}
           <div className={cn(
             'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-            'transition-transform duration-150 hover:scale-110',
+            'transition-transform duration-120 hover:scale-110',
             config.bgClass
           )}>
             <Icon className={cn('w-5 h-5', colorClass)} />
@@ -123,3 +124,5 @@ export const EventCard: React.FC<EventCardProps> = ({
 };
 
 export default EventCard;
+
+
