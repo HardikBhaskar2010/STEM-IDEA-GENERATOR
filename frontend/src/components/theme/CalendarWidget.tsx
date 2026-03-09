@@ -71,10 +71,10 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
           {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h3>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="h-7 w-7 transition-transform duration-150 hover:scale-105">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="h-7 w-7 transition-transform duration-150 hover:scale-105">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -107,17 +107,22 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
               key={date}
               onClick={() => onDateSelect?.(date)}
               className={cn(
-                'aspect-square rounded-lg text-xs font-medium transition-all',
-                'hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring',
-                isSelected && 'bg-primary text-primary-foreground',
+                'aspect-square rounded-lg text-xs font-medium',
+                // Phase D & F: Enhanced hover and selection states
+                'transition-all duration-150',
+                'hover:bg-muted hover:scale-105 cursor-pointer',
+                'focus:outline-none focus:ring-2 focus:ring-ring',
+                // Phase D: Enhanced selected day emphasis
+                isSelected && 'bg-primary text-primary-foreground scale-105 shadow-md',
                 !isSelected && 'text-foreground'
               )}
               data-testid={`calendar-day-${date}`}
             >
-              <div className="flex flex-col items-center justify-center h-full gap-0.5">
+              <div className="flex flex-col items-center justify-center h-full gap-1">
                 <span>{dayNumber}</span>
+                {/* Phase D: Activity dots with proper spacing */}
                 {activity && activity.events.length > 0 && (
-                  <div className="flex gap-0.5">
+                  <div className="flex gap-1 flex-wrap justify-center">
                     {activity.events.slice(0, 3).map((event, idx) => (
                       <div
                         key={idx}
