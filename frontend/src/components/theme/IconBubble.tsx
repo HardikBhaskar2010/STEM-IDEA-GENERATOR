@@ -51,6 +51,8 @@ export const IconBubble: React.FC<IconBubbleProps> = ({
     <div
       className={cn(
         'flex items-center justify-center rounded-lg',
+        // Priority 3: Consistent micro-interaction
+        'transition-transform duration-120 hover:scale-110',
         sizeMap[size],
         colorBgMap[color],
         className
@@ -62,3 +64,5 @@ export const IconBubble: React.FC<IconBubbleProps> = ({
 };
 
 export default IconBubble;
+
+
