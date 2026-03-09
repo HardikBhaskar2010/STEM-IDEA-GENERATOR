@@ -72,7 +72,7 @@ const Generator: React.FC = () => {
     setIsGenerating(true)
 
     try {
-      const res = await fetch(`${API}/api/generate-project`, {
+      const res = await fetch(`${API}/generate-project`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
