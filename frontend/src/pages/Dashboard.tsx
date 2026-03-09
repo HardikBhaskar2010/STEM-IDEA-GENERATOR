@@ -23,7 +23,7 @@ import { generateMockEvents, generateMockCalendarActivities } from '@/types/even
 import type { EventType } from '@/components/theme';
 import { WebGLDebug } from '@/components/WebGLDebug';
 
-// NOTE: This file was converted from escaped quotes - all \" should be regular "
+// NOTE: This file was converted from escaped quotes - all " should be regular "
 
 
 // Phase G: Helper function to group events by date
@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
     if (updated) {
       toast({
         title: 'Project revived',
-        description: `Project status updated to \"${updated.status}\"`,
+        description: `Project status updated to "${updated.status}"`,
       });
       await loadProjects();
     } else {
@@ -208,89 +208,89 @@ const Dashboard: React.FC = () => {
         {/* Phase E: Increased container spacing */}
         <div className="container mx-auto max-w-7xl">
           {/* Header Section - Phase E: Increased margin */}
-          <div className=\"flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10\">
-            <div className=\"space-y-2\">
-              <div className=\"flex items-center gap-2 text-muted-foreground\">
-                <TrendingUp className=\"w-4 h-4\" />
-                <span className=\"text-xs font-semibold uppercase tracking-wider\">Dashboard</span>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <TrendingUp className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Dashboard</span>
               </div>
-              <h1 className=\"text-3xl md:text-4xl font-bold tracking-tight\">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
                 Activity Feed
               </h1>
-              <p className=\"text-muted-foreground text-sm max-w-lg\">
+              <p className="text-muted-foreground text-sm max-w-lg">
                 Track your projects, experiments, and progress all in one place.
               </p>
             </div>
             
             <Button 
-              size=\"lg\"
+              size="lg"
               onClick={() => navigate('/generator')}
-              className=\"rounded-lg shadow-sm hover:shadow-md transition-all duration-150 hover:scale-[1.02]\"
-              data-testid=\"new-project-button\"
+              className="rounded-lg shadow-sm hover:shadow-md transition-all duration-150 hover:scale-[1.02]"
+              data-testid="new-project-button"
             >
-              <Plus className=\"w-5 h-5 mr-2\" />
+              <Plus className="w-5 h-5 mr-2" />
               New Project
             </Button>
           </div>
 
           {/* Stats Grid - Phase E: Increased gap and margin */}
-          <div className=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10\">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <ProjectStatsCard 
-              title=\"Total Projects\" 
+              title="Total Projects" 
               value={stats.total} 
               icon={Zap}
-              colorClass=\"text-foreground\"
+              colorClass="text-foreground"
               delay={0}
             />
             <ProjectStatsCard 
-              title=\"Completion\" 
+              title="Completion" 
               value={Math.round((stats.completed / (stats.total || 1)) * 100)} 
               icon={CheckCircle}
-              colorClass=\"text-[hsl(var(--accent-green))]\"
+              colorClass="text-[hsl(var(--accent-green))]"
               delay={100}
             />
             <ProjectStatsCard 
-              title=\"In Progress\" 
+              title="In Progress" 
               value={stats.inProgress} 
               icon={Clock}
-              colorClass=\"text-[hsl(var(--accent-blue))]\"
+              colorClass="text-[hsl(var(--accent-blue))]"
               delay={200}
             />
             <ProjectStatsCard 
-              title=\"Planning\" 
+              title="Planning" 
               value={stats.planning} 
               icon={Lightbulb}
-              colorClass=\"text-[hsl(var(--accent-orange))]\"
+              colorClass="text-[hsl(var(--accent-orange))]"
               delay={300}
             />
           </div>
 
           {/* Main Content Grid: Activity Timeline + Right Panel - Phase E: Increased gap */}
-          <div className=\"grid lg:grid-cols-3 gap-8\">
+          <div className="grid lg:grid-cols-3 gap-8">
             {/* Left: Activity Timeline + Charts - Phase E: Increased spacing */}
-            <div className=\"lg:col-span-2 space-y-8\">
+            <div className="lg:col-span-2 space-y-8">
               {/* Recent Activity Timeline - Phase G: Grouped by date */}
-              <SoftCard className=\"p-6\">
-                <div className=\"flex items-center justify-between mb-6\">
+              <SoftCard className="p-6">
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className=\"text-lg font-semibold flex items-center gap-2\">
-                      <Activity className=\"w-5 h-5\" />
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                      <Activity className="w-5 h-5" />
                       Recent Activity
                     </h2>
-                    <p className=\"text-sm text-muted-foreground mt-1\">Your latest actions and updates</p>
+                    <p className="text-sm text-muted-foreground mt-1">Your latest actions and updates</p>
                   </div>
                 </div>
                 
                 {/* Phase G: Activity feed grouped by date */}
-                <div className=\"space-y-6\">
+                <div className="space-y-6">
                   {Object.entries(groupedEvents).map(([dateLabel, events]) => (
                     <div key={dateLabel}>
                       {/* Date header */}
-                      <h3 className=\"text-xs uppercase font-semibold text-muted-foreground/70 mb-3 tracking-wider\">
+                      <h3 className="text-xs uppercase font-semibold text-muted-foreground/70 mb-3 tracking-wider">
                         {dateLabel}
                       </h3>
                       {/* Phase E: Events with 12px spacing */}
-                      <div className=\"space-y-3\">
+                      <div className="space-y-3">
                         {events.map((event) => {
                           const Icon = eventIconMap[event.type];
                           const timeAgo = new Date(event.timestamp).toLocaleString('en-US', {
@@ -317,32 +317,32 @@ const Dashboard: React.FC = () => {
               </SoftCard>
 
               {/* Charts Section - Phase E: Increased gap */}
-              <div className=\"grid md:grid-cols-2 gap-6\">
+              <div className="grid md:grid-cols-2 gap-6">
                 {/* Projects Over Time */}
-                <Card className=\"border-border\" data-testid=\"projects-over-time-card\">
-                  <CardHeader className=\"bg-soft-bg pb-4\">
-                    <CardTitle className=\"text-base font-semibold flex items-center gap-2\">
-                      <TrendingUp className=\"w-4 h-4\" />
+                <Card className="border-border" data-testid="projects-over-time-card">
+                  <CardHeader className="bg-soft-bg pb-4">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
                       Projects Over Time
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className=\"pt-6\">
-                    <div className=\"h-[200px]\">
-                      <ProjectsOverTimeChart type=\"area\" />
+                  <CardContent className="pt-6">
+                    <div className="h-[200px]">
+                      <ProjectsOverTimeChart type="area" />
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Activity Bar Chart */}
-                <Card className=\"border-border\" data-testid=\"activity-chart-card\">
-                  <CardHeader className=\"bg-soft-bg pb-4\">
-                    <CardTitle className=\"text-base font-semibold flex items-center gap-2\">
-                      <BarChart3 className=\"w-4 h-4\" />
+                <Card className="border-border" data-testid="activity-chart-card">
+                  <CardHeader className="bg-soft-bg pb-4">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
                       Daily Activity
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className=\"pt-6\">
-                    <div className=\"h-[200px]\">
+                  <CardContent className="pt-6">
+                    <div className="h-[200px]">
                       <ActivityBarChart data={dailyActivityData} />
                     </div>
                   </CardContent>
@@ -350,90 +350,90 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* Projects Section */}
-              <SoftCard className=\"p-6\">
-                <div className=\"flex items-center justify-between mb-6\">
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className=\"w-full\">
-                    <div className=\"flex items-center justify-between flex-wrap gap-4\">
-                      <h3 className=\"text-lg font-semibold flex items-center gap-2\">
-                        <BookOpen className=\"w-5 h-5\" />
+              <SoftCard className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <BookOpen className="w-5 h-5" />
                         Your Projects
                       </h3>
-                      <TabsList className=\"bg-muted border border-border rounded-lg p-1\">
-                        <TabsTrigger value=\"all\" className=\"rounded-md px-3 py-1.5 text-xs font-medium\">All</TabsTrigger>
-                        <TabsTrigger value=\"planning\" className=\"rounded-md px-3 py-1.5 text-xs font-medium\">Planning</TabsTrigger>
-                        <TabsTrigger value=\"in-progress\" className=\"rounded-md px-3 py-1.5 text-xs font-medium\">Active</TabsTrigger>
-                        <TabsTrigger value=\"completed\" className=\"rounded-md px-3 py-1.5 text-xs font-medium\">Done</TabsTrigger>
-                        <TabsTrigger value=\"abandoned\" className=\"rounded-md px-3 py-1.5 text-xs font-medium\">Archived</TabsTrigger>
+                      <TabsList className="bg-muted border border-border rounded-lg p-1">
+                        <TabsTrigger value="all" className="rounded-md px-3 py-1.5 text-xs font-medium">All</TabsTrigger>
+                        <TabsTrigger value="planning" className="rounded-md px-3 py-1.5 text-xs font-medium">Planning</TabsTrigger>
+                        <TabsTrigger value="in-progress" className="rounded-md px-3 py-1.5 text-xs font-medium">Active</TabsTrigger>
+                        <TabsTrigger value="completed" className="rounded-md px-3 py-1.5 text-xs font-medium">Done</TabsTrigger>
+                        <TabsTrigger value="abandoned" className="rounded-md px-3 py-1.5 text-xs font-medium">Archived</TabsTrigger>
                       </TabsList>
                     </div>
                   </Tabs>
                 </div>
 
                 {isLoading ? (
-                  <div className=\"grid gap-3\">
+                  <div className="grid gap-3">
                     {[1, 2, 3].map(i => (
-                      <div key={i} className=\"h-24 bg-muted/50 rounded-lg animate-pulse\" />
+                      <div key={i} className="h-24 bg-muted/50 rounded-lg animate-pulse" />
                     ))}
                   </div>
                 ) : filteredProjects.length > 0 ? (
-                  <div className=\"grid gap-3\">
+                  <div className="grid gap-3">
                     {filteredProjects.map((project) => (
-                      <SoftCard key={project.id} variant=\"hover\" className=\"p-4\">
-                        <div className=\"flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4\">
-                          <div className=\"flex-1 space-y-2\">
-                            <div className=\"flex items-center gap-2\">
-                              <Badge variant=\"outline\" className={`${getStatusColor(project.status)} border text-xs`}>
+                      <SoftCard key={project.id} variant="hover" className="p-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={`${getStatusColor(project.status)} border text-xs`}>
                                 {project.status}
                               </Badge>
-                              <span className=\"text-xs text-muted-foreground flex items-center gap-1\">
-                                <Clock className=\"w-3 h-3\" />
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
                                 {new Date(project.created_at).toLocaleDateString()}
                               </span>
                             </div>
-                            <h4 className=\"font-semibold text-sm\">{project.title}</h4>
-                            <p className=\"text-xs text-muted-foreground line-clamp-1\">{project.description}</p>
+                            <h4 className="font-semibold text-sm">{project.title}</h4>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{project.description}</p>
                             
-                            <div className=\"pt-1\">
-                              <div className=\"flex justify-between items-center mb-1\">
-                                <span className=\"text-xs font-medium text-muted-foreground\">Progress</span>
-                                <span className=\"text-xs font-semibold\">{project.progress}%</span>
+                            <div className="pt-1">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-medium text-muted-foreground">Progress</span>
+                                <span className="text-xs font-semibold">{project.progress}%</span>
                               </div>
-                              <div className=\"w-full bg-muted rounded-full h-1.5 overflow-hidden\">
-                                <div className=\"h-full bg-foreground\" style={{ width: `${project.progress}%` }} />
+                              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                <div className="h-full bg-foreground" style={{ width: `${project.progress}%` }} />
                               </div>
                             </div>
                           </div>
-                          <div className=\"flex items-center gap-2 w-full sm:w-auto\">
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
                             {project.status === 'abandoned' ? (
                               <Button 
-                                variant=\"default\" 
-                                size=\"sm\"
-                                className=\"rounded-lg transition-transform duration-150 hover:scale-[1.02]\"
+                                variant="default" 
+                                size="sm"
+                                className="rounded-lg transition-transform duration-150 hover:scale-[1.02]"
                                 onClick={(e) => handleReviveProject(project.id, e)}
                                 data-testid={`revive-project-${project.id}`}
                               >
-                                <RefreshCw className=\"w-4 h-4 mr-1\" />
+                                <RefreshCw className="w-4 h-4 mr-1" />
                                 Revive
                               </Button>
                             ) : (
                               <Button 
-                                variant=\"ghost\" 
-                                size=\"icon\"
-                                className=\"rounded-lg transition-transform duration-150 hover:scale-105\"
+                                variant="ghost" 
+                                size="icon"
+                                className="rounded-lg transition-transform duration-150 hover:scale-105"
                                 onClick={() => navigate(`/project/${project.id}`)}
                                 data-testid={`view-project-${project.id}`}
                               >
-                                <Eye className=\"w-4 h-4\" />
+                                <Eye className="w-4 h-4" />
                               </Button>
                             )}
                             <Button 
-                              variant=\"ghost\" 
-                              size=\"icon\"
-                              className=\"rounded-lg text-destructive hover:bg-destructive/10 transition-transform duration-150 hover:scale-105\"
+                              variant="ghost" 
+                              size="icon"
+                              className="rounded-lg text-destructive hover:bg-destructive/10 transition-transform duration-150 hover:scale-105"
                               onClick={() => handleDeleteProject(project.id)}
                               data-testid={`delete-project-${project.id}`}
                             >
-                              <Trash2 className=\"w-4 h-4\" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -441,17 +441,17 @@ const Dashboard: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className=\"text-center py-12\">
-                    <div className=\"w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4\">
-                      <Zap className=\"w-8 h-8 text-muted-foreground\" />
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Zap className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h4 className=\"font-semibold mb-2\">No Projects Found</h4>
-                    <p className=\"text-sm text-muted-foreground mb-6 max-w-xs mx-auto\">
+                    <h4 className="font-semibold mb-2">No Projects Found</h4>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
                       You haven't created any projects in this category yet.
                     </p>
                     <Button 
                       onClick={() => navigate('/generator')}
-                      className=\"rounded-lg transition-transform duration-150 hover:scale-[1.02]\"
+                      className="rounded-lg transition-transform duration-150 hover:scale-[1.02]"
                     >
                       Create Your First Project
                     </Button>
@@ -461,7 +461,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Right Panel: Calendar + Upcoming Events + Charts - Phase E: Increased spacing */}
-            <div className=\"space-y-6\">
+            <div className="space-y-6">
               {/* Calendar Widget */}
               <CalendarWidget
                 activities={calendarActivities}
@@ -470,10 +470,10 @@ const Dashboard: React.FC = () => {
               />
 
               {/* Upcoming Events */}
-              <SoftCard className=\"p-6\">
-                <h3 className=\"text-lg font-semibold mb-4\">Upcoming</h3>
+              <SoftCard className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Upcoming</h3>
                 {/* Phase E: 12px spacing between cards */}
-                <div className=\"space-y-3\">
+                <div className="space-y-3">
                   {upcomingEvents.map((event, idx) => (
                     <EventPreviewCard
                       key={idx}
@@ -488,26 +488,26 @@ const Dashboard: React.FC = () => {
               </SoftCard>
 
               {/* Stats Charts - Phase E: Increased spacing */}
-              <Card className=\"border-border\">
-                <CardHeader className=\"bg-soft-bg pb-2\">
-                  <CardTitle className=\"text-sm font-semibold flex items-center gap-2\">
-                    <BarChart3 className=\"w-4 h-4\" />
+              <Card className="border-border">
+                <CardHeader className="bg-soft-bg pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4" />
                     Project Distribution
                   </CardTitle>
                 </CardHeader>
-                <CardContent className=\"pt-6\">
+                <CardContent className="pt-6">
                   <ProjectStatusChart stats={stats} />
                 </CardContent>
               </Card>
 
-              <Card className=\"border-border\">
-                <CardHeader className=\"bg-soft-bg pb-2\">
-                  <CardTitle className=\"text-sm font-semibold flex items-center gap-2\">
-                    <TrendingUp className=\"w-4 h-4\" />
+              <Card className="border-border">
+                <CardHeader className="bg-soft-bg pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
                     Complexity
                   </CardTitle>
                 </CardHeader>
-                <CardContent className=\"pt-6\">
+                <CardContent className="pt-6">
                   <ProjectDifficultyChart projects={projects} />
                 </CardContent>
               </Card>
@@ -516,7 +516,7 @@ const Dashboard: React.FC = () => {
 
           {/* WebGL Debug Info - Development Only */}
           {import.meta.env.DEV && (
-            <div className=\"mt-8\">
+            <div className="mt-8">
               <WebGLDebug />
             </div>
           )}
