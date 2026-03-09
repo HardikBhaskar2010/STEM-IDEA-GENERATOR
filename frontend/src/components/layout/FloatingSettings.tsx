@@ -7,6 +7,7 @@ import { FloatingDock } from "@/components/ui/floating-dock";
 import { AdaptiveFloatingContainer } from "@/components/layout/AdaptiveFloatingContainer";
 import { useTTS } from "@/contexts/TTSContext";
 import { useTheme } from "@/hooks/useTheme";
+import { useFloatingIslandPosition } from "@/hooks/useFloatingIslandPosition";
 import { useState } from "react";
 import { Palette, Volume2, Mic } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
@@ -22,8 +23,20 @@ import {
 export const FloatingSettings = () => {
   const { isTTSActive } = useTTS();
   const { isDark } = useTheme();
+  const { isSmallScreen } = useFloatingIslandPosition();
   const [showThemeDialog, setShowThemeDialog] = useState(false);
   const [showVoiceDialog, setShowVoiceDialog] = useState(false);
+
+  // Calculate responsive offset to prevent overlap with FloatingNav
+  // Mobile: 260px (smaller nav)
+  // Tablet: 320px (medium nav)
+  // Desktop: 420px (full nav)
+  const getResponsiveOffset = (): string => {
+    if (isSmallScreen) {
+      return 'translate-x-[260px]'; // Mobile
+    }
+    return 'translate-x-[380px]'; // Desktop and tablet with better spacing
+  };
 
   const items = [
     {
@@ -58,7 +71,7 @@ export const FloatingSettings = () => {
 
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 translate-x-[260px] md:translate-x-[340px] z-50">
+      <div className={`fixed bottom-6 left-1/2 ${getResponsiveOffset()} z-50`}>
         <AdaptiveFloatingContainer selector="body">
           <div className="relative">
             {/* Custom click handlers overlay */}

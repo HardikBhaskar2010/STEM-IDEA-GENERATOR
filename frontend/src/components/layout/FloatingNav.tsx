@@ -105,13 +105,15 @@ export const FloatingNav = () => {
     : "bg-white/80 backdrop-blur-xl border border-gray-200/30";
 
   return (
-    <AdaptiveFloatingContainer selector="body">
-      <FloatingDock
-        items={items}
-        desktopClassName={dockClassName}
-        mobileClassName=""
-      />
-    </AdaptiveFloatingContainer>
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+      <AdaptiveFloatingContainer selector="body">
+        <FloatingDock
+          items={items}
+          desktopClassName={dockClassName}
+          mobileClassName=""
+        />
+      </AdaptiveFloatingContainer>
+    </div>
   );
 };
 
