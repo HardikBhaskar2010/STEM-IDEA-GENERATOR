@@ -470,7 +470,7 @@ class OpenRouterConfig:
     def __init__(self, api_key_override: Optional[str] = None):
         self.api_key = self._load_api_key(api_key_override)
         self.base_url = "https://openrouter.ai/api/v1"
-        self.model = "upstage/solar-pro-3:free"  # Upstage Solar Pro 3 Free model - optimized for STEM education
+        self.model = "qwen/qwen3-vl-235b-a22b-thinking"  # Upstage Solar Pro 3 Free model - optimized for STEM education
         self.timeout = 60
         self.max_retries = 3
         
