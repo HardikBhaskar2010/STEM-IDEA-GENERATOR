@@ -1,11 +1,12 @@
 import { supabase } from '@/lib/supabase'
 import type { AuthError, User } from '@supabase/supabase-js'
 import { guestService, type GuestUser } from './guestService'
-import type { AuthProvider } from '@/contexts/AuthContext'
 
 /* =======================
    Types
 ======================= */
+
+export type AuthProvider = 'guest' | 'google' | 'email' | null
 
 export interface SignUpData {
   email: string
