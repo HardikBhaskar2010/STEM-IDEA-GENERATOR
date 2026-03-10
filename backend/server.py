@@ -589,9 +589,8 @@ except Exception as e:
     logger.warning(f"Sentry initialization skipped: {e}")
 
 # Initialize OpenTelemetry for distributed tracing
-from backend.infrastructure.tracing import init_tracing
-
 try:
+    from backend.infrastructure.tracing import init_tracing
     init_tracing(
         service_name="stem-project-generator",
         service_version="1.0.0",
