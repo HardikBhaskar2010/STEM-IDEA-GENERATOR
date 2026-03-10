@@ -228,7 +228,12 @@
   
   /* Dark mode glass effect */
   .glass-dark {
-    @apply bg-black/10 backdrop-blur-lg border border-black/10 shadow-lg;
+    @apply bg-black/40 backdrop-blur-lg border border-black/10 shadow-lg;
+  }
+
+  /* Extreme glass effect for maximum blur */
+  .glass-extreme {
+    @apply bg-background/80 backdrop-blur-[40px] border border-white/10 shadow-2xl;
   }
   
   /* Responsive glass that adapts to background */

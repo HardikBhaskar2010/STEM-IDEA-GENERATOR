@@ -23,6 +23,10 @@ import { generateMockEvents, generateMockCalendarActivities } from '@/types/even
 import type { EventType } from '@/components/theme';
 import { WebGLDebug } from '@/components/WebGLDebug';
 
+import { EnergyGrid } from '@/components/background/EnergyGrid';
+import { ParticleStream } from '@/components/background/ParticleStream';
+import { EnergyChart } from '@/components/command-bridge/EnergyChart';
+
 // NOTE: This file was converted from escaped quotes - all " should be regular "
 
 
@@ -204,6 +208,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
+      <EnergyGrid />
+      <ParticleStream />
       {/* Priority 7: Subtle UI depth layer for premium SaaS feel */}
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
         {/* Priority 5: Increased container spacing */}
@@ -323,34 +329,18 @@ const Dashboard: React.FC = () => {
               {/* Charts Section - Phase E: Increased gap */}
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Projects Over Time */}
-                <Card className="border-border" data-testid="projects-over-time-card">
-                  <CardHeader className="bg-soft-bg pb-4">
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      Projects Over Time
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="h-[200px]">
-                      <ProjectsOverTimeChart type="area" />
-                    </div>
-                  </CardContent>
-                </Card>
+                <EnergyChart title="Projects Over Time" className="border-border">
+                  <div className="h-[200px]">
+                    <ProjectsOverTimeChart type="area" />
+                  </div>
+                </EnergyChart>
 
                 {/* Activity Bar Chart */}
-                <Card className="border-border" data-testid="activity-chart-card">
-                  <CardHeader className="bg-soft-bg pb-4">
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4" />
-                      Daily Activity
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="h-[200px]">
-                      <ActivityBarChart data={dailyActivityData} />
-                    </div>
-                  </CardContent>
-                </Card>
+                <EnergyChart title="Daily Activity" className="border-border">
+                  <div className="h-[200px]">
+                    <ActivityBarChart data={dailyActivityData} />
+                  </div>
+                </EnergyChart>
               </div>
 
               {/* Projects Section */}
@@ -492,29 +482,13 @@ const Dashboard: React.FC = () => {
               </SoftCard>
 
               {/* Stats Charts - Priority 5: Consistent spacing */}
-              <Card className="border-border">
-                <CardHeader className="bg-soft-bg pb-2">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    Project Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <ProjectStatusChart stats={stats} />
-                </CardContent>
-              </Card>
+              <EnergyChart title="Project Distribution" className="border-border">
+                <ProjectStatusChart stats={stats} />
+              </EnergyChart>
 
-              <Card className="border-border">
-                <CardHeader className="bg-soft-bg pb-2">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Complexity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <ProjectDifficultyChart projects={projects} />
-                </CardContent>
-              </Card>
+              <EnergyChart title="Complexity" className="border-border">
+                <ProjectDifficultyChart projects={projects} />
+              </EnergyChart>
             </div>
           </div>
 

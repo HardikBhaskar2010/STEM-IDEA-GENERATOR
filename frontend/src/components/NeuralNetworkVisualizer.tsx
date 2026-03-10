@@ -5,6 +5,7 @@ interface NeuralNetworkVisualizerProps {
   isActive?: boolean;
   className?: string;
   message?: string;
+  thinkingOutput?: string;
 }
 
 interface Node {
@@ -25,12 +26,21 @@ interface Connection {
 export const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = ({
   isActive = false,
   className = '',
-  message = 'AI Processing...'
+  message = 'AI Processing...',
+  thinkingOutput = ''
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const thoughtScrollRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
+
+  // Auto-scroll thoughts
+  useEffect(() => {
+    if (thoughtScrollRef.current) {
+      thoughtScrollRef.current.scrollTop = thoughtScrollRef.current.scrollHeight;
+    }
+  }, [thinkingOutput]);
 
   // Initialize neural network structure
   useEffect(() => {
@@ -202,8 +212,20 @@ export const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = (
             className="w-full h-auto"
           />
           
+          {thinkingOutput && (
+            <div 
+              ref={thoughtScrollRef}
+              className="absolute inset-0 p-6 overflow-y-auto bg-background/70 backdrop-blur-[2px] z-10 scrollbar-thin scrollbar-thumb-primary/20"
+            >
+              <div className="text-sm font-mono text-cyan-400 whitespace-pre-wrap leading-relaxed opacity-90 drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]">
+                {thinkingOutput}
+                <span className="inline-block w-2 h-4 ml-1 bg-cyan-400 animate-pulse align-middle" />
+              </div>
+            </div>
+          )}
+          
           {/* Scanning line effect */}
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none z-20">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/10 to-transparent animate-scan" />
           </div>
         </div>
@@ -222,7 +244,7 @@ export const NeuralNetworkVisualizer: React.FC<NeuralNetworkVisualizerProps> = (
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Model:</span>
-            <span className="font-mono text-primary">upstage/solar-pro-3</span>
+            <span className="font-mono text-cyan-400">qwen/qwen3-vl-235b-a22b-thinking</span>
           </div>
         </div>
       </div>
