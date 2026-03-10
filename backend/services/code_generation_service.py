@@ -166,9 +166,9 @@ class VeronicaAIService(BaseService):
         # Multi-model configuration for different tasks
         self.models = {
             "code_generation": "arcee-ai/trinity-large-preview:free",  # Best for code generation
-            "idea_generation": "upstage/solar-pro-3:free",             # Best for ideas and planning
-            "project_analysis": "upstage/solar-pro-3:free",            # Good for understanding requirements
-            "documentation": "upstage/solar-pro-3:free",               # Good for writing docs
+            "idea_generation": "stepfun/step-3.5-flash:free",             # Best for ideas and planning
+            "project_analysis": "stepfun/step-3.5-flash:free",            # Good for understanding requirements
+            "documentation": "stepfun/step-3.5-flash:free",               # Good for writing docs
             "debugging": "arcee-ai/trinity-large-preview:free",        # Technical problem solving
         }
         

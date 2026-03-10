@@ -479,7 +479,7 @@ class OpenRouterConfig:
     def __init__(self, api_key_override: Optional[str] = None):
         self.api_key = self._load_api_key(api_key_override)
         self.base_url = "https://openrouter.ai/api/v1"
-        self.model = "qwen/qwen3-vl-235b-a22b-thinking"  # Upstage Solar Pro 3 Free model - optimized for STEM education
+        self.model = "stepfun/step-3.5-flash:free"  # Stepfun Step 3.5 Flash Free model - optimized for STEM education
         self.timeout = 60
         self.max_retries = 3
         
@@ -2108,7 +2108,7 @@ async def _execute_call_openrouter_with_logging(prompt: str, log_context: Dict[s
     structured_logger = log_context['logger']
     
     # Use Solar Pro 3 as default for idea generation if no model specified
-    selected_model = model or "upstage/solar-pro-3:free"
+    selected_model = model or "stepfun/step-3.5-flash:free"
     
     try:
         messages = [{"role": "user", "content": prompt}]
@@ -2223,7 +2223,7 @@ async def _execute_call_openrouter_basic(prompt: str, model: str = None, **kwarg
     )
 
     # Use Solar Pro 3 as default for idea generation if no model specified
-    selected_model = model or "upstage/solar-pro-3:free"
+    selected_model = model or "stepfun/step-3.5-flash:free"
 
     try:
         messages = [{"role": "user", "content": prompt}]
@@ -3043,7 +3043,7 @@ Return ONLY the JSON object, no markdown, no extra text."""
 
     try:
         # Use gemini-2.5-flash-free specifically for project idea generation as it's better at JSON
-        ai_text = await call_openrouter(prompt, model="google/gemini-2.5-flash:free")
+        ai_text = await call_openrouter(prompt, model="stepfun/step-3.5-flash:free")
         
         # Enhanced JSON parsing to handle various response formats
         json_data = None
@@ -3303,7 +3303,7 @@ Return ONLY the JSON object, no markdown, no extra text."""
                 "X-Title": "STEM Idea Generator"
             }
             body = {
-                "model": "google/gemini-2.5-flash:free",
+                "model": "stepfun/step-3.5-flash:free",
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": True,
                 "include_reasoning": False
