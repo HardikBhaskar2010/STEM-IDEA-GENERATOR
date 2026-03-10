@@ -11,7 +11,7 @@ import Layout from '@/components/layout/Layout';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { HelpTooltip } from '@/components/ui/enhanced-tooltip';
 import { toast } from '@/hooks/use-toast';
-import { generateProject, healthCheck, type ProjectParams } from '@/services/apiService';
+import { generateProject, generateProjectStream, healthCheck, type ProjectParams } from '@/services/apiService';
 import { projectService } from '@/services/projectService';
 import { useNavigate } from 'react-router-dom';
 import { CapsuleAnimation } from '@/components/ui/capsule-animation';
@@ -31,6 +31,7 @@ const Generator: React.FC = () => {
   const { isGuest } = useAuth();
   const { checkForNewAchievements } = useAchievements();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [thinkingOutput, setThinkingOutput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSynthesized, setIsSynthesized] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -130,10 +131,34 @@ const Generator: React.FC = () => {
 
     setIsGenerating(true);
     setIsSynthesized(false);
+    setThinkingOutput('');
     
     try {
-      // Use standard generation (streaming not implemented for project generation)
-      const project = await generateProject(formData);
+      // Use streaming generation to capture thought processes
+      let finalContent = '';
+      for await (const chunk of generateProjectStream(formData)) {
+        if (chunk.reasoning) {
+          setThinkingOutput(prev => prev + chunk.reasoning);
+        }
+        if (chunk.content) {
+          finalContent += chunk.content;
+        }
+      }
+      
+      // Attempt to parse final structured output as JSON
+      let project;
+      try {
+        // Find JSON block if it exists
+        const jsonMatch = finalContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
+                          finalContent.match(/({[\s\S]*})/);
+        const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : finalContent;
+        project = JSON.parse(jsonString);
+      } catch (parseError) {
+        // Fallback for missing/bad JSON format
+        console.warn('Could not parse generated content as JSON:', parseError);
+        console.log('Raw output:', finalContent);
+        throw new Error("Could not construct project file format.");
+      }
       
       setGeneratedProject(project);
       setIsSynthesized(true);
@@ -459,6 +484,7 @@ const Generator: React.FC = () => {
                   <NeuralNetworkVisualizer 
                     isActive={isGenerating}
                     message="AI Generating Project..."
+                    thinkingOutput={thinkingOutput}
                     className="mb-6"
                   />
                   

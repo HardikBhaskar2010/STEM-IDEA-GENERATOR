@@ -459,32 +459,29 @@ class UniversalChatService:
             List of session dictionaries
         """
         try:
-            query = """
-                SELECT 
-                    id, session_id, user_id, title, message_count,
-                    last_message_at, session_metadata, is_active,
-                    created_at, updated_at
-                FROM public.universal_chat_sessions
-                WHERE user_id = %s AND is_active = true
-                ORDER BY last_message_at DESC
-                LIMIT %s OFFSET %s
-            """
+            client = await get_db_client()
             
-            results = await self.db.fetch_all(query, (user_id, limit, offset))
+            result = client.table('universal_chat_sessions') \
+                .select('id, session_id, user_id, title, message_count, last_message_at, session_metadata, is_active, created_at, updated_at') \
+                .eq('user_id', user_id) \
+                .eq('is_active', True) \
+                .order('last_message_at', desc=True) \
+                .range(offset, offset + limit - 1) \
+                .execute()
             
             sessions = []
-            for row in results:
+            for row in result.data:
                 sessions.append({
                     'id': str(row['id']),
                     'session_id': row['session_id'],
                     'user_id': str(row['user_id']),
                     'title': row['title'],
                     'message_count': row['message_count'],
-                    'last_message_at': row['last_message_at'].isoformat() if row['last_message_at'] else None,
-                    'session_metadata': row['session_metadata'] or {},
+                    'last_message_at': row['last_message_at'],
+                    'session_metadata': row.get('session_metadata') or {},
                     'is_active': row['is_active'],
-                    'created_at': row['created_at'].isoformat(),
-                    'updated_at': row['updated_at'].isoformat()
+                    'created_at': row['created_at'],
+                    'updated_at': row['updated_at']
                 })
             
             logger.info(f"Retrieved {len(sessions)} sessions for user {user_id}")
@@ -518,26 +515,31 @@ class UniversalChatService:
             if not title:
                 title = "New Chat Session"
             
-            query = """
-                INSERT INTO public.universal_chat_sessions (
-                    session_id, user_id, title, message_count, is_active
-                ) VALUES (%s, %s, %s, 0, true)
-                RETURNING id, created_at
-            """
+            client = await get_db_client()
             
-            result = await self.db.fetch_one(query, (session_id, user_id, title))
+            result = client.table('universal_chat_sessions').insert({
+                'session_id': session_id, 
+                'user_id': user_id, 
+                'title': title, 
+                'message_count': 0, 
+                'is_active': True
+            }).execute()
             
-            logger.info(f"Created new chat session: {session_id} for user {user_id}")
-            
-            return {
-                'id': str(result['id']),
-                'session_id': session_id,
-                'user_id': user_id,
-                'title': title,
-                'message_count': 0,
-                'is_active': True,
-                'created_at': result['created_at'].isoformat()
-            }
+            if result.data and len(result.data) > 0:
+                row = result.data[0]
+                logger.info(f"Created new chat session: {session_id} for user {user_id}")
+                
+                return {
+                    'id': str(row['id']),
+                    'session_id': session_id,
+                    'user_id': user_id,
+                    'title': title,
+                    'message_count': 0,
+                    'is_active': True,
+                    'created_at': row['created_at']
+                }
+            else:
+                raise Exception("Failed to create session")
             
         except Exception as e:
             logger.error(f"Error creating chat session: {e}")
@@ -559,13 +561,12 @@ class UniversalChatService:
             True if successful
         """
         try:
-            query = """
-                UPDATE public.universal_chat_sessions
-                SET title = %s, updated_at = NOW()
-                WHERE session_id = %s
-            """
+            client = await get_db_client()
+            client.table('universal_chat_sessions').update({
+                'title': title,
+                'updated_at': datetime.now().isoformat()
+            }).eq('session_id', session_id).execute()
             
-            await self.db.execute(query, (title, session_id))
             logger.info(f"Updated session title: {session_id}")
             return True
             
@@ -589,20 +590,13 @@ class UniversalChatService:
             True if successful
         """
         try:
+            client = await get_db_client()
+            
             # Delete messages first (due to foreign key constraint)
-            delete_messages_query = """
-                DELETE FROM public.universal_chat_messages
-                WHERE user_id = %s AND session_id = %s
-            """
+            client.table('universal_chat_messages').delete().eq('user_id', user_id).eq('session_id', session_id).execute()
             
             # Delete session
-            delete_session_query = """
-                DELETE FROM public.universal_chat_sessions
-                WHERE user_id = %s AND session_id = %s
-            """
-            
-            await self.db.execute(delete_messages_query, (user_id, session_id))
-            await self.db.execute(delete_session_query, (user_id, session_id))
+            client.table('universal_chat_sessions').delete().eq('user_id', user_id).eq('session_id', session_id).execute()
             
             logger.info(f"Deleted chat session: {session_id} for user {user_id}")
             return True
@@ -629,15 +623,14 @@ class UniversalChatService:
             Dict with conversation context
         """
         try:
-            query = """
-                SELECT role, content, action_type, conversation_context, created_at
-                FROM public.universal_chat_messages
-                WHERE user_id = %s AND session_id = %s
-                ORDER BY created_at DESC
-                LIMIT %s
-            """
-            
-            results = await self.db.fetch_all(query, (user_id, session_id, limit))
+            client = await get_db_client()
+            result = client.table('universal_chat_messages') \
+                .select('role, content, action_type, conversation_context, created_at') \
+                .eq('user_id', user_id) \
+                .eq('session_id', session_id) \
+                .order('created_at', desc=True) \
+                .limit(limit) \
+                .execute()
             
             context = {
                 'session_id': session_id,
@@ -646,18 +639,18 @@ class UniversalChatService:
                 'conversation_state': {}
             }
             
-            for row in reversed(results):  # Reverse to get chronological order
+            for row in reversed(result.data):  # Reverse to get chronological order
                 context['recent_messages'].append({
                     'role': row['role'],
                     'content': row['content'],
-                    'timestamp': row['created_at'].isoformat()
+                    'timestamp': row['created_at']
                 })
                 
-                if row['action_type']:
+                if row.get('action_type'):
                     context['last_action'] = row['action_type']
                 
                 # Merge conversation context from latest message
-                if row['conversation_context']:
+                if row.get('conversation_context'):
                     context['conversation_state'].update(row['conversation_context'])
             
             return context

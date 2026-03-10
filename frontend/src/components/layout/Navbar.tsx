@@ -10,6 +10,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCompetition } from '@/contexts/CompetitionContext';
 import { Badge } from '@/components/ui/badge';
 import { NavbarAuthButton } from '@/components/auth/NavbarAuthButton';
+import { HolographicText } from '@/components/command-bridge';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -135,7 +136,7 @@ const Navbar: React.FC = () => {
       className={`
         fixed top-0 left-0 right-0 z-50 transition-all duration-300
         ${isScrolled 
-          ? 'glass-effect border-b border-white/5 backdrop-blur-2xl bg-black/40' 
+          ? 'glass-effect border-b border-white/5 backdrop-blur-3xl bg-black/70' 
           : 'bg-transparent'
         }
       `}
@@ -151,7 +152,7 @@ const Navbar: React.FC = () => {
             <div className={`w-10 h-10 ${getLogoClasses()} rounded-lg flex items-center justify-center`}>
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gradient">STEM Project Generator</span>
+            <HolographicText variant="primary" className="text-xl">STEM Project Generator</HolographicText>
           </Link>
 
           {/* Desktop Navigation */}
