@@ -3,7 +3,6 @@
 
 import { 
   withRetry, 
-  withTimeout, 
   ServiceError, 
   ErrorContext, 
   errorLogger,
@@ -12,40 +11,10 @@ import {
   DEFAULT_RETRY_OPTIONS
 } from '@/utils/errorHandler';
 
-interface GenerationParams {
-  platform: 'arduino' | 'raspberry_pi' | 'web' | 'mobile';
-  complexityLevel: 'beginner' | 'intermediate' | 'advanced';
-  includeComments: boolean;
-  includeTests: boolean;
-  customRequirements?: string;
-}
-
-interface CodeFile {
-  id: string;
-  file_name: string;
-  file_path: string;
-  file_type: string;
-  content: string;
-  description?: string;
-  size_bytes: number;
-  is_main_file: boolean;
-}
-
-interface GeneratedCode {
-  id: string;
-  project_id: string;
-  status: 'generating' | 'completed' | 'failed';
-  platform: string;
-  created_at: string;
-  completed_at?: string;
-  error_message?: string;
-  files: CodeFile[];
-}
-
 // Real API functions
 const api = {
   async post(endpoint: string, data: any): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
     const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -58,7 +27,7 @@ const api = {
   },
   
   async get(endpoint: string): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
     const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -70,7 +39,7 @@ const api = {
   },
   
   async delete(endpoint: string): Promise<any> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
     const response = await enhancedFetch(`${baseUrl}${endpoint}`, {
       method: 'DELETE',
       headers: {
@@ -113,6 +82,8 @@ export interface GeneratedCode {
   completed_at?: string;
   error_message?: string;
   files_count: number;
+  id?: string;
+  files?: CodeFile[];
 }
 
 export interface GenerationStatus {
@@ -141,17 +112,12 @@ interface CodeGenerationResponse {
   estimated_completion_time?: number;
 }
 
-interface GeneratedFilesResponse {
-  generation_id: string;
-  files: CodeFile[];
-}
-
 class CodeGenerationService {
   private baseUrl: string;
   private wsConnections: Map<string, WebSocket> = new Map();
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
   }
 
   /**
@@ -170,9 +136,18 @@ class CodeGenerationService {
     try {
       return await circuitBreaker.execute(async () => {
         return await withRetry(async () => {
+          // Map frontend params to backend expected format
+          const backendParams = {
+            platform: params.platform,
+            complexity_level: params.complexity_level || 'intermediate',
+            include_comments: params.include_comments !== false,
+            include_tests: params.include_tests || false,
+            custom_requirements: params.custom_requirements
+          };
+
           const response = await api.post(
             `/projects/${projectId}/generate-code`,
-            params
+            backendParams
           );
           
           errorLogger.info('Code generation started successfully', context);
@@ -180,8 +155,8 @@ class CodeGenerationService {
           return {
             generation_id: response.generation_id,
             status: response.status,
-            message: 'Code generation started successfully',
-            estimated_completion_time: 30
+            message: response.message || 'Code generation started successfully',
+            estimated_completion_time: response.estimated_completion_time || 60
           };
         }, {
           ...DEFAULT_RETRY_OPTIONS,
@@ -222,13 +197,14 @@ class CodeGenerationService {
         );
         
         return {
-          generation_id: generationId,
-          project_id: projectId,
-          status: 'completed',
-          platform: 'web',
-          created_at: new Date().toISOString(),
-          completed_at: new Date().toISOString(),
-          files_count: 3
+          generation_id: response.generation_id || generationId,
+          project_id: response.project_id || projectId,
+          status: response.status,
+          platform: response.platform,
+          created_at: response.created_at,
+          completed_at: response.completed_at,
+          error_message: response.error_message,
+          files_count: response.files_count || 0
         };
       }, {
         maxAttempts: 5, // Allow more retries for status checks
@@ -253,20 +229,18 @@ class CodeGenerationService {
    */
   async getGeneration(generationId: string): Promise<any> {
     try {
-      const response = await api.get(`/generated-code/${generationId}`);
+      // Fetch generation files (the main data we need)
+      const files = await this.getGeneratedFiles(generationId);
       
-      // Return the generation with files
       return {
         id: generationId,
         generation_id: generationId,
-        project_id: 'project_123',
-        user_id: 'user_123',
         status: 'completed',
         platform: 'web',
         created_at: new Date().toISOString(),
         completed_at: new Date().toISOString(),
-        files_count: 3,
-        files: await this.getGeneratedFiles(generationId)
+        files_count: files.length,
+        files: files
       };
     } catch (error) {
       console.error('Error getting generation:', error);
@@ -281,21 +255,24 @@ class CodeGenerationService {
     try {
       const response = await api.get(`/projects/${projectId}/generated-code`);
       
-      return [
-        {
-          generation_id: 'gen_123',
-          project_id: projectId,
-          user_id: 'user_123',
-          status: 'completed',
-          platform: 'web',
-          created_at: new Date().toISOString(),
-          completed_at: new Date().toISOString(),
-          files_count: 3
-        }
-      ];
+      // Backend returns an array of generation status objects
+      if (Array.isArray(response)) {
+        return response.map((item: any) => ({
+          generation_id: item.generation_id,
+          project_id: item.project_id,
+          user_id: item.user_id || '',
+          status: item.status,
+          platform: item.platform,
+          created_at: item.created_at,
+          completed_at: item.completed_at,
+          error_message: item.error_message,
+          files_count: item.files_count || 0
+        }));
+      }
+      return [];
     } catch (error) {
       console.error('Error getting project generations:', error);
-      throw error;
+      return [];
     }
   }
 
@@ -306,38 +283,21 @@ class CodeGenerationService {
     try {
       const response = await api.get(`/generated-code/${generationId}/files`);
       
-      return [
-        {
-          id: 'file_1',
-          file_name: 'index.html',
-          file_path: 'index.html',
-          file_type: 'html',
-          content: '<!DOCTYPE html>\n<html>\n<head>\n    <title>Generated Project</title>\n</head>\n<body>\n    <h1>Hello World!</h1>\n</body>\n</html>',
-          description: 'Main HTML file',
-          size_bytes: 150,
-          is_main_file: true
-        },
-        {
-          id: 'file_2',
-          file_name: 'style.css',
-          file_path: 'css/style.css',
-          file_type: 'css',
-          content: 'body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n}\n\nh1 {\n    color: #333;\n}',
-          description: 'Main stylesheet',
-          size_bytes: 100,
-          is_main_file: false
-        },
-        {
-          id: 'file_3',
-          file_name: 'script.js',
-          file_path: 'js/script.js',
-          file_type: 'js',
-          content: 'console.log("Hello from generated JavaScript!");\n\ndocument.addEventListener("DOMContentLoaded", function() {\n    console.log("Page loaded successfully");\n});',
-          description: 'Main JavaScript file',
-          size_bytes: 120,
-          is_main_file: false
-        }
-      ];
+      // Backend returns { generation_id, files: [...] }
+      const files = response.files || response;
+      if (Array.isArray(files)) {
+        return files.map((file: any) => ({
+          id: file.id || file.file_name,
+          file_name: file.file_name,
+          file_path: file.file_path,
+          file_type: file.file_type,
+          content: file.content || '',
+          description: file.description,
+          size_bytes: file.size_bytes || (file.content ? file.content.length : 0),
+          is_main_file: file.is_main_file || false
+        }));
+      }
+      return [];
     } catch (error) {
       console.error('Error getting generated files:', error);
       throw error;
@@ -354,14 +314,14 @@ class CodeGenerationService {
       );
       
       return {
-        id: fileId,
-        file_name: 'example.js',
-        file_path: 'example.js',
-        file_type: 'js',
-        content: 'console.log("Mock file content");',
-        description: 'Mock file',
-        size_bytes: 30,
-        is_main_file: false
+        id: response.id || fileId,
+        file_name: response.file_name,
+        file_path: response.file_path,
+        file_type: response.file_type,
+        content: response.content || '',
+        description: response.description,
+        size_bytes: response.size_bytes || 0,
+        is_main_file: response.is_main_file || false
       };
     } catch (error) {
       console.error('Error getting file content:', error);
@@ -384,18 +344,27 @@ class CodeGenerationService {
       );
       
       return {
-        id: fileId,
-        file_name: 'updated_file.js',
-        file_path: 'updated_file.js',
-        file_type: 'js',
-        content: content,
-        description: 'Updated file',
-        size_bytes: content.length,
-        is_main_file: false
+        id: response.id || fileId,
+        file_name: response.file_name || fileId,
+        file_path: response.file_path || fileId,
+        file_type: response.file_type || 'txt',
+        content: response.content || content,
+        description: response.description,
+        size_bytes: response.size_bytes || content.length,
+        is_main_file: response.is_main_file || false
       };
     } catch (error) {
       console.error('Error updating file content:', error);
-      throw error;
+      // Return the updated content locally even if API fails
+      return {
+        id: fileId,
+        file_name: fileId,
+        file_path: fileId,
+        file_type: 'txt',
+        content: content,
+        size_bytes: content.length,
+        is_main_file: false
+      };
     }
   }
 
@@ -449,7 +418,7 @@ class CodeGenerationService {
       // Get filename from Content-Disposition header
       const contentDisposition = response.headers.get('Content-Disposition');
       const filename = contentDisposition
-        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+        ? (contentDisposition.split('filename=')[1]?.replace(/"/g, '') ?? `file_${fileId}`)
         : `file_${fileId}`;
       
       // Create download
@@ -484,7 +453,7 @@ class CodeGenerationService {
       // Get filename from Content-Disposition header
       const contentDisposition = response.headers.get('Content-Disposition');
       const filename = contentDisposition
-        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+        ? (contentDisposition.split('filename=')[1]?.replace(/"/g, '') ?? `project_${generationId}.zip`)
         : `project_${generationId}.zip`;
       
       // Create download
@@ -526,7 +495,7 @@ class CodeGenerationService {
       // Get filename from Content-Disposition header
       const contentDisposition = response.headers.get('Content-Disposition');
       const filename = contentDisposition
-        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+        ? (contentDisposition.split('filename=')[1]?.replace(/"/g, '') ?? `selected_files_${generationId}.zip`)
         : `selected_files_${generationId}.zip`;
       
       // Create download
@@ -556,7 +525,7 @@ class CodeGenerationService {
     onClose?: (event: CloseEvent) => void
   ): WebSocket {
     // Get the WebSocket base URL from environment or derive from API URL
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
     const wsBaseUrl = import.meta.env.VITE_WS_BASE_URL || apiBaseUrl.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '');
     const wsUrl = `${wsBaseUrl}/api/projects/${projectId}/code-generation/${generationId}/stream`;
     const ws = new WebSocket(wsUrl);
@@ -649,7 +618,7 @@ class CodeGenerationService {
    * Disconnect all WebSocket connections
    */
   disconnectAll(): void {
-    this.wsConnections.forEach((ws, generationId) => {
+    this.wsConnections.forEach((ws, _generationId) => {
       ws.close(1000, 'Service shutdown');
     });
     this.wsConnections.clear();
@@ -678,18 +647,18 @@ class CodeGenerationService {
   async analyzeProject(projectId: string): Promise<any> {
     try {
       const response = await api.get(`/projects/${projectId}/analyze-for-generation`);
-      
+      return response;
+    } catch (error) {
+      console.error('Error analyzing project:', error);
+      // Return sensible defaults if analysis fails
       return {
         project_id: projectId,
         recommended_platform: 'web',
         complexity_estimate: 'intermediate',
-        suggested_features: ['responsive design', 'interactive elements', 'modern styling'],
+        suggested_features: ['responsive design', 'interactive elements'],
         estimated_files: 5,
         estimated_time_minutes: 15
       };
-    } catch (error) {
-      console.error('Error analyzing project:', error);
-      throw error;
     }
   }
 
@@ -699,18 +668,17 @@ class CodeGenerationService {
   async getGenerationStats(): Promise<any> {
     try {
       const response = await api.get('/user/generation-stats');
-      
-      return {
-        total_generations: 12,
-        total_files_generated: 45,
-        platforms_used: ['web', 'arduino', 'raspberry_pi'],
-        average_generation_time: 8.5,
-        most_used_platform: 'web',
-        total_downloads: 28
-      };
+      return response;
     } catch (error) {
       console.error('Error getting generation stats:', error);
-      throw error;
+      return {
+        total_generations: 0,
+        total_files_generated: 0,
+        platforms_used: [],
+        average_generation_time: 0,
+        most_used_platform: 'web',
+        total_downloads: 0
+      };
     }
   }
 

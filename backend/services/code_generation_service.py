@@ -670,15 +670,7 @@ class VeronicaAIService(BaseService):
         
         # Add README file if not present
         if not any(f.file_name.lower().startswith('readme') for f in files):
-            readme_content = self._generate_readme_file(files, platform)
-            readme_file = CodeFile(
-                file_path="README.md",
-                file_name="README.md", 
-                file_type="md",
-                content=readme_content,
-                description="Project documentation and setup instructions",
-                is_main_file=False
-            )
+            readme_file = self._generate_readme_file(files, platform=platform)
             files.append(readme_file)
         
         return files
@@ -774,28 +766,43 @@ class VeronicaAIService(BaseService):
     def _generate_readme_file(
         self, 
         files: List[CodeFile], 
-        params: GenerationParams,
-        project_context: ProjectContext
+        params: Optional[GenerationParams] = None,
+        project_context: Optional[ProjectContext] = None,
+        platform: Optional['Platform'] = None
     ) -> CodeFile:
         """
         Generate a README file for the project
         
         Args:
             files: List of generated files
-            params: Generation parameters
-            project_context: Project context
+            params: Generation parameters (optional)
+            project_context: Project context (optional)
+            platform: Platform override when params not available (optional)
             
         Returns:
-            Generated README file
+            Generated README CodeFile object
         """
+        # Build title and description from available context
+        title = (project_context.title if project_context else
+                (params.platform.value.title() + " Project" if params else "Generated Project"))
+        description = (project_context.description if project_context else
+                      "An AI-generated project.")
+        
+        # Determine effective platform
+        effective_platform = None
+        if params:
+            effective_platform = params.platform
+        elif platform:
+            effective_platform = platform
+        
         readme_content = [
-            f"# {project_context.title}",
+            f"# {title}",
             "",
-            f"{project_context.description}",
+            f"{description}",
             "",
             "## Project Information",
-            f"- **Platform**: {params.platform.value}",
-            f"- **Complexity**: {params.complexity_level.value}",
+            f"- **Platform**: {(effective_platform.value if effective_platform else 'unknown')}",
+            f"- **Complexity**: {(params.complexity_level.value if params else 'intermediate')}",
             f"- **Generated**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC",
             "",
             "## Files",
@@ -810,26 +817,26 @@ class VeronicaAIService(BaseService):
         ])
         
         # Platform-specific setup instructions
-        if params.platform == Platform.ARDUINO:
+        if effective_platform == Platform.ARDUINO:
             readme_content.extend([
                 "1. Open the .ino file in Arduino IDE",
                 "2. Connect your Arduino board",
                 "3. Select the correct board and port",
                 "4. Upload the code to your Arduino",
             ])
-        elif params.platform == Platform.WEB:
+        elif effective_platform == Platform.WEB:
             readme_content.extend([
                 "1. Open index.html in a web browser",
                 "2. Or serve the files using a local web server",
                 "3. For development: `python -m http.server 8000`",
             ])
-        elif params.platform == Platform.RASPBERRY_PI:
+        elif effective_platform == Platform.RASPBERRY_PI:
             readme_content.extend([
                 "1. Copy files to your Raspberry Pi",
                 "2. Install required dependencies: `pip install -r requirements.txt`",
                 "3. Run the main script: `python main.py`",
             ])
-        elif params.platform == Platform.MOBILE:
+        elif effective_platform == Platform.MOBILE:
             readme_content.extend([
                 "1. Ensure Flutter is installed",
                 "2. Run `flutter pub get` to install dependencies",
