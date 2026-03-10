@@ -9,7 +9,7 @@
 [![React](https://img.shields.io/badge/⚛️_React-18.3.1-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![FastAPI](https://img.shields.io/badge/⚡_FastAPI-0.110.1-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 
-<img src="./screenshots/01-home-page.jpeg" alt="STEM Idea Adventure Hero" width="800"/>
+<img src="./screenshots/02-login-page.png" alt="STEM Idea Adventure — AI Command Bridge" width="800"/>
 
 **An immersive 3D platform combining AI intelligence with stunning visuals to revolutionize STEM education**
  
@@ -384,68 +384,98 @@ Teacher Creates Team → Shares Code → Students Join → Generate Ideas → Su
 
 ## 🎬 Screenshots
 
-> **Note**: All screenshots are captured in dark mode for optimal viewing experience.
+> **Note**: All screenshots captured live from the running app in dark mode.
 
 <div align="center">
 
-### 🏠 Hero Section with 3D Particles
-<img src="./screenshots/01-home-page.jpeg" alt="Home Page" width="800"/>
+<table>
+<tr>
+<td align="center" width="50%">
 
-*Immersive 3D particle field with theme-aware colors*
+### 🏠 Home — AI Command Bridge
+<img src="./screenshots/01-home-page.png" alt="Home Page" width="100%"/>
 
----
+*Deep-space dark theme with animated STEM branding*
 
-### 🎨 Project Generator with AI
-<img src="./screenshots/03-generator-page.jpeg" alt="Generator" width="800"/>
+</td>
+<td align="center" width="50%">
 
-*AI-powered project creation with elegant loading animations and beautifully formatted output*
+### 🔐 Authentication
+<img src="./screenshots/02-login-page.png" alt="Login Page" width="100%"/>
 
-**Note:** Screenshots show the improved UI with cool loading effects during generation and formatted project display. No raw JSON is visible to users.
+*Glassmorphism card with purple-gradient CTA*
 
----
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
 
-### 📦 Interactive Component Library
-<img src="./screenshots/04-components-library.jpeg" alt="Components" width="800"/>
+### 🧬 Project Lab — Input
+<img src="./screenshots/03-generator-page.png" alt="Generator Page" width="100%"/>
 
-*500+ components with 3D previews and detailed specifications*
+*Two-panel layout — Specs + "AWAITING SYNTHESIS" neural canvas*
 
----
+</td>
+<td align="center" width="50%">
 
-### 📊 Smart Dashboard
-<img src="./screenshots/02-login-page.jpeg" alt="Dashboard" width="800"/>
+### ⚡ Live AI Thinking Stream
+<img src="./screenshots/09-neural-thinking-display.png" alt="Neural Thinking Display" width="100%"/>
 
-*Futuristic login page with glassmorphism, animated particles, and purple gradients*
+*`qwen/qwen3-vl-235b-a22b-thinking` reasoning in cyan monospace*
 
-**NEW Design Features:**
-- Dark gradient background with starry effects
-- Left hero section with "STEM Idea Adventure" branding
-- Glassmorphism auth card with purple glow
-- Interactive form elements with smooth animations
-- "Start Your Adventure" gradient button
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
 
----
+### 🚀 Synthesized Architecture
+<img src="./screenshots/04-generator-result.png" alt="Generated Project Result" width="100%"/>
 
-### 🎓 Interactive Learning Hub
-<img src="./screenshots/05-learn-page.jpeg" alt="Learn" width="800"/>
+*AI-generated project with BOM, budget & difficulty*
 
-*Digital book experience with immersive 3D visualizations*
+</td>
+<td align="center" width="50%">
 
----
+### 📦 Component Database
+<img src="./screenshots/05-components-library.png" alt="Components Library" width="100%"/>
 
-### 💻 Veronica AI Code Generator (Phase 4)
-<img src="./screenshots/06-code-generator.jpeg" alt="Code Generator" width="800"/>
+*Search, category filters & soft-lock guest experience*
 
-*Professional workspace with Monaco editor, live preview, and terminal emulation*
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
 
-**Features Shown:**
-- Real-time code preview with dev server simulation
-- Multi-panel layout with resizable sections
-- Integrated terminal with command history
-- Console output with error tracking
-- Network request monitoring
-- Build status indicators
+### 📚 Knowledge Synthesis Hub
+<img src="./screenshots/06-learn-page.png" alt="Learn Page" width="100%"/>
+
+*Logic & Software / Physical Hardware split with chapter search*
+
+</td>
+<td align="center" width="50%">
+
+### 🏆 Competition Platform
+<img src="./screenshots/07-competition-page.png" alt="Competition Page" width="100%"/>
+
+*Team-code join flow, leaderboard & level-up system*
+
+</td>
+</tr>
+<tr>
+<td align="center" colspan="2">
+
+### 💻 Veronica AI Code Generator
+<img src="./screenshots/08-code-generator.png" alt="Code Generator" width="60%"/>
+
+*Intelligent coding companion — multi-file workspace & Monaco editor*
+
+</td>
+</tr>
+</table>
 
 </div>
+
+
 
 ---
 
