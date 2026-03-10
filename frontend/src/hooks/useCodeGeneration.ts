@@ -115,15 +115,36 @@ export const useCodeGeneration = (): UseCodeGenerationReturn => {
           const data = JSON.parse(event.data);
           
           switch (data.type) {
-            case 'progress':
+            case 'connection_ack':
+              // Backend acknowledged the WebSocket connection
+              console.log('WebSocket connection acknowledged by backend:', data);
               setGenerationProgress({
-                stage: data.stage || 'generating',
+                stage: 'analyzing',
+                message: 'Connected — analyzing project requirements...',
+                progress: 5
+              });
+              break;
+
+            case 'status_update':
+              // General status/progress update from backend
+              setGenerationProgress({
+                stage: data.status || 'generating',
                 message: data.message || 'Generating code...',
                 progress: data.progress || 0,
                 currentFile: data.current_file
               });
               break;
               
+            case 'progress_update':
+              // Files progress update
+              setGenerationProgress(prev => ({
+                ...prev,
+                message: `Generated ${data.files_generated || 0} of ${data.total_files || '?'} files`,
+                progress: data.progress_percentage || prev.progress,
+                currentFile: data.current_file
+              }));
+              break;
+
             case 'file_generated':
               setGenerationProgress(prev => ({
                 ...prev,
@@ -133,26 +154,52 @@ export const useCodeGeneration = (): UseCodeGenerationReturn => {
               }));
               break;
               
-            case 'generation_complete':
+            case 'completion':
               setGenerationProgress({
                 stage: 'complete',
                 message: 'Code generation completed successfully!',
                 progress: 100
               });
               
-              // Fetch the complete generation data
+              // Fetch the complete generation data with files
               const completedGeneration = await codeGenerationService.getGeneration(generationId);
               setCurrentGeneration(completedGeneration);
               setIsGenerating(false);
               
               toast({
                 title: "Code Generated Successfully!",
-                description: `Generated ${completedGeneration.files.length} files for your project.`,
+                description: `Generated ${completedGeneration.files?.length || 0} files for your project.`,
+              });
+              break;
+
+            // Legacy event name fallbacks
+            case 'progress':
+              setGenerationProgress({
+                stage: data.stage || 'generating',
+                message: data.message || 'Generating code...',
+                progress: data.progress || 0,
+                currentFile: data.current_file
+              });
+              break;
+
+            case 'generation_complete':
+              setGenerationProgress({
+                stage: 'complete',
+                message: 'Code generation completed successfully!',
+                progress: 100
+              });
+              const gen = await codeGenerationService.getGeneration(generationId);
+              setCurrentGeneration(gen);
+              setIsGenerating(false);
+              toast({
+                title: "Code Generated Successfully!",
+                description: `Generated ${gen.files?.length || 0} files.`,
               });
               break;
               
+            case 'error':
             case 'generation_error':
-              setError(data.error || 'Code generation failed');
+              setError(data.message || data.error || 'Code generation failed');
               setIsGenerating(false);
               setGenerationProgress({
                 stage: 'initializing',
@@ -162,13 +209,13 @@ export const useCodeGeneration = (): UseCodeGenerationReturn => {
               
               toast({
                 title: "Code Generation Failed",
-                description: data.error || 'An error occurred during code generation.',
+                description: data.message || data.error || 'An error occurred during code generation.',
                 variant: "destructive"
               });
               break;
               
             default:
-              console.log('Unknown WebSocket message type:', data.type);
+              console.log('Unhandled WebSocket message type:', data.type, data);
           }
         } catch (parseError) {
           console.error('Error parsing WebSocket message:', parseError);

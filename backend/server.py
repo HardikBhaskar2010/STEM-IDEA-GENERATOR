@@ -2361,9 +2361,35 @@ def local_generator(p: ProjectParams) -> GeneratedProject:
     # Generate hands-on, practical steps based on project type and level
     steps = generate_practical_steps(project_type, level, base, components)
 
+    # Build a meaningful title from the user's interests if provided
+    interests = (p.interests or '').strip()
+    if interests:
+        # Capitalize first letter of interests for use as project name
+        project_idea = interests[:60].rstrip('.,!?')
+        # Capitalize properly
+        project_idea = project_idea[0].upper() + project_idea[1:] if project_idea else project_idea
+        title = f"{project_idea} ({level})"
+        description = f"A {level.lower()}-level {project_type} project focused on: {interests}. Designed for hands-on learning and practical skill development."
+    else:
+        # Fallback project names per type
+        fallback_titles = {
+            'robotics': f"Autonomous Navigation Robot ({level})",
+            'iot': f"Smart Home Monitor with ESP32 ({level})",
+            'electronics': f"Digital Signal Processing Circuit ({level})",
+            'automation': f"Smart Automation Controller ({level})",
+            'sensors': f"Environmental Data Logger ({level})",
+            'web-development': f"Full-Stack Web Application ({level})",
+            'mobile-apps': f"Cross-Platform Mobile App ({level})",
+            'desktop-software': f"Desktop Productivity Tool ({level})",
+            'game-development': f"2D Platformer Game ({level})",
+            'ai-ml': f"Machine Learning Classifier ({level})",
+        }
+        title = fallback_titles.get(project_type, f"{base} Project ({level})")
+        description = f"A {level.lower()}-level {project_type} project designed for hands-on learning and practical skill development."
+
     return GeneratedProject(
-        title=f"{base} Project ({level})",
-        description=f"A {level.lower()}-level {project_type} project designed for hands-on learning and practical skill development.",
+        title=title,
+        description=description,
         difficulty=level,
         estimatedTime=p.duration or "3–6 weeks",
         estimatedCost=p.budget or "$50–150",
@@ -2973,33 +2999,39 @@ async def generate_project(params: ProjectParams):
         await perform_startup_health_validation()
         _startup_validation_performed = True
     
+    interests_context = f"The user's specific idea/interest is: {params.interests}" if params.interests and params.interests.strip() else "No specific idea provided — create a creative and practical project."
+    budget_context = f"Budget constraint: {params.budget}." if params.budget and params.budget.strip() else ""
+    duration_context = f"Target duration: {params.duration}." if params.duration and params.duration.strip() else ""
+    
     prompt = f"""
-Generate a STEM project idea as a valid JSON object with exactly these fields:
-- title: string (project name)
-- description: string (detailed description)
-- difficulty: string (Beginner/Intermediate/Advanced/Expert)
-- estimatedTime: string (time duration like "3-6 weeks")
-- estimatedCost: string (cost range like "$50-150")
-- components: array of strings (list of required components - BE SPECIFIC to the project type)
-- skills: array of strings (list of skills to learn)
-- steps: array of strings (list of implementation steps)
+You are a STEM project idea generator. Create a SPECIFIC, CREATIVE, and REALISTIC project idea.
 
 Project Requirements:
-Type: {params.projectType}
-Level: {params.skillLevel}
-Interests: {params.interests}
-Budget: {params.budget}
-Duration: {params.duration}
+- Domain: {params.projectType}
+- Skill Level: {params.skillLevel}
+- {interests_context}
+- {budget_context}
+- {duration_context}
 
-IMPORTANT: Make the components list SPECIFIC to the project type:
-- For robotics: Include motors, wheels, chassis, motor drivers, sensors specific to movement
-- For IoT: Include WiFi modules, cloud services, specific sensors for data collection
-- For electronics: Include specific ICs, resistors, capacitors, displays relevant to the circuit
-- For automation: Include relays, actuators, timers, control systems
-- For sensors: Include specific sensor types, data loggers, calibration tools
+IMPORTANT RULES:
+1. The title MUST be a SPECIFIC project name (e.g. "Solar-Powered Plant Watering Bot" not "robotics Project")
+2. The description MUST describe THIS SPECIFIC project, not a generic one
+3. The steps MUST be specific to building this exact project
+4. If the user gave a specific idea/interest, build the project around THAT idea
 
-Return ONLY a valid JSON object, no markdown formatting, no explanations.
-"""
+Return a valid JSON object with EXACTLY these fields:
+{{
+  "title": "[Specific creative project name]",
+  "description": "[2-3 sentences describing this specific project and what it does]",
+  "difficulty": "{params.skillLevel}",
+  "estimatedTime": "[realistic time like '3-6 weeks']",
+  "estimatedCost": "[cost range like '$50-150']",
+  "components": ["[specific component 1]", "[specific component 2]", ...],
+  "skills": ["[specific skill 1]", "[specific skill 2]", ...],
+  "steps": ["[detailed step 1]", "[detailed step 2]", ...]
+}}
+
+Return ONLY the JSON object, no markdown, no extra text."""
 
     try:
         # Use gemini-2.5-flash-free specifically for project idea generation as it's better at JSON
@@ -3225,27 +3257,29 @@ async def generate_project_stream(params: ProjectParams):
     """
     async def generate_stream():
         try:
-            prompt = f"""
-Generate a STEM project idea as a valid JSON object with exactly these fields:
-- title: string (project name)
-- description: string (detailed description)
-- difficulty: string (Beginner/Intermediate/Advanced/Expert)
-- estimatedTime: string (time duration like "3-6 weeks")
-- estimatedCost: string (cost range like "$50-150")
-- components: array of strings (list of required components - BE SPECIFIC to the project type)
-- skills: array of strings (list of skills to learn)
-- steps: array of strings (list of implementation steps)
+            interests_context = f"The user's specific idea/interest is: {params.interests}" if params.interests and params.interests.strip() else "No specific idea provided — create a creative and practical project."
+            budget_context = f"Budget constraint: {params.budget}." if params.budget and params.budget.strip() else ""
+            duration_context = f"Target duration: {params.duration}." if params.duration and params.duration.strip() else ""
+
+            prompt = f"""You are a STEM project idea generator. Create a SPECIFIC, CREATIVE, and REALISTIC project idea.
 
 Project Requirements:
-Type: {params.projectType}
-Level: {params.skillLevel}
-Interests: {params.interests}
-Budget: {params.budget}
-Duration: {params.duration}
+- Domain: {params.projectType}
+- Skill Level: {params.skillLevel}
+- {interests_context}
+- {budget_context}
+- {duration_context}
 
-IMPORTANT: Make the components list SPECIFIC to the project type.
-Return ONLY a valid JSON object, no markdown formatting, no explanations.
-"""
+IMPORTANT RULES:
+1. The title MUST be a SPECIFIC project name (e.g. "Solar-Powered Plant Watering Bot" not "robotics Project")
+2. The description MUST describe THIS SPECIFIC project, not a generic one
+3. The steps MUST be specific to building this exact project
+4. If the user gave a specific idea/interest, build the project around THAT idea
+
+Return a valid JSON object with EXACTLY these fields:
+{{"title": "[Specific creative project name]", "description": "[2-3 sentences]", "difficulty": "{params.skillLevel}", "estimatedTime": "[e.g. 3-6 weeks]", "estimatedCost": "[e.g. $50-150]", "components": ["item1", "item2"], "skills": ["skill1", "skill2"], "steps": ["step1", "step2"]}}
+
+Return ONLY the JSON object, no markdown, no extra text."""
             
             # Build real streaming request to OpenRouter
             import requests
@@ -3257,14 +3291,14 @@ Return ONLY a valid JSON object, no markdown formatting, no explanations.
             headers = {
                 "Authorization": f"Bearer {config.api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://stem-idea-generator.vercel.app",
+                "HTTP-Referer": "https://stemidea.vercel.app",
                 "X-Title": "STEM Idea Generator"
             }
             body = {
-                "model": "qwen/qwen3-vl-235b-a22b-thinking",
+                "model": "google/gemini-2.5-flash:free",
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": True,
-                "include_reasoning": True
+                "include_reasoning": False
             }
             
             response = requests.post(
