@@ -438,7 +438,7 @@ Focus on learning and practical steps. Avoid jargon unless necessary."""
                 max_tokens=2000,
                 temperature=0.7,
                 top_p=0.9,
-                model="upstage/solar-pro-3:free"  # Specialized for idea generation and guidance
+                model="stepfun/step-3.5-flash:free"  # Specialized for idea generation and guidance
             )
             
             # Extract response content
