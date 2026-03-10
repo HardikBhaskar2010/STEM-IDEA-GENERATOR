@@ -3002,8 +3002,8 @@ Return ONLY a valid JSON object, no markdown formatting, no explanations.
 """
 
     try:
-        # Use Solar Pro 3 model specifically for project idea generation
-        ai_text = await call_openrouter(prompt, model="upstage/solar-pro-3:free")
+        # Use gemini-2.5-flash-free specifically for project idea generation as it's better at JSON
+        ai_text = await call_openrouter(prompt, model="google/gemini-2.5-flash:free")
         
         # Enhanced JSON parsing to handle various response formats
         json_data = None
@@ -3247,22 +3247,71 @@ IMPORTANT: Make the components list SPECIFIC to the project type.
 Return ONLY a valid JSON object, no markdown formatting, no explanations.
 """
             
-            # For now, we'll use the non-streaming API and simulate streaming
-            # In a full implementation, you'd use OpenRouter's streaming API
-            # Use Solar Pro 3 model specifically for project idea generation
-            ai_text = await call_openrouter(prompt, model="upstage/solar-pro-3:free")
+            # Build real streaming request to OpenRouter
+            import requests
             
-            # Simulate streaming by sending chunks of the response
-            chunk_size = 50  # Characters per chunk
-            for i in range(0, len(ai_text), chunk_size):
-                chunk = ai_text[i:i + chunk_size]
-                yield f"data: {json.dumps({'content': chunk})}\n\n"
-                await asyncio.sleep(0.05)  # Small delay for realistic streaming feel
+            if not openrouter_client:
+                raise RuntimeError("OpenRouter client is not initialized.")
+                
+            config = openrouter_client.config
+            headers = {
+                "Authorization": f"Bearer {config.api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://stem-idea-generator.vercel.app",
+                "X-Title": "STEM Idea Generator"
+            }
+            body = {
+                "model": "qwen/qwen3-vl-235b-a22b-thinking",
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": True,
+                "include_reasoning": True
+            }
+            
+            response = requests.post(
+                f"{config.base_url}/chat/completions",
+                headers=headers,
+                json=body,
+                stream=True,
+                timeout=120
+            )
+            response.raise_for_status()
+            
+            for line in response.iter_lines():
+                if line:
+                    line_str = line.decode('utf-8')
+                    if line_str.startswith('data: '):
+                        data_str = line_str[6:]
+                        if data_str == '[DONE]':
+                            continue
+                        try:
+                            chunk_data = json.loads(data_str)
+                            choice = chunk_data.get('choices', [{}])[0]
+                            delta = choice.get('delta', {})
+                            content = delta.get('content') or ''
+                            reasoning = delta.get('reasoning') or ''
+                            
+                            if content or reasoning:
+                                # Stream the chunk including thinking
+                                yield f"data: {json.dumps({'content': content, 'reasoning': reasoning})}\n\n"
+                                await asyncio.sleep(0.01) # Yield to event loop
+                        except json.JSONDecodeError:
+                            pass
+                        except Exception as e:
+                            logger.error(f"Error parsing chunk: {e}")
             
             # Send completion signal
-            yield f"data: {json.dumps({'content': '', 'complete': True})}\n\n"
+            yield f"data: {json.dumps({'content': '', 'reasoning': '', 'complete': True})}\n\n"
             yield "data: [DONE]\n\n"
             
+        except requests.exceptions.HTTPError as he:
+            err_msg = f"API Error: {he}"
+            if he.response:
+                try:
+                    err_msg += f" {he.response.json()}"
+                except:
+                    err_msg += f" {he.response.text}"
+            logger.error(err_msg)
+            yield f"data: {json.dumps({'error': str(err_msg)})}\n\n"
         except Exception as e:
             logger.error(f"Streaming error: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

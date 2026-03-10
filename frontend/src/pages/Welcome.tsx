@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Zap, Rocket, ArrowRight, LogIn } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { HolographicText, CommandButton } from '@/components/command-bridge';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
@@ -47,28 +47,14 @@ const Welcome: React.FC = () => {
           {/* Main title with stunning animation */}
           <div className="space-y-4">
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight drop-shadow-2xl">
-              <span 
-                className="inline-block bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: 'linear-gradient(to right, #ffffff, #e0e7ff, #c7d2fe)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
+              <HolographicText variant="secondary" glitch={true} className="pb-2">
                 STEM
-              </span>
+              </HolographicText>
             </h1>
             <h2 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight drop-shadow-2xl">
-              <span 
-                className="inline-block bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: 'linear-gradient(to right, #ddd6fe, #ffffff, #c7d2fe)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
+              <HolographicText variant="primary" className="pb-2">
                 Idea Adventure
-              </span>
+              </HolographicText>
             </h2>
           </div>
 
@@ -87,16 +73,12 @@ const Welcome: React.FC = () => {
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              <span 
-                className="bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: isBlackWhite 
-                    ? 'linear-gradient(to right, #ffffff, #e5e5e5)' 
-                    : 'linear-gradient(to right, #a855f7, #ec4899, #8b5cf6)',
-                }}
+              <HolographicText 
+                variant={isBlackWhite ? "primary" : "secondary"} 
+                className="pb-2"
               >
                 Where Innovation Begins
-              </span>
+              </HolographicText>
             </h2>
             <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
               STEM Idea Adventure combines AI intelligence with stunning visuals to inspire 
@@ -210,16 +192,9 @@ const Welcome: React.FC = () => {
             isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}>
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6">
-              <span 
-                className="bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: isBlackWhite 
-                    ? 'linear-gradient(to right, #ffffff, #e5e5e5)' 
-                    : 'linear-gradient(to right, #a855f7, #ec4899)',
-                }}
-              >
+              <HolographicText variant="primary" className="pb-2">
                 {isAuthenticated ? 'Welcome Back!' : 'Ready to Create?'}
-              </span>
+              </HolographicText>
             </h2>
             <p className="text-xl md:text-2xl text-gray-300">
               {isAuthenticated 
@@ -235,53 +210,43 @@ const Welcome: React.FC = () => {
             }`}>
               {isAuthenticated ? (
                 // Authenticated: Single "Enter Dashboard" button
-                <Button 
+                <CommandButton 
                   onClick={handleEnterDashboard} 
                   data-testid="enter-dashboard-btn"
                   size="lg"
-                  className="text-lg px-8 py-6 rounded-xl font-semibold shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
-                  style={{
-                    background: isBlackWhite 
-                      ? 'linear-gradient(to right, #ffffff, #e5e5e5)' 
-                      : 'linear-gradient(to right, #a855f7, #8b5cf6)',
-                    color: isBlackWhite ? '#000000' : '#ffffff',
-                  }}
+                  variant="primary"
+                  pulseGlow={true}
+                  energySpark={true}
+                  className="text-lg px-8 py-6 rounded-xl font-semibold shadow-glow transform transition-all duration-300 hover:scale-105"
                 >
                   Enter Dashboard
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
+                </CommandButton>
               ) : (
                 // Not Authenticated: "Get Started" + "Sign In" buttons
                 <>
-                  <Button 
+                  <CommandButton 
                     onClick={handleGetStarted} 
                     data-testid="get-started-btn"
                     size="lg"
-                    className="text-lg px-8 py-6 rounded-xl font-semibold shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
-                    style={{
-                      background: isBlackWhite 
-                        ? 'linear-gradient(to right, #ffffff, #e5e5e5)' 
-                        : 'linear-gradient(to right, #a855f7, #8b5cf6)',
-                      color: isBlackWhite ? '#000000' : '#ffffff',
-                    }}
+                    variant="primary"
+                    pulseGlow={true}
+                    energySpark={true}
+                    className="text-lg px-8 py-6 rounded-xl font-semibold shadow-glow transform transition-all duration-300 hover:scale-105"
                   >
                     Get Started
                     <Rocket className="ml-2 h-5 w-5" />
-                  </Button>
-                  <Button 
+                  </CommandButton>
+                  <CommandButton 
                     onClick={handleSignIn} 
-                    variant="outline"
+                    variant="secondary"
                     data-testid="sign-in-btn"
                     size="lg"
-                    className="text-lg px-8 py-6 rounded-xl font-semibold border-2 hover:bg-white/10 transition-all duration-300 hover:scale-105"
-                    style={{
-                      borderColor: isBlackWhite ? '#ffffff' : '#a855f7',
-                      color: isBlackWhite ? '#ffffff' : '#a855f7',
-                    }}
+                    className="text-lg px-8 py-6 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
                   >
                     Sign In
                     <LogIn className="ml-2 h-5 w-5" />
-                  </Button>
+                  </CommandButton>
                 </>
               )}
             </div>

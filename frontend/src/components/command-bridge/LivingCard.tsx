@@ -35,11 +35,11 @@ export const LivingCard = React.forwardRef<HTMLDivElement, LivingCardProps>(
     ref
   ) => {
     const cardRef = useRef<HTMLDivElement>(null);
-    const { mode } = usePerf();
+    const { lowPerf } = usePerf();
 
     // Determine if animations should run
-    const shouldAnimate = (mode === 'high' || mode === 'medium') && floating;
-    const shouldGlow = mode === 'high' && enableGlowPulse;
+    const shouldAnimate = !lowPerf && floating;
+    const shouldGlow = !lowPerf && enableGlowPulse;
 
     useEffect(() => {
       if (!cardRef.current || !shouldAnimate) return;
@@ -86,9 +86,16 @@ export const LivingCard = React.forwardRef<HTMLDivElement, LivingCardProps>(
         {...props}
       >
         {/* Energy border effect */}
-        {energyBorder && mode === 'high' && (
+        {energyBorder && !lowPerf && (
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent animate-shimmer" />
+          </div>
+        )}
+
+        {/* HUD Scanline effect */}
+        {!lowPerf && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+            <div className="w-full h-[2px] bg-primary/40 shadow-[0_0_15px_rgba(168,85,247,0.5)] absolute -top-[10%] animate-scanline" />
           </div>
         )}
 

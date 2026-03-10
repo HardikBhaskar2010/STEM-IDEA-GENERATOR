@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
 import { projectService, type SavedProject } from '@/services/projectService';
 import { toast } from '@/hooks/use-toast';
-import { LivingCard } from '@/components/command-bridge';
+import { LivingCard, AICore3D, HolographicText, CommandButton } from '@/components/command-bridge';
 import { NumberCounter, FloatingMotion } from '@/components/animations';
 
 const Home: React.FC = () => {
@@ -395,15 +395,15 @@ const Home: React.FC = () => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div ref={heroIconRef.ref} className="flex justify-center mb-8">
-              <div className="p-4 bg-gradient-primary rounded-2xl shadow-glow animate-glow-pulse">
-                <Rocket className="w-16 h-16 text-white" />
-              </div>
+              <AICore3D size="medium" className="mx-auto" />
             </div>
 
             <h1 ref={heroTitleRef.ref} className="text-5xl md:text-7xl font-bold mb-6">
-              <span className="text-gradient">STEM Project</span>
-              <br />
-              <span className="text-foreground">Generator</span>
+              <HolographicText variant="primary" glitch={true} className="pb-2">
+                STEM Project
+                <br />
+                Generator
+              </HolographicText>
             </h1>
 
             <p ref={heroDescRef.ref} className="text-xl md:text-2xl text-muted-foreground mb-8">
@@ -413,20 +413,20 @@ const Home: React.FC = () => {
 
             <div ref={heroButtonsRef.ref} className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/generator">
-                <Button
+                <CommandButton
                   size="lg"
-                  className="bg-gradient-primary text-white shadow-glow"
-                  ripple={true}
+                  variant="primary"
+                  className="shadow-glow"
                 >
                   <Sparkles className="mr-2 w-5 h-5" />
                   Start Generating
                   <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+                </CommandButton>
               </Link>
               <Link to="/components">
-                <Button size="lg" variant="outline">
+                <CommandButton size="lg" variant="secondary">
                   Browse Components
-                </Button>
+                </CommandButton>
               </Link>
             </div>
           </div>
@@ -449,13 +449,12 @@ const Home: React.FC = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Link to={feature.link} className="block">
-                  <Card
-                    key={index}
+                <Link to={feature.link} className="block" key={index}>
+                  <LivingCard
+                    variant="energy"
+                    floating={true}
+                    glowPulse={true}
                     className="group border-border/50 glass-effect cursor-pointer"
-                    enableAnimation={true}
-                    enableHover={true}
-                    animationDelay={index * 100}
                   >
                   <CardHeader>
                     <div className={`w-16 h-16 ${feature.color} rounded-xl flex items-center justify-center mb-4 group-hover:animate-glow-pulse`}>
@@ -467,12 +466,12 @@ const Home: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button variant="ghost" className="group/btn w-full">
+                    <CommandButton variant="secondary" className="group/btn w-full">
                       Explore
                       <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                    </Button>
+                    </CommandButton>
                   </CardContent>
-                  </Card>
+                  </LivingCard>
                 </Link>
               );
             })}
@@ -484,9 +483,10 @@ const Home: React.FC = () => {
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-hero opacity-10" />
         <div className="container mx-auto px-4 relative z-10">
-          <Card
+          <LivingCard
+            variant="energy"
+            floating={true}
             className="max-w-4xl mx-auto glass-effect border-primary/20 shadow-glow"
-            enableAnimation={true}
           >
             <CardContent className="p-12 text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gradient">
@@ -496,17 +496,18 @@ const Home: React.FC = () => {
                 Join thousands of makers and innovators creating the future
               </p>
               <Link to="/generator">
-                <Button
+                <CommandButton
                   size="lg"
-                  className="bg-gradient-primary text-white shadow-glow"
-                  ripple={true}
+                  variant="primary"
+                  energySpark={true}
+                  className="shadow-glow"
                 >
                   <Zap className="mr-2 w-5 h-5" />
                   Get Started Now
-                </Button>
+                </CommandButton>
               </Link>
             </CardContent>
-          </Card>
+          </LivingCard>
         </div>
       </section>
     </Layout>

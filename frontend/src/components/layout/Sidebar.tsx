@@ -24,6 +24,8 @@ import { useTTS } from '@/contexts/TTSContext';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { NavbarAuthButton } from '@/components/auth/NavbarAuthButton';
+import { NeuralRail } from '@/components/command-bridge/NeuralRail';
+import { HolographicText } from '@/components/command-bridge';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -113,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 h-screen bg-black/95 backdrop-blur-xl border-r border-white/10 z-50',
+          'fixed left-0 top-0 h-screen bg-black/98 backdrop-blur-3xl border-r border-white/10 z-50',
           'flex flex-col w-64',
           'transition-transform duration-300 ease-in-out',
           isMobile && !isOpen && '-translate-x-full',
@@ -130,9 +132,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className={cn(getLogoClasses(), 'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0')}>
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <span className="text-sm font-bold text-gradient whitespace-nowrap">
+            <HolographicText variant="primary" className="text-sm whitespace-nowrap">
               STEM Generator
-            </span>
+            </HolographicText>
           </Link>
           
           {isMobile && (
@@ -181,7 +183,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </div>
           )}
           
-          <div className="space-y-1">
+          <NeuralRail className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -251,7 +253,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 })}
               </>
             )}
-          </div>
+          </NeuralRail>
         </nav>
 
         {/* Bottom Section - Theme Toggle, TTS Visualizer & Voice Commands */}

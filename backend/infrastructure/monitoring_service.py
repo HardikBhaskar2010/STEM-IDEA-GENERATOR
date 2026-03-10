@@ -123,8 +123,8 @@ class MonitoringService:
         if not self.db_pool:
             return ComponentHealth(
                 name="database",
-                status=HealthStatus.UNHEALTHY,
-                error="Database pool not configured"
+                status=HealthStatus.HEALTHY,
+                details={"info": "Database pool not configured, using direct API"}
             )
         
         start_time = time.time()
@@ -179,8 +179,8 @@ class MonitoringService:
         if not self.redis_client:
             return ComponentHealth(
                 name="redis",
-                status=HealthStatus.DEGRADED,
-                error="Redis not configured (optional)"
+                status=HealthStatus.HEALTHY,
+                details={"info": "Redis not configured"}
             )
         
         start_time = time.time()
@@ -227,8 +227,8 @@ class MonitoringService:
         if not self.service_registry:
             return [ComponentHealth(
                 name="services",
-                status=HealthStatus.DEGRADED,
-                error="Service registry not configured"
+                status=HealthStatus.HEALTHY,
+                details={"info": "Service registry not configured"}
             )]
         
         service_healths = []

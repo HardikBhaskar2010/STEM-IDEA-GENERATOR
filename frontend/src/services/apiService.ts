@@ -134,9 +134,60 @@ export async function getStatusChecks(): Promise<StatusCheck[]> {
   return apiFetch<StatusCheck[]>('/status');
 }
 
+export async function* generateProjectStream(params: ProjectParams) {
+  const endpoint = '/generate-project-stream';
+  const url = endpoint.startsWith('http') ? endpoint : `${FINAL_API_BASE_URL}${endpoint}`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP Error: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("Stream not supported");
+
+  const decoder = new TextDecoder("utf-8");
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.slice(6).trim();
+          if (dataStr === '[DONE]') return;
+          if (dataStr) {
+            try {
+              yield JSON.parse(dataStr);
+            } catch (e) {
+              console.error('Error parsing stream chunk:', e, dataStr);
+            }
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export default {
   healthCheck,
   generateProject,
+  generateProjectStream,
   createStatusCheck,
   getStatusChecks,
 };
