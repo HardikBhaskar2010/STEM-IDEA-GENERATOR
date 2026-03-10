@@ -134,30 +134,46 @@ const Generator: React.FC = () => {
     setThinkingOutput('');
     
     try {
-      // Use streaming generation to capture thought processes
+      // Try streaming first to capture thought processes  
       let finalContent = '';
-      for await (const chunk of generateProjectStream(formData)) {
-        if (chunk.reasoning) {
-          setThinkingOutput(prev => prev + chunk.reasoning);
+      try {
+        for await (const chunk of generateProjectStream(formData)) {
+          if (chunk.reasoning) {
+            setThinkingOutput(prev => prev + chunk.reasoning);
+          }
+          if (chunk.content) {
+            finalContent += chunk.content;
+          }
         }
-        if (chunk.content) {
-          finalContent += chunk.content;
-        }
+      } catch (streamError) {
+        console.warn('Streaming generation failed, falling back to sync API:', streamError);
+        finalContent = '';
       }
       
       // Attempt to parse final structured output as JSON
       let project;
-      try {
-        // Find JSON block if it exists
-        const jsonMatch = finalContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
-                          finalContent.match(/({[\s\S]*})/);
-        const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : finalContent;
-        project = JSON.parse(jsonString);
-      } catch (parseError) {
-        // Fallback for missing/bad JSON format
-        console.warn('Could not parse generated content as JSON:', parseError);
-        console.log('Raw output:', finalContent);
-        throw new Error("Could not construct project file format.");
+      
+      if (!finalContent.trim()) {
+        // Stream returned empty — fall back to direct sync API call
+        console.log('Stream returned empty content, using sync generateProject fallback...');
+        project = await generateProject(formData);
+      } else {
+        try {
+          // Find JSON block if it exists
+          const jsonMatch = finalContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
+                            finalContent.match(/({[\s\S]*})/);
+          const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : finalContent;
+          project = JSON.parse(jsonString);
+        } catch (parseError) {
+          // JSON parse failed — try the direct sync endpoint as a last resort
+          console.warn('Could not parse streaming content as JSON, trying sync API:', parseError);
+          try {
+            project = await generateProject(formData);
+          } catch (syncError) {
+            console.error('Sync API also failed:', syncError);
+            throw new Error("AI generated an unreadable response. Please try again.");
+          }
+        }
       }
       
       setGeneratedProject(project);
