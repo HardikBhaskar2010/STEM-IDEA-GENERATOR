@@ -122,7 +122,7 @@ A **guest-friendly** authentication system that lets users explore freely while 
 - **Budget Planning**: Cost estimates and timelines
 - **Skill Matching**: Projects for your level
 
-</td>
+</td> 
 <td width="50%">
 
 #### 📈 Smart Guidance
