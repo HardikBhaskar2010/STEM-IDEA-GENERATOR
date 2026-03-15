@@ -208,12 +208,12 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <EnergyGrid />
-      <ParticleStream />
-      {/* Priority 7: Subtle UI depth layer for premium SaaS feel */}
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
-        {/* Priority 5: Increased container spacing */}
-        <div className="container mx-auto max-w-7xl">
+      <div className="opacity-20 pointer-events-none fixed inset-0 z-0">
+        <EnergyGrid />
+        <ParticleStream />
+      </div>
+      <div className="min-h-screen bg-transparent p-4 md:p-8">
+        <div className="container mx-auto max-w-7xl relative z-10">
           {/* Header Section - Phase E: Increased margin */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div className="space-y-2">

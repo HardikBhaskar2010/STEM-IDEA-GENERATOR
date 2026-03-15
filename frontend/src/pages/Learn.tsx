@@ -93,7 +93,7 @@ const Learn: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-transparent">
         <Navbar />
         <div className="flex items-center justify-center min-h-screen px-4">
           <div className="text-center space-y-3 md:space-y-4">
@@ -108,7 +108,7 @@ const Learn: React.FC = () => {
   const chapter = filteredContent[currentChapter];
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-transparent relative">
       <Navbar />
       
       <div className="pt-20 pb-8 px-3 md:px-4 relative z-10">

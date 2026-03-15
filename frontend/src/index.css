@@ -143,8 +143,14 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: transparent;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Base dark colour on html element so the page isn't a white flash before React mounts */
+  html {
+    background-color: hsl(0 0% 8%);
   }
   
   /* Custom scrollbar - Neutral */

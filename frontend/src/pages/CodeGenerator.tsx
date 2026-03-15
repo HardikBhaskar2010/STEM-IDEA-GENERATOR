@@ -573,7 +573,7 @@ const CodeGenerator: React.FC = () => {
 
   return (
     <Layout>
-      <div className={`min-h-screen relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : ''}`}>
+      <div className={`min-h-screen relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'bg-transparent'}`}>
         <div className="relative z-10 h-full">
           {selectedProject ? renderWorkspace() : (
             <div className="container mx-auto px-6 py-12">
