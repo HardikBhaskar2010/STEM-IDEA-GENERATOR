@@ -21,6 +21,7 @@ import { preloadAnimations } from "@/lib/animation";
 import { PerfPromptBanner } from "@/components/ui/perf-prompt-banner";
 import { debugApiCalls } from "@/utils/apiDebug";
 import { CommandPalette } from "@/components/CommandPalette";
+import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { polyfillRAF } from '@/lib/browserCompat';
 
 // Lazy load page components
@@ -42,6 +43,7 @@ const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const Presentation = React.lazy(() => import("./pages/Presentation"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
+const STEMWorkshop = React.lazy(() => import("./pages/STEMWorkshop"));
 
 const queryClient = new QueryClient();
 
@@ -82,6 +84,8 @@ const App = () => {
                             <Sonner />
 
                             <BrowserRouter>
+                              {/* 🌐 Global GridScan background — theme-aware, skips /, /login, /signup, /about */}
+                              <GlobalBackground />
                               {/* 🚀 CMD+K Command Palette */}
                               <CommandPalette />
                               <PerfPromptBanner />
@@ -105,6 +109,7 @@ const App = () => {
                                   <Route path="/about" element={<About />} />
                                   <Route path="/admin" element={<AdminDashboard />} />
                                   <Route path="/presentation" element={<Presentation />} />
+                                  <Route path="/workshop" element={<STEMWorkshop />} />
                                   <Route path="*" element={<NotFound />} />
                                 </Routes>
                               </Suspense>
