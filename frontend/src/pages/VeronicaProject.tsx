@@ -7,8 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import EnhancedCodeEditor from '@/components/EnhancedCodeEditor';
-import { downloadVeronicaProjectZip, getVeronicaProject, updateVeronicaProjectFile } from '@/services/veronicaAIService';
-import { ArrowLeft, Download } from 'lucide-react';
+import {
+  downloadVeronicaProjectZip,
+  getVeronicaProject,
+  updateVeronicaProjectFile,
+  startVeronicaRun,
+  stopVeronicaRun,
+  getVeronicaRunLogs,
+  runVeronicaSelfFix,
+} from '@/services/veronicaAIService';
+import { ArrowLeft, Download, Play, Square, Terminal, Wrench } from 'lucide-react';
 
 type ProjectFile = {
   path: string;
@@ -56,6 +64,11 @@ const VeronicaProject: React.FC = () => {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [runId, setRunId] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [logs, setLogs] = useState<string>('');
+  const [fixes, setFixes] = useState<string[]>([]);
+  const [isFixing, setIsFixing] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -127,6 +140,67 @@ const VeronicaProject: React.FC = () => {
     }
   };
 
+  const handleRun = async () => {
+    if (!id || isRunning) return;
+    try {
+      setIsRunning(true);
+      const res = await startVeronicaRun(id);
+      setRunId(res.run_id);
+      toast({ title: 'Run started', description: 'Sandbox run has been started.' });
+      // Fetch initial logs (stubbed for now)
+      const logRes = await getVeronicaRunLogs(id, res.run_id);
+      setLogs(logRes.logs);
+    } catch (e) {
+      setIsRunning(false);
+      toast({
+        title: 'Run failed',
+        description: e instanceof Error ? e.message : 'Unable to start run.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleStop = async () => {
+    if (!id || !runId) return;
+    try {
+      await stopVeronicaRun(id, runId);
+      setIsRunning(false);
+      toast({ title: 'Run stopped', description: 'Sandbox run has been stopped.' });
+    } catch (e) {
+      toast({
+        title: 'Stop failed',
+        description: e instanceof Error ? e.message : 'Unable to stop run.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSelfFix = async () => {
+    if (!id || !runId || isFixing) return;
+    setIsFixing(true);
+    try {
+      const res = await runVeronicaSelfFix(id, runId);
+      const lines: string[] = [];
+      res.attempts.forEach((a) => {
+        if (a.applied_fix) {
+          lines.push(`Attempt ${a.attempt}: applied fix ${JSON.stringify(a.applied_fix)}`);
+        } else if (a.error_kind) {
+          lines.push(`Attempt ${a.attempt}: error ${a.error_kind}`);
+        }
+      });
+      setFixes(lines);
+      toast({ title: 'Self-fix finished', description: 'Review logs and applied fixes below.' });
+    } catch (e) {
+      toast({
+        title: 'Self-fix failed',
+        description: e instanceof Error ? e.message : 'Unable to run self-fix.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 pt-16 pb-10">
@@ -146,10 +220,38 @@ const VeronicaProject: React.FC = () => {
                 {spec?.summary && <p className="text-sm text-muted-foreground line-clamp-2">{spec.summary}</p>}
               </div>
             </div>
-            <Button onClick={handleDownloadZip} disabled={!id || isDownloading} className="bg-gradient-primary text-white">
-              <Download className="w-4 h-4 mr-2" />
-              {isDownloading ? 'Downloading…' : 'Download ZIP'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleRun}
+                disabled={!id || isRunning}
+                variant="outline"
+                className="border-green-500/40 text-green-500"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Run
+              </Button>
+              <Button
+                onClick={handleStop}
+                disabled={!id || !runId}
+                variant="outline"
+                className="border-red-500/40 text-red-500"
+              >
+                <Square className="w-4 h-4 mr-2" />
+                Stop
+              </Button>
+              <Button
+                onClick={handleSelfFix}
+                disabled={!id || !runId || isFixing}
+                variant="outline"
+              >
+                <Wrench className="w-4 h-4 mr-2" />
+                {isFixing ? 'Fixing…' : 'Self-fix'}
+              </Button>
+              <Button onClick={handleDownloadZip} disabled={!id || isDownloading} className="bg-gradient-primary text-white">
+                <Download className="w-4 h-4 mr-2" />
+                {isDownloading ? 'Downloading…' : 'Download ZIP'}
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-12 gap-4">
@@ -196,6 +298,31 @@ const VeronicaProject: React.FC = () => {
               <div className="p-2">
                 <EnhancedCodeEditor file={selectedFile as any} onSave={handleSave} readOnly={!selectedFile} />
               </div>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4">
+            <Card className="col-span-12 glass-effect border-primary/10 overflow-hidden">
+              <div className="p-4 border-b border-primary/10 flex items-center gap-2">
+                <Terminal className="w-4 h-4" />
+                <div className="text-sm font-semibold">Run Logs</div>
+              </div>
+              <ScrollArea className="h-40">
+                <pre className="p-4 text-xs whitespace-pre-wrap">
+                  {logs || 'Run logs will appear here once available.'}
+                </pre>
+              </ScrollArea>
+            </Card>
+            <Card className="col-span-12 glass-effect border-primary/10 overflow-hidden">
+              <div className="p-4 border-b border-primary/10 flex items-center gap-2">
+                <Wrench className="w-4 h-4" />
+                <div className="text-sm font-semibold">Applied Fixes</div>
+              </div>
+              <ScrollArea className="h-32">
+                <div className="p-4 text-xs space-y-2">
+                  {fixes.length ? fixes.map((x, i) => <div key={i}>{x}</div>) : <div>No fixes applied yet.</div>}
+                </div>
+              </ScrollArea>
             </Card>
           </div>
         </div>
