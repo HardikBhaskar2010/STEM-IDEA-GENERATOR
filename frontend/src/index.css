@@ -504,6 +504,96 @@
   animation: voice-ripple 2s ease-out infinite 0.5s;
   z-index: -1;
 }
+
+/* Sci-Fi Cursor */
+.sci-fi-cursor-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: screen;
+  opacity: 0;
+  --cursor-scale: 1;
+  transform: translate3d(-100px, -100px, 0);
+  margin-left: 0;
+  margin-top: 0;
+  transition:
+    opacity 150ms ease-out,
+    transform 40ms linear,
+    width 140ms ease-out,
+    height 140ms ease-out;
+}
+
+.sci-fi-cursor-wrapper.is-visible {
+  opacity: 1;
+}
+
+.sci-fi-crosshair {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(255, 255, 255, 0.95);
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.9))
+    drop-shadow(0 0 16px rgba(59, 130, 246, 0.55));
+  transition:
+    transform 90ms ease-out,
+    filter 120ms ease-out,
+    border-color 120ms ease-out;
+}
+
+.sci-fi-crosshair.tl {
+  top: 0;
+  left: 0;
+  border-top: 3px solid;
+  border-left: 3px solid;
+}
+.sci-fi-crosshair.tr {
+  top: 0;
+  right: 0;
+  border-top: 3px solid;
+  border-right: 3px solid;
+}
+.sci-fi-crosshair.bl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 3px solid;
+  border-left: 3px solid;
+}
+.sci-fi-crosshair.br {
+  bottom: 0;
+  right: 0;
+  border-bottom: 3px solid;
+  border-right: 3px solid;
+}
+
+/* Hovered interactive elements: slightly larger corners + purple accent */
+.sci-fi-cursor-wrapper.is-hovering .sci-fi-crosshair {
+  width: 16px;
+  height: 16px;
+  border-color: rgba(168, 85, 247, 0.98);
+  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.95))
+    drop-shadow(0 0 18px rgba(56, 189, 248, 0.5));
+}
+
+/* Click feedback */
+.sci-fi-cursor-wrapper.is-pressed {
+  --cursor-scale: 0.985;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sci-fi-cursor-wrapper {
+    transition: opacity 150ms ease-out;
+  }
+}
+
+/* When sci-fi cursor is active, hide system cursor */
+html.scifi-cursor-enabled,
+html.scifi-cursor-enabled * ,
+body.scifi-cursor-enabled,
+body.scifi-cursor-enabled * {
+  cursor: none !important;
+}
 /* Split Pane Styles */
 .Resizer {
   background: rgba(255, 255, 255, 0.1);
