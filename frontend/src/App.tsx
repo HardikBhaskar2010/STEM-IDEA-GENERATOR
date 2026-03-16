@@ -5,10 +5,10 @@ import { Analytics } from "@vercel/analytics/react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimationProvider } from "@/contexts/AnimationContext";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PerfProvider } from "@/contexts/PerfContext";
 import { ThreeDProvider } from "@/contexts/ThreeDContext";
 import { TTSProvider } from "@/contexts/TTSContext";
@@ -24,6 +24,17 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { polyfillRAF } from '@/lib/browserCompat';
 import { SciFiCursor } from "@/components/layout/SciFiCursor";
+
+const WelcomeRoute = () => {
+  const { isLoading, mode } = useAuth();
+
+  if (isLoading) return <PageLoading />;
+
+  // Only skip welcome when truly authenticated (not guest).
+  if (mode === "authenticated") return <Navigate to="/dashboard" replace />;
+
+  return <Welcome />;
+};
 
 // Lazy load page components
 const Welcome = React.lazy(() => import("./pages/Welcome"));
@@ -94,7 +105,7 @@ const App = () => {
 
                               <Suspense fallback={<PageLoading />}>
                                 <Routes>
-                                  <Route path="/" element={<Welcome />} />
+                                  <Route path="/" element={<WelcomeRoute />} />
                                   <Route path="/login" element={<Login />} />
                                   <Route path="/signup" element={<SignUp />} />
                                   <Route path="/dashboard" element={<Dashboard />} />
