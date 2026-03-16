@@ -3420,6 +3420,9 @@ def _check_veronica_rate_limit(req: Request, *, action: str, limit: int, window_
         )
 
 
+from backend.services.sandbox_manager import get_sandbox_manager, SandboxRun
+
+
 @api.post("/veronica-ai/chat", response_model=VeronicaAIChatResponse)
 async def veronica_ai_chat(request: VeronicaAIChatRequest):
     """
@@ -3581,6 +3584,300 @@ async def veronica_projects_download_zip(request: Request, project_id: str):
             "Content-Length": str(len(zip_bytes)),
         },
     )
+
+
+class VeronicaRunResponse(BaseModel):
+    project_id: str
+    run_id: str
+    status: str
+    preview_url: Optional[str] = None
+
+
+class VeronicaLogsResponse(BaseModel):
+    run_id: str
+    logs: str
+
+
+class VeronicaSelfFixResponse(BaseModel):
+    run_id: str
+    attempts: List[Dict[str, Any]]
+
+
+class VeronicaAgentJobResponse(BaseModel):
+    job_id: str
+    project_id: str
+    status: str
+    plan: List[Dict[str, Any]] = []
+    result: Dict[str, Any] = {}
+    error: Optional[str] = None
+
+class DevLabJobResponse(BaseModel):
+    job_id: str
+    type: str
+    status: str
+    project_id: Optional[str] = None
+    progress: int = 0
+    logs: List[str] = []
+    result: Dict[str, Any] = {}
+    error: Optional[str] = None
+
+class SnapshotResponse(BaseModel):
+    snapshot_id: str
+    project_id: str
+    created_at: float
+    label: str = ""
+
+class VeronicaMemoryResponse(BaseModel):
+    user_id: str
+    preferences: Dict[str, Any]
+    learning_goals: Dict[str, Any]
+
+class VeronicaMentorResponse(BaseModel):
+    project_id: str
+    suggestions: List[str]
+
+
+@api.post("/veronica-projects/{project_id}/run", response_model=VeronicaRunResponse)
+async def veronica_projects_run(request: Request, project_id: str):
+    """
+    Phase 2 stub: start a sandboxed run for a project.
+
+    Current implementation uses an in-memory SandboxManager that returns a
+    synthetic preview URL and log buffer, ready to be wired to Docker later.
+    """
+    _check_veronica_rate_limit(request, action="run_project", limit=10, window_seconds=60)
+    manager = get_sandbox_manager()
+    try:
+        run: SandboxRun = manager.create_run(project_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="project not found")
+    return VeronicaRunResponse(
+        project_id=run.project_id,
+        run_id=run.run_id,
+        status=run.status,
+        preview_url=run.preview_url,
+    )
+
+
+@api.post("/veronica-projects/{project_id}/stop", response_model=VeronicaRunResponse)
+async def veronica_projects_stop(request: Request, project_id: str, run_id: str):
+    _check_veronica_rate_limit(request, action="stop_project", limit=20, window_seconds=60)
+    manager = get_sandbox_manager()
+    try:
+        run = manager.stop_run(run_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="run not found")
+    if run.project_id != project_id:
+        raise HTTPException(status_code=400, detail="run does not belong to project")
+    return VeronicaRunResponse(
+        project_id=run.project_id,
+        run_id=run.run_id,
+        status=run.status,
+        preview_url=run.preview_url,
+    )
+
+
+@api.get("/veronica-projects/{project_id}/runs/{run_id}/logs", response_model=VeronicaLogsResponse)
+async def veronica_projects_logs(request: Request, project_id: str, run_id: str):
+    _check_veronica_rate_limit(request, action="logs", limit=60, window_seconds=60)
+    manager = get_sandbox_manager()
+    try:
+        run = manager.get_run(run_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="run not found")
+    if run.project_id != project_id:
+        raise HTTPException(status_code=400, detail="run does not belong to project")
+    logs = manager.get_logs(run_id)
+    return VeronicaLogsResponse(run_id=run_id, logs=logs)
+
+
+@api.post("/veronica-projects/{project_id}/runs/{run_id}/self-fix", response_model=VeronicaSelfFixResponse)
+async def veronica_projects_self_fix(request: Request, project_id: str, run_id: str):
+    """
+    Phase 3: bounded observe→fix→retry loop (MVP).
+    Attempts to install/build (web projects) and applies small high-confidence fixes.
+    """
+    _check_veronica_rate_limit(request, action="self_fix", limit=10, window_seconds=60)
+    from backend.services.self_fix_runner import SelfFixRunner
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    runner = SelfFixRunner(base_dir=base_dir)
+    try:
+        attempts = runner.run_self_fix(project_id=project_id, run_id=run_id, max_attempts=2)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="project not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"self-fix failed: {str(e)}")
+
+    return VeronicaSelfFixResponse(
+        run_id=run_id,
+        attempts=[a.__dict__ for a in attempts],
+    )
+
+
+@api.post("/veronica-projects/{project_id}/agent-jobs", response_model=VeronicaAgentJobResponse)
+async def veronica_agent_start(request: Request, project_id: str, run_id: str):
+    """
+    Phase 4 MVP: start an agent job (planner + deterministic tool steps).
+    """
+    _check_veronica_rate_limit(request, action="agent_start", limit=10, window_seconds=60)
+    from backend.services.agent_orchestrator import get_agent_orchestrator
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    orch = get_agent_orchestrator(base_dir=base_dir)
+    job = orch.start_job(project_id=project_id)
+    job = orch.run_job(job.job_id, run_id=run_id)
+    return VeronicaAgentJobResponse(
+        job_id=job.job_id,
+        project_id=job.project_id,
+        status=job.status,
+        plan=job.plan,
+        result=job.result,
+        error=job.error,
+    )
+
+
+@api.get("/veronica-agent-jobs/{job_id}", response_model=VeronicaAgentJobResponse)
+async def veronica_agent_get(request: Request, job_id: str):
+    _check_veronica_rate_limit(request, action="agent_get", limit=60, window_seconds=60)
+    from backend.services.agent_orchestrator import get_agent_orchestrator
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    orch = get_agent_orchestrator(base_dir=base_dir)
+    try:
+        job = orch.get_job(job_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="job not found")
+    return VeronicaAgentJobResponse(
+        job_id=job.job_id,
+        project_id=job.project_id,
+        status=job.status,
+        plan=job.plan,
+        result=job.result,
+        error=job.error,
+    )
+
+
+@api.post("/veronica-devlab/jobs", response_model=DevLabJobResponse)
+async def veronica_devlab_create_job(request: Request, job_type: str, project_id: Optional[str] = None):
+    """
+    Phase 5 MVP job endpoint. Creates and immediately completes simple jobs.
+    """
+    _check_veronica_rate_limit(request, action="devlab_job_create", limit=30, window_seconds=60)
+    from backend.services.job_system import get_job_system
+
+    js = get_job_system()
+    job = js.create_job(type=job_type, project_id=project_id)
+    js.append_log(job.job_id, f"Job created: {job_type}")
+    js.set_progress(job.job_id, 10)
+    # MVP: mark succeeded immediately
+    js.set_progress(job.job_id, 100)
+    js.succeed(job.job_id, result={"message": "MVP job completed"})
+    job = js.get_job(job.job_id)
+    return DevLabJobResponse(**job.__dict__)
+
+
+@api.get("/veronica-devlab/jobs/{job_id}", response_model=DevLabJobResponse)
+async def veronica_devlab_get_job(request: Request, job_id: str):
+    _check_veronica_rate_limit(request, action="devlab_job_get", limit=120, window_seconds=60)
+    from backend.services.job_system import get_job_system
+
+    js = get_job_system()
+    try:
+        job = js.get_job(job_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="job not found")
+    return DevLabJobResponse(**job.__dict__)
+
+
+@api.post("/veronica-projects/{project_id}/snapshots", response_model=SnapshotResponse)
+async def veronica_create_snapshot(request: Request, project_id: str, label: str = ""):
+    _check_veronica_rate_limit(request, action="snapshot_create", limit=30, window_seconds=60)
+    from backend.services.project_versioning import ProjectVersioning
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    pv = ProjectVersioning(base_dir=base_dir)
+    snap = pv.create_snapshot(project_id=project_id, label=label)
+    return SnapshotResponse(snapshot_id=snap.snapshot_id, project_id=snap.project_id, created_at=snap.created_at, label=snap.label)
+
+
+@api.get("/veronica-projects/{project_id}/snapshots", response_model=List[SnapshotResponse])
+async def veronica_list_snapshots(request: Request, project_id: str):
+    _check_veronica_rate_limit(request, action="snapshot_list", limit=120, window_seconds=60)
+    from backend.services.project_versioning import ProjectVersioning
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    pv = ProjectVersioning(base_dir=base_dir)
+    snaps = pv.list_snapshots(project_id=project_id)
+    return [SnapshotResponse(snapshot_id=s.snapshot_id, project_id=s.project_id, created_at=s.created_at, label=s.label) for s in snaps]
+
+
+@api.post("/veronica-projects/{project_id}/snapshots/{snapshot_id}/restore")
+async def veronica_restore_snapshot(request: Request, project_id: str, snapshot_id: str):
+    _check_veronica_rate_limit(request, action="snapshot_restore", limit=30, window_seconds=60)
+    from backend.services.project_versioning import ProjectVersioning
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    pv = ProjectVersioning(base_dir=base_dir)
+    try:
+        pv.restore_snapshot(project_id=project_id, snapshot_id=snapshot_id)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"ok": True, "project_id": project_id, "snapshot_id": snapshot_id}
+
+
+@api.get("/veronica/memory/{user_id}", response_model=VeronicaMemoryResponse)
+async def veronica_get_memory(request: Request, user_id: str):
+    _check_veronica_rate_limit(request, action="memory_get", limit=120, window_seconds=60)
+    from backend.services.veronica_memory import VeronicaMemoryStore
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    store = VeronicaMemoryStore(base_dir=base_dir)
+    mem = store.load(user_id)
+    return VeronicaMemoryResponse(user_id=mem.user_id, preferences=mem.preferences, learning_goals=mem.learning_goals)
+
+
+@api.post("/veronica/memory/{user_id}", response_model=VeronicaMemoryResponse)
+async def veronica_update_memory(request: Request, user_id: str, payload: Dict[str, Any]):
+    _check_veronica_rate_limit(request, action="memory_update", limit=60, window_seconds=60)
+    from backend.services.veronica_memory import VeronicaMemoryStore, UserMemory
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    store = VeronicaMemoryStore(base_dir=base_dir)
+    existing = store.load(user_id)
+    prefs = dict(existing.preferences)
+    goals = dict(existing.learning_goals)
+    prefs.update(dict(payload.get("preferences") or {}))
+    goals.update(dict(payload.get("learning_goals") or {}))
+    mem = UserMemory(user_id=user_id, preferences=prefs, learning_goals=goals)
+    store.save(mem)
+    return VeronicaMemoryResponse(user_id=mem.user_id, preferences=mem.preferences, learning_goals=mem.learning_goals)
+
+
+@api.get("/veronica-projects/{project_id}/mentor", response_model=VeronicaMentorResponse)
+async def veronica_mentor_suggestions(request: Request, project_id: str):
+    """
+    Phase 6 MVP mentorship: returns a few guided next-step suggestions
+    derived from the current ProjectSpec.
+    """
+    _check_veronica_rate_limit(request, action="mentor", limit=60, window_seconds=60)
+    from backend.services.veronica_project_store import VeronicaProjectStore
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    store = VeronicaProjectStore(base_dir=base_dir)
+    try:
+        spec = store.load_spec(project_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="project not found")
+
+    suggestions = [
+        "Run the project and confirm you can reproduce the current behavior end-to-end.",
+        "Add one small improvement (e.g., better error handling or clearer UI copy) and re-run.",
+        "Write a short checklist in README for wiring/safety/testing before you build.",
+    ]
+    if spec.platform.value == "web":
+        suggestions.insert(0, "Add a simple smoke test (or at least a build step) and verify it passes before changes.")
+    return VeronicaMentorResponse(project_id=project_id, suggestions=suggestions)
 
 
 @api.put("/veronica-projects/{project_id}/files")

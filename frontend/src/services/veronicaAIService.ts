@@ -79,3 +79,54 @@ export async function downloadVeronicaProjectZip(projectId: string): Promise<Blo
   return await response.blob();
 }
 
+export interface VeronicaRunResponse {
+  project_id: string;
+  run_id: string;
+  status: string;
+  preview_url?: string | null;
+}
+
+export interface VeronicaLogsResponse {
+  run_id: string;
+  logs: string;
+}
+
+export async function startVeronicaRun(projectId: string): Promise<VeronicaRunResponse> {
+  return apiFetch<VeronicaRunResponse>(`/veronica-projects/${encodeURIComponent(projectId)}/run`, {
+    method: 'POST',
+  });
+}
+
+export async function stopVeronicaRun(projectId: string, runId: string): Promise<VeronicaRunResponse> {
+  const params = new URLSearchParams({ run_id: runId });
+  return apiFetch<VeronicaRunResponse>(`/veronica-projects/${encodeURIComponent(projectId)}/stop?${params.toString()}`, {
+    method: 'POST',
+  });
+}
+
+export async function getVeronicaRunLogs(projectId: string, runId: string): Promise<VeronicaLogsResponse> {
+  return apiFetch<VeronicaLogsResponse>(
+    `/veronica-projects/${encodeURIComponent(projectId)}/runs/${encodeURIComponent(runId)}/logs`
+  );
+}
+
+export interface VeronicaSelfFixResponse {
+  run_id: string;
+  attempts: Array<{
+    attempt: number;
+    command: string[];
+    exit_code: number;
+    error_kind?: string | null;
+    applied_fix?: any | null;
+    stdout: string;
+    stderr: string;
+  }>;
+}
+
+export async function runVeronicaSelfFix(projectId: string, runId: string): Promise<VeronicaSelfFixResponse> {
+  return apiFetch<VeronicaSelfFixResponse>(
+    `/veronica-projects/${encodeURIComponent(projectId)}/runs/${encodeURIComponent(runId)}/self-fix`,
+    { method: 'POST' }
+  );
+}
+
