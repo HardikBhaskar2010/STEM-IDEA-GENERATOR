@@ -64,6 +64,8 @@ if (typeof window !== "undefined") {
   preloadAnimations();
 }
 
+import { ThemeProvider } from "next-themes";
+
 const App = () => {
   useEffect(() => {
     polyfillRAF();
@@ -79,63 +81,65 @@ const App = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <PreferencesProvider>
-            <PerfProvider>
-              <ThreeDProvider>
-                <AnimationProvider>
-                  <TTSProvider>
-                    <CodeGenerationProvider>
-                      <CompetitionProvider>
-                        <AchievementProvider>
-                          <TooltipProvider>
-                            {/* 🔥 Vercel magic */}
-                            <SpeedInsights />
-                            <Analytics />
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <PreferencesProvider>
+              <PerfProvider>
+                <ThreeDProvider>
+                  <AnimationProvider>
+                    <TTSProvider>
+                      <CodeGenerationProvider>
+                        <CompetitionProvider>
+                          <AchievementProvider>
+                            <TooltipProvider>
+                              {/* 🔥 Vercel magic */}
+                              <SpeedInsights />
+                              <Analytics />
 
-                            <Toaster />
-                            <Sonner />
+                              <Toaster />
+                              <Sonner />
 
-                            <BrowserRouter>
-                              <SciFiCursor />
-                              {/* 🌐 Global GridScan background — theme-aware, skips /, /login, /signup, /about */}
-                              <GlobalBackground />
-                              {/* 🚀 CMD+K Command Palette */}
-                              <CommandPalette />
-                              <PerfPromptBanner />
+                              <BrowserRouter>
+                                <SciFiCursor />
+                                {/* 🌐 Global GridScan background — theme-aware, skips /, /login, /signup, /about */}
+                                <GlobalBackground />
+                                {/* 🚀 CMD+K Command Palette */}
+                                <CommandPalette />
+                                <PerfPromptBanner />
 
-                              <Suspense fallback={<PageLoading />}>
-                                <Routes>
-                                  <Route path="/" element={<WelcomeRoute />} />
-                                  <Route path="/login" element={<Login />} />
-                                  <Route path="/signup" element={<SignUp />} />
-                                  <Route path="/dashboard" element={<Dashboard />} />
-                                  <Route path="/auth/callback" element={<AuthCallback />} />
-                                  <Route path="/project/:id" element={<ProjectDetail />} />
-                                  <Route path="/generator" element={<Generator />} />
-                                  <Route path="/code-generator" element={<CodeGenerator />} />
-                                  <Route path="/competition" element={<Competition />} />
-                                  <Route path="/components" element={<Components />} />
-                                  <Route path="/components/compare" element={<ComponentComparison />} />
-                                  <Route path="/library" element={<Library />} />
-                                  <Route path="/learn" element={<Learn />} />
-                                  <Route path="/profile" element={<Profile />} />
-                                  <Route path="/about" element={<About />} />
-                                  <Route path="/admin" element={<AdminDashboard />} />
-                                  <Route path="/presentation" element={<Presentation />} />
-                                  <Route path="/workshop" element={<STEMWorkshop />} />
-                                  <Route path="*" element={<NotFound />} />
-                                </Routes>
-                              </Suspense>
-                            </BrowserRouter>
-                          </TooltipProvider>
-                        </AchievementProvider>
-                      </CompetitionProvider>
-                  </CodeGenerationProvider>
-                </TTSProvider>
-              </AnimationProvider>
-              </ThreeDProvider>
-            </PerfProvider>
-          </PreferencesProvider>
+                                <Suspense fallback={<PageLoading />}>
+                                  <Routes>
+                                    <Route path="/" element={<WelcomeRoute />} />
+                                    <Route path="/login" element={<Login />} />
+                                    <Route path="/signup" element={<SignUp />} />
+                                    <Route path="/dashboard" element={<Dashboard />} />
+                                    <Route path="/auth/callback" element={<AuthCallback />} />
+                                    <Route path="/project/:id" element={<ProjectDetail />} />
+                                    <Route path="/generator" element={<Generator />} />
+                                    <Route path="/code-generator" element={<CodeGenerator />} />
+                                    <Route path="/competition" element={<Competition />} />
+                                    <Route path="/components" element={<Components />} />
+                                    <Route path="/components/compare" element={<ComponentComparison />} />
+                                    <Route path="/library" element={<Library />} />
+                                    <Route path="/learn" element={<Learn />} />
+                                    <Route path="/profile" element={<Profile />} />
+                                    <Route path="/about" element={<About />} />
+                                    <Route path="/admin" element={<AdminDashboard />} />
+                                    <Route path="/presentation" element={<Presentation />} />
+                                    <Route path="/workshop" element={<STEMWorkshop />} />
+                                    <Route path="*" element={<NotFound />} />
+                                  </Routes>
+                                </Suspense>
+                              </BrowserRouter>
+                            </TooltipProvider>
+                          </AchievementProvider>
+                        </CompetitionProvider>
+                      </CodeGenerationProvider>
+                    </TTSProvider>
+                  </AnimationProvider>
+                </ThreeDProvider>
+              </PerfProvider>
+            </PreferencesProvider>
+          </ThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
