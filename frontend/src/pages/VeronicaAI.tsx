@@ -106,7 +106,7 @@ const VeronicaAI: React.FC = () => {
   return (
     <Layout>
       <div className="relative min-h-screen overflow-hidden">
-        <Silk speed={5} scale={1.2} color="#111827" noiseIntensity={1.1} rotation={0.15} />
+        <Silk speed={5} scale={1.2} rotation={0.15} />
         <div className="container mx-auto px-4 pt-24 pb-12 relative">
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex items-center justify-between gap-4">

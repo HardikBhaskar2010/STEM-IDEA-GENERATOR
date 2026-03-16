@@ -3,6 +3,7 @@ import React, { forwardRef, useMemo, useRef, useLayoutEffect } from 'react';
 import { Canvas, useFrame, useThree, RootState } from '@react-three/fiber';
 import { Color, Mesh, ShaderMaterial } from 'three';
 import type { IUniform } from 'three';
+import { usePreferences, COLOR_THEMES } from '@/contexts/PreferencesContext';
 
 type NormalizedRGB = [number, number, number];
 
@@ -129,22 +130,37 @@ export interface SilkProps {
 const Silk: React.FC<SilkProps> = ({
   speed = 5,
   scale = 1,
-  color = '#7B7481',
-  noiseIntensity = 1.5,
+  color,
+  noiseIntensity = 0,
   rotation = 0,
 }) => {
   const meshRef = useRef<Mesh>(null);
+
+  const { colorTheme } = usePreferences();
+
+  const resolvedColor = useMemo(() => {
+    if (color) return color;
+    const theme = COLOR_THEMES[colorTheme as keyof typeof COLOR_THEMES] || COLOR_THEMES.allblack;
+    const hslStr = `hsl(${theme.colors.primary})`;
+    // Convert HSL to hex using a small canvas (same trick as GlobalBackground)
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '#111827';
+    ctx.fillStyle = hslStr;
+    const hex = ctx.fillStyle; // normalized hex/rgb
+    return hex as string;
+  }, [color, colorTheme]);
 
   const uniforms = useMemo<SilkUniforms>(
     () => ({
       uSpeed: { value: speed },
       uScale: { value: scale },
       uNoiseIntensity: { value: noiseIntensity },
-      uColor: { value: new Color(...hexToNormalizedRGB(color)) },
+      uColor: { value: new Color(...hexToNormalizedRGB(resolvedColor)) },
       uRotation: { value: rotation },
       uTime: { value: 0 },
     }),
-    [speed, scale, noiseIntensity, color, rotation]
+    [speed, scale, noiseIntensity, resolvedColor, rotation]
   );
 
   return (
