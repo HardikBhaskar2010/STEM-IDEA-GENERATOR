@@ -51,6 +51,28 @@ export function ProjectCard({
     );
   };
 
+  const firstInoFile = useMemo(
+    () => project.files?.find((f) => f.path.toLowerCase().endsWith('.ino')),
+    [project.files]
+  );
+
+  const handleDownloadIno = () => {
+    if (!firstInoFile) return;
+    const blob = new Blob([firstInoFile.content || ''], { type: 'text/x-arduino' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = firstInoFile.path.split('/').pop() || 'sketch.ino';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({
+      title: 'Sketch downloaded',
+      description: `${link.download} has been downloaded.`,
+    });
+  };
+
   const handleSave = async () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -259,6 +281,12 @@ export function ProjectCard({
                   return null;
               }
             })}
+          {firstInoFile && (
+            <Button size="sm" variant="outline" onClick={handleDownloadIno}>
+              <Download className="w-4 h-4 mr-2" />
+              Download .ino
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Any, Awaitable, Callable, Dict, Optional
 
-from backend.models.project_spec import ProjectSpec, VeronicaPlatform
+from backend.models.project_spec import ProjectSpec, VeronicaPlatform, ProjectFile
 from backend.services.project_spec_validator import ProjectSpecValidationError, validate_project_spec_from_text
 
 
@@ -112,12 +112,105 @@ async def generate_project_spec(
     text = await llm_complete(prompt)
     try:
         spec, _raw = validate_project_spec_from_text(text)
-        return spec
     except ProjectSpecValidationError as e:
         # One bounded repair attempt
         error_summary = str(e.details or e)
         repair = _repair_prompt(original_message=message, bad_output=text, error_summary=error_summary)
         text2 = await llm_complete(repair)
-        spec2, _raw2 = validate_project_spec_from_text(text2)
-        return spec2
+        spec, _raw2 = validate_project_spec_from_text(text2)
+
+    # Post-process spec to enforce platform-specific expectations.
+    files: list[ProjectFile] = list(spec.files or [])
+
+    if picked_platform == VeronicaPlatform.WEB:
+        # Ensure a minimal React+Vite template is present.
+        template_files: dict[str, str] = {
+            "package.json": f'''{{
+  "name": "{spec.title.lower().replace(' ', '-')}",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {{
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }},
+  "dependencies": {{
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }},
+  "devDependencies": {{
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  }}
+}}''',
+            "index.html": """<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Veronica Project</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+""",
+            "src/main.tsx": """import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+""",
+            "src/App.tsx": f"""import React from 'react';
+
+function App() {{
+  return (
+    <main style={{{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}}>
+      <h1>{spec.title}</h1>
+      <p>{spec.summary}</p>
+    </main>
+  );
+}}
+
+export default App;
+""",
+        }
+
+        existing_paths = {f.path for f in files}
+        for path, content in template_files.items():
+            if path not in existing_paths:
+                files.append(ProjectFile(path=path, content=content, is_main=path == "src/App.tsx"))
+
+    if picked_platform == VeronicaPlatform.ARDUINO:
+        # Ensure at least one .ino sketch exists.
+        has_ino = any(f.path.endswith(".ino") for f in files)
+        if not has_ino:
+            sketch = f"""// {spec.title}
+// {spec.summary}
+// Auto-generated starter sketch by Veronica.
+
+void setup() {{
+  // TODO: initialize pins, sensors, and communication here.
+}}
+
+void loop() {{
+  // TODO: implement main project logic here.
+}}
+"""
+            files.append(ProjectFile(path="arduino/main.ino", content=sketch, is_main=True))
+
+    # If no main file was marked, pick a reasonable default.
+    if not any(f.is_main for f in files):
+        for candidate in ("src/App.tsx", "src/main.tsx", "arduino/main.ino"):
+            for f in files:
+                if f.path == candidate:
+                    f.is_main = True
+                    break
+
+    spec = spec.model_copy(update={"files": files})
+    return spec
 
