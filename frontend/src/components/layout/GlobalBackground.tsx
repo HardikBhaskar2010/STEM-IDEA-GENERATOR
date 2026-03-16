@@ -20,7 +20,8 @@ export function GlobalBackground() {
       path === '/login' || 
       path === '/signup' || 
       path === '/about' || 
-      path.startsWith('/auth/')
+      path.startsWith('/auth/') ||
+      path === '/veronica-ai'
     );
   }, [location.pathname]);
 
