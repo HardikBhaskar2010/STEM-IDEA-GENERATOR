@@ -5,12 +5,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Send, Sparkles } from 'lucide-react';
+import { Send, Sparkles, Cpu, Bug, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { sendVeronicaMessage, type VeronicaAIAction, type VeronicaAIChatResponse } from '@/services/veronicaAIService';
 import { ProjectCard } from '@/components/veronica/ProjectCard';
+import Silk from '@/components/veronica/Silk';
 
 type ChatMessage = {
   id: string;
@@ -104,110 +105,153 @@ const VeronicaAI: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 pt-16 pb-10">
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <h1 className="text-4xl font-bold text-gradient flex items-center gap-2">
-                <Sparkles className="w-7 h-7 text-primary" />
-                Veronica AI
-              </h1>
-              <p className="text-muted-foreground">
-                Chat to generate project ideas (code generation is kept in the backend for later).
-              </p>
+      <div className="relative min-h-screen overflow-hidden">
+        <Silk speed={5} scale={1.2} color="#111827" noiseIntensity={1.1} rotation={0.15} />
+        <div className="container mx-auto px-4 pt-24 pb-12 relative">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-2">
+                <Badge variant="outline" className="border-primary/30 bg-primary/5 text-xs uppercase tracking-wide">
+                  Veronica Studio
+                </Badge>
+                <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-gradient flex items-center gap-2">
+                  <Sparkles className="w-7 h-7 text-primary" />
+                  Where STEM ideas become reality
+                </h1>
+                <p className="text-muted-foreground max-w-2xl">
+                  Describe what you want to build and Veronica will turn it into a structured STEM project you can actually ship.
+                </p>
+              </div>
+              {lastUserMessage && (
+                <div className="hidden md:flex flex-col items-end gap-2">
+                  <Badge variant="outline" className="bg-primary/5 border-primary/15 text-primary text-xs">
+                    Last prompt
+                  </Badge>
+                  <p className="text-xs text-muted-foreground max-w-xs text-right line-clamp-2">
+                    {lastUserMessage}
+                  </p>
+                </div>
+              )}
             </div>
-            {lastUserMessage && (
-              <Badge variant="outline" className="bg-primary/5 border-primary/15 text-primary">
-                Last: {lastUserMessage.slice(0, 28)}{lastUserMessage.length > 28 ? '…' : ''}
-              </Badge>
-            )}
-          </div>
 
-          <Card className="glass-effect border-primary/10 overflow-hidden">
-            <ScrollArea className="h-[65vh]">
-              <div className="p-5 space-y-4">
-                {messages.map((m) => (
-                  <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
-                    <div className={cn('max-w-[85%] space-y-2', m.role === 'user' ? 'text-right' : 'text-left')}>
-                      <div
-                        className={cn(
-                          'rounded-2xl px-4 py-3 text-sm leading-relaxed',
-                          m.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        )}
-                      >
-                        {m.role === 'user' ? (
-                          <p className="whitespace-pre-wrap">{m.content}</p>
-                        ) : (
-                          <div className="chat-markdown">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {m.content}
-                            </ReactMarkdown>
+            {/* Mode pills row */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-background/70 px-2 py-1 text-xs shadow-sm">
+              <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-primary">
+                <Lightbulb className="w-3 h-3" />
+                <span>Project Idea</span>
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-muted-foreground">
+                <Cpu className="w-3 h-3" />
+                <span>Full Build (soon)</span>
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-muted-foreground">
+                <Bug className="w-3 h-3" />
+                <span>Debug Help</span>
+              </div>
+            </div>
+
+            <Card className="glass-effect border-primary/20 bg-background/80 backdrop-blur-2xl shadow-[0_18px_45px_rgba(0,0,0,0.55)] overflow-hidden">
+              <ScrollArea className="h-[65vh]">
+                <div className="p-6 space-y-4">
+                  {messages.map((m) => (
+                    <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+                      <div className={cn('max-w-[80%] space-y-2', m.role === 'user' ? 'text-right' : 'text-left')}>
+                        <div
+                          className={cn(
+                            'rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm',
+                            m.role === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-gradient-to-br from-background/80 to-background/40 border border-primary/10 text-foreground'
+                          )}
+                        >
+                          {m.role === 'user' ? (
+                            <p className="whitespace-pre-wrap">{m.content}</p>
+                          ) : (
+                            <div className="chat-markdown prose prose-invert max-w-none text-sm">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {m.content}
+                              </ReactMarkdown>
+                            </div>
+                          )}
+                        </div>
+
+                        {m.role === 'assistant' && typeof m.confidence === 'number' && m.intent && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Badge variant="outline" className="bg-background/40 border-primary/20">
+                              {m.intent}
+                            </Badge>
+                            <span>confidence: {(m.confidence * 100).toFixed(0)}%</span>
                           </div>
                         )}
+
+                        {m.role === 'assistant' && m.project && Array.isArray(m.actions) && (
+                          <ProjectCard
+                            project={m.project as any}
+                            actions={m.actions}
+                            defaultProjectType={m.projectTypeHint}
+                            onActionsChange={(next) => {
+                              setMessages((prev) =>
+                                prev.map((x) => (x.id === m.id ? { ...x, actions: next } : x))
+                              );
+                            }}
+                          />
+                        )}
                       </div>
-
-                      {m.role === 'assistant' && typeof m.confidence === 'number' && m.intent && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Badge variant="outline" className="bg-background/40">
-                            {m.intent}
-                          </Badge>
-                          <span>confidence: {(m.confidence * 100).toFixed(0)}%</span>
-                        </div>
-                      )}
-
-                      {m.role === 'assistant' && m.project && Array.isArray(m.actions) && (
-                        <ProjectCard
-                          project={m.project as any}
-                          actions={m.actions}
-                          defaultProjectType={m.projectTypeHint}
-                          onActionsChange={(next) => {
-                            setMessages((prev) =>
-                              prev.map((x) => (x.id === m.id ? { ...x, actions: next } : x))
-                            );
-                          }}
-                        />
-                      )}
                     </div>
-                  </div>
-                ))}
+                  ))}
 
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-2xl px-4 py-3 text-sm text-muted-foreground">
-                      Veronica is thinking…
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-background/70 border border-primary/15 rounded-2xl px-4 py-3 text-sm text-muted-foreground shadow-sm">
+                        Veronica is thinking…
+                      </div>
                     </div>
+                  )}
+
+                  <div ref={endRef} />
+                </div>
+              </ScrollArea>
+
+              <div className="border-t border-primary/10 px-4 py-4 bg-background/70">
+                {/* Quick prompt suggestions */}
+                <div className="flex flex-wrap gap-2 mb-3 text-xs">
+                  <span className="text-muted-foreground mr-1">Try:</span>
+                  <Badge variant="outline" className="cursor-pointer bg-background/80 hover:bg-primary/10">
+                    Beginner Arduino robot for 2 weeks
+                  </Badge>
+                  <Badge variant="outline" className="cursor-pointer bg-background/80 hover:bg-primary/10">
+                    IoT sensor project under $50
+                  </Badge>
+                  <Badge variant="outline" className="cursor-pointer bg-background/80 hover:bg-primary/10">
+                    Web app to track experiments
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 rounded-full border border-primary/20 bg-background/80 px-4 py-1 flex items-center gap-3 shadow-inner">
+                    <Input
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={onKeyDown}
+                      placeholder="Describe what you want to build (platform, difficulty, goals)…"
+                      disabled={isLoading}
+                      className="h-10 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+                    />
                   </div>
-                )}
-
-                <div ref={endRef} />
+                  <Button
+                    onClick={handleSend}
+                    disabled={isLoading || !inputValue.trim()}
+                    className="h-11 px-5 bg-gradient-primary text-white rounded-full shadow-lg"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="mt-2 text-[10px] text-muted-foreground">
+                  Veronica focuses on structured STEM project ideas first. Code generation and live runs are enabled from your project view.
+                </p>
               </div>
-            </ScrollArea>
-
-            <div className="border-t border-primary/10 p-4">
-              <div className="flex gap-2">
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  placeholder="Describe what you want (e.g., 'Give me a robotics project idea')"
-                  disabled={isLoading}
-                  className="h-12"
-                />
-                <Button
-                  onClick={handleSend}
-                  disabled={isLoading || !inputValue.trim()}
-                  className="h-12 px-4 bg-gradient-primary text-white"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Press Enter to send.
-              </p>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       </div>
     </Layout>
