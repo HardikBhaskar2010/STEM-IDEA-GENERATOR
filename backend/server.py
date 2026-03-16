@@ -641,6 +641,25 @@ class GeneratedProject(BaseModel):
     skills: List[str]
     steps: List[str]
 
+class VeronicaAIChatRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
+
+class VeronicaAIAction(BaseModel):
+    type: str
+    enabled: bool = True
+    id: Optional[str] = None
+    label: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
+
+class VeronicaAIChatResponse(BaseModel):
+    intent: str
+    confidence: float
+    assistant_text: str
+    actions: List[VeronicaAIAction]
+    project: Optional[Dict[str, Any]] = None
+
 # ───────────────── OPENROUTER CLIENT ─────────────────
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
@@ -3366,6 +3385,57 @@ Return ONLY the JSON object, no markdown, no extra text."""
             "X-Accel-Buffering": "no",  # Disable nginx buffering
             "Connection": "keep-alive",
         }
+    )
+
+
+@api.post("/veronica-ai/chat", response_model=VeronicaAIChatResponse)
+async def veronica_ai_chat(request: VeronicaAIChatRequest):
+    """
+    Veronica AI unified chat endpoint.
+    Performs intent classification (intent + confidence) then routes to existing modules.
+    """
+    from backend.services.veronica_intent_classifier import classify_intent
+    from backend.services.veronica_ai_router import route_message
+
+    if not request.message or not request.message.strip():
+        raise HTTPException(status_code=400, detail="message is required")
+
+    async def llm_complete(prompt: str) -> str:
+        # Use existing OpenRouter helper if available.
+        # Falls back to raising if OpenRouter isn't configured.
+        return await call_openrouter(prompt, model="stepfun/step-3.5-flash:free")
+
+    classification = await classify_intent(
+        request.message,
+        llm_complete=(llm_complete if openrouter_client else None),
+        llm_threshold=0.6,
+    )
+
+    async def generate_project_fn(params_dict: Dict[str, Any]) -> Dict[str, Any]:
+        params_obj = ProjectParams(**params_dict)
+        project_result = await generate_project(params_obj)
+        # Normalize pydantic/dict return
+        if hasattr(project_result, "model_dump"):
+            return project_result.model_dump()
+        if hasattr(project_result, "dict"):
+            return project_result.dict()
+        return project_result
+
+    routed = await route_message(
+        request.message,
+        classification,
+        generate_project_fn=generate_project_fn,
+    )
+
+    # Convert actions to response model
+    actions = [VeronicaAIAction(**a) for a in routed.actions]
+
+    return VeronicaAIChatResponse(
+        intent=routed.intent.value,
+        confidence=float(routed.confidence),
+        assistant_text=routed.assistant_text,
+        actions=actions,
+        project=routed.project,
     )
 
 @api.post("/projects/sync", response_model=ProjectSyncResponse)

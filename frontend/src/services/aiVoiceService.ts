@@ -228,7 +228,7 @@ class AIVoiceService {
           return {
             text: "Aww, looks like you haven't created any projects yet! But that's totally okay - everyone starts somewhere! 🌱\n\n✨ **Let's build something AMAZING together!** I can help you make:\n• 🤖 **Super cool robots** - they can move and think!\n• 🏠 **Smart home gadgets** - like magic for your house!\n• ⚡ **Electronic wizardry** - lights, sounds, and circuits!\n• 🤖 **Automation magic** - making things work by themselves!\n\nJust say something like 'Create a fun robotics project!' and we'll start our adventure! This is gonna be epic! 🎊",
             action: 'suggest_navigation',
-            parameters: { path: '/generator' }
+            parameters: { path: '/veronica-ai' }
           };
         }
 
@@ -388,7 +388,7 @@ class AIVoiceService {
           text: `OMG YES! 🎉 Building projects is like, the BEST thing ever! I'm so excited to help you create something absolutely amazing! ✨\n\n**📋 Here's what I understood from your request:**\n• **You asked for**: "${transcript}"\n• **Project Type**: ${projectType.charAt(0).toUpperCase() + projectType.slice(1)}\n• **Skill Level**: ${skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1)}\n• **Your Vision**: ${transcript}\n\n🚀 **Taking you to our super cool Project Lab** where I'll pre-fill everything for you! The form will be ready with all your preferences, and you can generate your amazing STEM project with just one click!\n\nThis is gonna be SO much fun! Let's build something incredible together! 🌟`,
           action: 'navigate',
           parameters: { 
-            path: '/generator',
+            path: '/veronica-ai',
             formData: {
               projectType: projectType,
               skillLevel: skillLevel,
@@ -450,7 +450,7 @@ class AIVoiceService {
         return {
           text: "Opening the Project Lab where you can generate new STEM project ideas.",
           action: 'navigate',
-          parameters: { path: '/generator' }
+          parameters: { path: '/veronica-ai' }
         };
       }
     }
@@ -460,7 +460,7 @@ class AIVoiceService {
       return {
         text: "Robotics projects are exciting! I can help you create anything from simple line-following robots to advanced autonomous systems. Would you like me to take you to the Project Lab to generate a custom robotics project?",
         action: 'suggest_navigation',
-        parameters: { path: '/generator', type: 'robotics' }
+        parameters: { path: '/veronica-ai', type: 'robotics' }
       };
     }
 
@@ -468,7 +468,7 @@ class AIVoiceService {
       return {
         text: "IoT projects are great for connecting devices and creating smart systems! I can help you design projects like smart home automation, environmental monitoring, or connected sensors. Want to create an IoT project?",
         action: 'suggest_navigation',
-        parameters: { path: '/generator', type: 'iot' }
+        parameters: { path: '/veronica-ai', type: 'iot' }
       };
     }
 
@@ -692,7 +692,7 @@ class AIVoiceService {
         text: `Oops! I had trouble creating your project directly, but don't worry! 😅\n\nLet me take you to our super cool Project Lab where we can create your ${skillLevel} level ${projectType} project together! Sometimes the hands-on approach is even more fun! 🚀\n\n*Error: ${error.message}*`,
         action: 'navigate',
         parameters: { 
-          path: '/generator',
+          path: '/veronica-ai',
           formData: {
             projectType: projectType,
             skillLevel: skillLevel,

@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Home, Zap, Cpu, BookOpen, User } from 'lucide-react';
+import { Home, Sparkles, Cpu, BookOpen, User } from 'lucide-react';
 import { type BreadcrumbItem } from '@/components/ui/breadcrumb';
 
 // Route configuration for breadcrumbs
 const routeConfig: Record<string, { title: string; icon?: React.ComponentType<{ className?: string }> }> = {
   '/': { title: 'Home', icon: Home },
-  '/generator': { title: 'Generator', icon: Zap },
+  '/veronica-ai': { title: 'Veronica AI', icon: Sparkles },
   '/components': { title: 'Components', icon: Cpu },
   '/library': { title: 'Library', icon: BookOpen },
   '/profile': { title: 'Profile', icon: User },

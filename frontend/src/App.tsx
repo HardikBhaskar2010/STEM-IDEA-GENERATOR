@@ -41,8 +41,7 @@ const Welcome = React.lazy(() => import("./pages/Welcome"));
 const Login = React.lazy(() => import("./pages/Login"));
 const SignUp = React.lazy(() => import("./pages/SignUp"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
-const Generator = React.lazy(() => import("./pages/Generator"));
-const CodeGenerator = React.lazy(() => import("./pages/CodeGenerator"));
+const VeronicaAI = React.lazy(() => import("./pages/VeronicaAI"));
 const Competition = React.lazy(() => import("./pages/Competition"));
 const Components = React.lazy(() => import("./pages/Components"));
 const Library = React.lazy(() => import("./pages/Library"));
@@ -114,8 +113,7 @@ const App = () => {
                                     <Route path="/dashboard" element={<Dashboard />} />
                                     <Route path="/auth/callback" element={<AuthCallback />} />
                                     <Route path="/project/:id" element={<ProjectDetail />} />
-                                    <Route path="/generator" element={<Generator />} />
-                                    <Route path="/code-generator" element={<CodeGenerator />} />
+                                    <Route path="/veronica-ai" element={<VeronicaAI />} />
                                     <Route path="/competition" element={<Competition />} />
                                     <Route path="/components" element={<Components />} />
                                     <Route path="/components/compare" element={<ComponentComparison />} />

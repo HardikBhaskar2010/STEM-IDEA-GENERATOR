@@ -130,7 +130,7 @@ const HeroSection = () => {
             Start Exploring
           </button>
           <button 
-            onClick={() => navigate("/generator")}
+            onClick={() => navigate("/veronica-ai")}
             className="btn-ghost-glow px-8 py-4 rounded-xl font-display font-semibold text-lg"
           >
             Generate Ideas

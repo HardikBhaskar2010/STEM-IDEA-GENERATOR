@@ -158,7 +158,7 @@ const Library: React.FC = () => {
                 size="lg"
                 className="w-full md:w-auto bg-gradient-primary text-white shadow-glow hover:shadow-glow-lg transition-all duration-300 rounded-full px-8 h-14"
                 ripple={true}
-                onClick={() => navigate('/generator')}
+                onClick={() => navigate('/veronica-ai')}
               >
                 <Plus className="w-5 h-5 mr-2" />
                 <span className="font-semibold">New Entry</span>
@@ -291,7 +291,7 @@ const Library: React.FC = () => {
                       size="lg"
                       className="bg-gradient-primary text-white rounded-full px-10 h-14 shadow-glow"
                       ripple={true}
-                      onClick={() => navigate('/generator')}
+                      onClick={() => navigate('/veronica-ai')}
                     >
                       <Plus className="mr-2 h-5 w-5" />
                       Initialize First Project
