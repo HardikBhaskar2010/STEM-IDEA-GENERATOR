@@ -183,65 +183,6 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
 
       // Execute action if specified
       if (aiResponse.action === 'navigate' && aiResponse.parameters?.path) {
-        let formData = aiResponse.parameters.formData || {};
-        
-        // If navigating to generator, always extract parameters from the user's message to ensure accuracy
-        if (aiResponse.parameters.path === '/generator') {
-          const contentLower = content.toLowerCase();
-          console.log('🔍 UniversalChat - Original message:', content);
-          console.log('🔍 UniversalChat - Lowercase message:', contentLower);
-          console.log('🔍 UniversalChat - Existing formData from AI:', formData);
-          
-          // Extract project type
-          let projectType = 'robotics'; // default
-          if (contentLower.includes('robot')) {
-            projectType = 'robotics';
-          } else if (contentLower.includes('iot') || contentLower.includes('smart home')) {
-            projectType = 'iot';
-          } else if (contentLower.includes('electronic') || contentLower.includes('circuit')) {
-            projectType = 'electronics';
-          } else if (contentLower.includes('automation') || contentLower.includes('automat')) {
-            projectType = 'automation';
-          } else if (contentLower.includes('sensor') || contentLower.includes('monitor')) {
-            projectType = 'sensors';
-          }
-          
-          // Extract skill level
-          let skillLevel = 'intermediate'; // default
-          if (contentLower.includes('expert')) {
-            skillLevel = 'expert';
-            console.log('🎯 UniversalChat - Found "expert" in message, setting skillLevel to expert');
-          } else if (contentLower.includes('advanced')) {
-            skillLevel = 'advanced';
-            console.log('🎯 UniversalChat - Found "advanced" in message, setting skillLevel to advanced');
-          } else if (contentLower.includes('beginner') || contentLower.includes('start')) {
-            skillLevel = 'beginner';
-            console.log('🎯 UniversalChat - Found "beginner" in message, setting skillLevel to beginner');
-          } else if (contentLower.includes('intermediate') || contentLower.includes('medium')) {
-            skillLevel = 'intermediate';
-            console.log('🎯 UniversalChat - Found "intermediate" in message, setting skillLevel to intermediate');
-          } else {
-            console.log('🎯 UniversalChat - No skill level found, defaulting to intermediate');
-          }
-          
-          // Always use extracted data to override any AI-provided data
-          formData = {
-            projectType: projectType,
-            skillLevel: skillLevel,
-            interests: content,
-            budget: formData.budget || '',
-            duration: formData.duration || ''
-          };
-          
-          console.log('🔍 UniversalChat - Final extracted form data:', formData);
-        }
-        
-        // Store form data in sessionStorage for the Generator page
-        if (formData && Object.keys(formData).length > 0) {
-          sessionStorage.setItem('generatorFormData', JSON.stringify(formData));
-          console.log('💾 UniversalChat - Stored form data in sessionStorage:', formData);
-        }
-        
         // Navigate after a delay (no additional message needed since it's in the main response)
         setTimeout(() => {
           window.location.href = aiResponse.parameters.path;

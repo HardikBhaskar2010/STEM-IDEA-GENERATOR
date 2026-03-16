@@ -89,7 +89,7 @@ export const CommandPalette: React.FC = () => {
       label: 'Go to Project Lab',
       description: 'Generate new AI-powered projects',
       icon: Sparkles,
-      action: () => navigate('/generator'),
+      action: () => navigate('/veronica-ai'),
       category: 'navigation',
       keywords: ['generator', 'create', 'ai', 'new', 'lab'],
       badge: 'AI'
@@ -137,7 +137,7 @@ export const CommandPalette: React.FC = () => {
       label: 'Generate New Project',
       description: 'Create AI-powered STEM project',
       icon: Sparkles,
-      action: () => navigate('/generator'),
+      action: () => navigate('/veronica-ai'),
       category: 'actions',
       keywords: ['new', 'create', 'generate', 'project', 'ai'],
       badge: 'Hot'

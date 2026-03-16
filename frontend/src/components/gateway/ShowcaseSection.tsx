@@ -5,8 +5,8 @@ import { Wand2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ideas = [
-  { category: "Generation", title: "STEM Idea Generator", color: "primary", path: "/generator" },
-  { category: "Innovation", title: "AI Code Lab", color: "secondary", path: "/code-generator" },
+  { category: "Veronica", title: "Veronica AI", color: "primary", path: "/veronica-ai" },
+  { category: "Veronica", title: "Veronica AI Workspace (Soon)", color: "secondary", path: "/veronica-ai" },
   { category: "Community", title: "Innovation Competition", color: "accent", path: "/competition" },
   { category: "Resources", title: "Hardware Catalog", color: "primary", path: "/components" },
 ];
@@ -79,7 +79,7 @@ const ShowcaseSection = () => {
               tailored to your skill level, interests, and available resources.
             </p>
             <button 
-              onClick={() => navigate("/generator")}
+              onClick={() => navigate("/veronica-ai")}
               className="btn-glow inline-flex items-center gap-3 px-6 py-3 rounded-xl font-display font-semibold text-primary-foreground"
             >
               <Wand2 className="w-5 h-5" />
