@@ -80,10 +80,37 @@ export default {
             height: "0",
           },
         },
+        "scanning-line": {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100%)" }
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        "float-slow": {
+          "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
+          "50%": { transform: "translateY(-30px) rotate(5deg)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "1" },
+        },
+        orbit: {
+          "0%": { transform: "rotate(0deg) translateX(120px) rotate(0deg)" },
+          "100%": { transform: "rotate(360deg) translateX(120px) rotate(-360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "nav-fade": "nav-fade 0.5s ease-out forwards",
+        "scroll-indicator": "scroll-indicator 2s infinite",
+        "scanning-line": "scanning-line 8s linear infinite",
+        float: "float 6s ease-in-out infinite",
+        "float-slow": "float-slow 8s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+        orbit: "orbit 20s linear infinite",
       },
     },
   },
