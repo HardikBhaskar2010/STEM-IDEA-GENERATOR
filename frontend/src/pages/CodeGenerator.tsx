@@ -133,7 +133,7 @@ const CodeGenerator: React.FC = () => {
     setSelectedProject(project);
     setActiveTab('files');
     // Update URL
-    navigate(`/code-generator?project=${project.id}`, { replace: true });
+    navigate(`/veronica-ai`, { replace: true });
   };
 
   // Handle code generation
@@ -299,7 +299,7 @@ const CodeGenerator: React.FC = () => {
               }
             </p>
             <Button
-              onClick={() => navigate('/generator')}
+              onClick={() => navigate('/veronica-ai')}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -323,7 +323,7 @@ const CodeGenerator: React.FC = () => {
             onClick={() => {
               setSelectedProject(null);
               setActiveTab('projects');
-              navigate('/code-generator', { replace: true });
+              navigate('/veronica-ai', { replace: true });
             }}
             className="text-white/60 hover:text-white hover:bg-white/10"
           >

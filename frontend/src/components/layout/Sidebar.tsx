@@ -9,7 +9,7 @@ import {
   Info, 
   X,
   User,
-  Code,
+  Sparkles,
   Trophy,
   Shield
 } from 'lucide-react';
@@ -85,8 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
-    { path: '/generator', label: 'Generator', icon: Zap },
-    { path: '/code-generator', label: 'Veronica AI', icon: Code },
+    { path: '/veronica-ai', label: 'Veronica AI', icon: Sparkles },
     { path: '/competition', label: 'Competition', icon: Trophy },
     { path: '/components', label: 'Components', icon: Cpu },
     { path: '/library', label: 'Library', icon: BookOpen },

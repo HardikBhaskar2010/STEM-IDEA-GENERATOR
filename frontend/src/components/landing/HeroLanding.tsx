@@ -184,7 +184,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
   const { displayed, currentLine } = useTypedConsole(CONSOLE_LINES);
 
   const handlePortalComplete = () => {
-    navigate(isAuthenticated ? '/dashboard' : '/generator');
+    navigate(isAuthenticated ? '/dashboard' : '/veronica-ai');
   };
 
   // 96 WebP frames from public/frames/ — scrubbed via scroll progress
@@ -595,7 +595,7 @@ const FinalCTASection: React.FC<{
   const navigate = useNavigate();
 
   const handlePortalComplete = () => {
-    navigate(isAuthenticated ? '/dashboard' : '/generator');
+    navigate(isAuthenticated ? '/dashboard' : '/veronica-ai');
   };
 
   return (

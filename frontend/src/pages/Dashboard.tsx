@@ -231,7 +231,7 @@ const Dashboard: React.FC = () => {
             
             <Button 
               size="lg"
-              onClick={() => navigate('/generator')}
+              onClick={() => navigate('/veronica-ai')}
               className="rounded-lg shadow-sm hover:shadow-md transition-all duration-150 hover:scale-[1.02]"
               data-testid="new-project-button"
             >
@@ -444,7 +444,7 @@ const Dashboard: React.FC = () => {
                       You haven't created any projects in this category yet.
                     </p>
                     <Button 
-                      onClick={() => navigate('/generator')}
+                      onClick={() => navigate('/veronica-ai')}
                       className="rounded-lg transition-transform duration-150 hover:scale-[1.02]"
                     >
                       Create Your First Project

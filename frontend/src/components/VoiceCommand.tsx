@@ -135,7 +135,7 @@ export const VoiceCommand: React.FC<VoiceCommandProps> = ({ onCommand }) => {
           navigate('/dashboard');
           speak('Opening dashboard');
         } else if (lowerCommand.includes('generator') || lowerCommand.includes('project lab') || lowerCommand.includes('create project')) {
-          navigate('/generator');
+          navigate('/veronica-ai');
           speak('Opening project lab');
         } else if (lowerCommand.includes('component') || lowerCommand.includes('parts')) {
           navigate('/components');
@@ -153,7 +153,7 @@ export const VoiceCommand: React.FC<VoiceCommandProps> = ({ onCommand }) => {
       }
       // Action commands
       else if (lowerCommand.includes('generate') || lowerCommand.includes('create') || lowerCommand.includes('new project')) {
-        navigate('/generator');
+        navigate('/veronica-ai');
         speak('Let\'s create a new project');
       }
       else if (lowerCommand.includes('search') || lowerCommand.includes('find')) {

@@ -118,7 +118,7 @@ const Home: React.FC = () => {
       title: 'AI-Powered Ideas',
       description: 'Generate innovative STEM project ideas tailored to your skill level',
       color: 'bg-gradient-primary',
-      link: '/generator'
+      link: '/veronica-ai'
     },
     {
       icon: Cpu,
@@ -169,7 +169,7 @@ const Home: React.FC = () => {
                   <Button
                     size="lg"
                     className="flex-1 md:flex-none bg-gradient-primary text-white shadow-glow hover:shadow-glow-lg transition-all duration-300 rounded-full px-8 h-14"
-                    onClick={() => navigate('/generator')}
+                    onClick={() => navigate('/veronica-ai')}
                   >
                     <Plus className="w-5 h-5 mr-2" />
                     <span className="font-semibold">New Project</span>
@@ -364,7 +364,7 @@ const Home: React.FC = () => {
                       <Button
                         size="lg"
                         className="bg-gradient-primary text-white rounded-full px-8 mt-4"
-                        onClick={() => navigate('/generator')}
+                        onClick={() => navigate('/veronica-ai')}
                       >
                         <Zap className="w-4 h-4 mr-2" />
                         Get Started
@@ -412,7 +412,7 @@ const Home: React.FC = () => {
             </p>
 
             <div ref={heroButtonsRef.ref} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/generator">
+              <Link to="/veronica-ai">
                 <CommandButton
                   size="lg"
                   variant="primary"
@@ -495,7 +495,7 @@ const Home: React.FC = () => {
               <p className="text-xl text-muted-foreground mb-8">
                 Join thousands of makers and innovators creating the future
               </p>
-              <Link to="/generator">
+              <Link to="/veronica-ai">
                 <CommandButton
                   size="lg"
                   variant="primary"
