@@ -13,11 +13,11 @@ if _project_root not in sys.path:
 import json
 import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
@@ -659,6 +659,11 @@ class VeronicaAIChatResponse(BaseModel):
     assistant_text: str
     actions: List[VeronicaAIAction]
     project: Optional[Dict[str, Any]] = None
+
+
+class VeronicaProjectFileUpdateRequest(BaseModel):
+    path: str
+    content: str
 
 # ───────────────── OPENROUTER CLIENT ─────────────────
 import requests
@@ -3388,6 +3393,33 @@ Return ONLY the JSON object, no markdown, no extra text."""
     )
 
 
+from backend.infrastructure.rate_limiter import InMemoryRateLimiter
+
+_veronica_rate_limiter = InMemoryRateLimiter()
+
+
+def _client_ip(req: Request) -> str:
+    try:
+        return req.client.host if req.client else "unknown"
+    except Exception:
+        return "unknown"
+
+
+def _check_veronica_rate_limit(req: Request, *, action: str, limit: int, window_seconds: int) -> None:
+    identifier = f"veronica:{action}:{_client_ip(req)}"
+    result = _veronica_rate_limiter.check_rate_limit(
+        identifier=identifier,
+        limit=limit,
+        window=timedelta(seconds=window_seconds),
+    )
+    if not result.allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded",
+            headers={"Retry-After": str(result.retry_after or window_seconds)},
+        )
+
+
 @api.post("/veronica-ai/chat", response_model=VeronicaAIChatResponse)
 async def veronica_ai_chat(request: VeronicaAIChatRequest):
     """
@@ -3437,6 +3469,138 @@ async def veronica_ai_chat(request: VeronicaAIChatRequest):
         actions=actions,
         project=routed.project,
     )
+
+
+@api.post("/veronica-projects/generate", response_model=VeronicaAIChatResponse)
+async def veronica_projects_generate(request: Request, payload: VeronicaAIChatRequest):
+    """
+    Phase 0/1 Veronica generator endpoint:
+    - classify intent
+    - for idea intents, generate a canonical ProjectSpec and persist to filesystem
+    - return VeronicaAIChatResponse with enabled actions (open/download) and `project` as ProjectSpec dict
+    """
+    from backend.services.veronica_intent_classifier import classify_intent, VeronicaIntent
+    from backend.services.veronica_project_generator import generate_project_spec
+    from backend.services.veronica_project_store import VeronicaProjectStore
+
+    _check_veronica_rate_limit(request, action="generate", limit=10, window_seconds=60)
+
+    if not payload.message or not payload.message.strip():
+        raise HTTPException(status_code=400, detail="message is required")
+
+    async def llm_complete(prompt: str) -> str:
+        return await call_openrouter(prompt, model="stepfun/step-3.5-flash:free")
+
+    classification = await classify_intent(
+        payload.message,
+        llm_complete=(llm_complete if openrouter_client else None),
+        llm_threshold=0.6,
+    )
+
+    # Non-idea intents: return a helpful preface, no project yet
+    if classification.intent not in (VeronicaIntent.IDEA_ONLY, VeronicaIntent.IDEA_PLUS_CODE):
+        assistant_text = (
+            "Tell me what you want to build and any constraints (platform, budget, time). "
+            "If you have an error log, paste it and I’ll help debug."
+            if classification.intent == VeronicaIntent.DEBUG_HELP
+            else "Got it. Share what you want (platform, constraints, desired behavior) and I’ll generate a complete project."
+        )
+        return VeronicaAIChatResponse(
+            intent=classification.intent.value,
+            confidence=float(classification.confidence),
+            assistant_text=assistant_text,
+            actions=[
+                VeronicaAIAction(type="save_project", enabled=False),
+                VeronicaAIAction(type="open_project", enabled=False),
+                VeronicaAIAction(type="generate_code", enabled=False),
+                VeronicaAIAction(type="edit_code", enabled=False),
+                VeronicaAIAction(type="download_project", enabled=False),
+                VeronicaAIAction(type="preview_project", enabled=False),
+            ],
+            project=None,
+        )
+
+    # Generate ProjectSpec
+    spec = await generate_project_spec(message=payload.message, llm_complete=llm_complete)
+
+    # Store on filesystem
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    store = VeronicaProjectStore(base_dir=base_dir)
+    store.save_spec(spec)
+
+    assistant_text = f"Here’s a project you can build:\n\n**{spec.title}**\n\n{spec.summary}".strip()
+    return VeronicaAIChatResponse(
+        intent=classification.intent.value,
+        confidence=float(classification.confidence),
+        assistant_text=assistant_text,
+        actions=[
+            VeronicaAIAction(type="save_project", enabled=True, id=spec.project_id),
+            VeronicaAIAction(type="open_project", enabled=True, id=spec.project_id),
+            VeronicaAIAction(type="generate_code", enabled=False),
+            VeronicaAIAction(type="edit_code", enabled=True, id=spec.project_id),
+            VeronicaAIAction(type="download_project", enabled=True, id=spec.project_id),
+            VeronicaAIAction(type="preview_project", enabled=False),
+        ],
+        project=spec.model_dump(),
+    )
+
+
+@api.get("/veronica-projects/{project_id}")
+async def veronica_projects_get(project_id: str):
+    from backend.services.veronica_project_store import VeronicaProjectStore
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    store = VeronicaProjectStore(base_dir=base_dir)
+    try:
+        spec = store.load_spec(project_id)
+        return spec.model_dump()
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="project not found")
+
+
+@api.get("/veronica-projects/{project_id}/download/zip")
+async def veronica_projects_download_zip(request: Request, project_id: str):
+    from backend.services.veronica_project_store import VeronicaProjectStore
+
+    _check_veronica_rate_limit(request, action="download_zip", limit=30, window_seconds=60)
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    store = VeronicaProjectStore(base_dir=base_dir)
+    try:
+        zip_bytes = store.create_zip_bytes(project_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="project not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create ZIP: {str(e)}")
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename=veronica_project_{project_id}.zip",
+            "Content-Length": str(len(zip_bytes)),
+        },
+    )
+
+
+@api.put("/veronica-projects/{project_id}/files")
+async def veronica_projects_update_file(request: Request, project_id: str, payload: VeronicaProjectFileUpdateRequest):
+    """
+    V1 file editing endpoint (single-file update).
+    """
+    from backend.services.veronica_project_store import VeronicaProjectStore
+
+    _check_veronica_rate_limit(request, action="update_file", limit=60, window_seconds=60)
+
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+    store = VeronicaProjectStore(base_dir=base_dir)
+    try:
+        updated = store.update_file(project_id, path=payload.path, content=payload.content)
+        return updated.model_dump()
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="project not found")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @api.post("/projects/sync", response_model=ProjectSyncResponse)
 async def sync_project(request: ProjectSyncRequest):
