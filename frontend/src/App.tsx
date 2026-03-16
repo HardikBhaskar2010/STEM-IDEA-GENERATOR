@@ -23,6 +23,7 @@ import { debugApiCalls } from "@/utils/apiDebug";
 import { CommandPalette } from "@/components/CommandPalette";
 import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import { polyfillRAF } from '@/lib/browserCompat';
+import { SciFiCursor } from "@/components/layout/SciFiCursor";
 
 // Lazy load page components
 const Welcome = React.lazy(() => import("./pages/Welcome"));
@@ -84,6 +85,7 @@ const App = () => {
                             <Sonner />
 
                             <BrowserRouter>
+                              <SciFiCursor />
                               {/* 🌐 Global GridScan background — theme-aware, skips /, /login, /signup, /about */}
                               <GlobalBackground />
                               {/* 🚀 CMD+K Command Palette */}
