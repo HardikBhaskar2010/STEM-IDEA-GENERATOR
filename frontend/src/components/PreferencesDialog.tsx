@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { userPreferencesService, type UserPreferences } from '@/services/userPreferencesService';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
+import { useTheme } from 'next-themes';
 
 interface PreferencesDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ interface PreferencesDialogProps {
 
 const PreferencesDialog: React.FC<PreferencesDialogProps> = ({ open, onOpenChange }) => {
   const { user } = useAuth();
+  const { setTheme } = useTheme();
   const isGuest = user && authService.isGuestUser(user);
 
   const [preferences, setPreferences] = useState<UserPreferences>({
@@ -58,6 +60,10 @@ const PreferencesDialog: React.FC<PreferencesDialogProps> = ({ open, onOpenChang
     if (isGuest) {
       // Save to localStorage for guests
       localStorage.setItem('guest_preferences', JSON.stringify(preferences));
+      
+      // Apply theme change for guests too
+      setTheme(preferences.theme);
+      
       toast({
         title: 'Preferences Saved',
         description: 'Your preferences have been saved locally.',
@@ -79,20 +85,8 @@ const PreferencesDialog: React.FC<PreferencesDialogProps> = ({ open, onOpenChang
       });
       onOpenChange(false);
       
-      // Apply theme change immediately
-      if (preferences.theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else if (preferences.theme === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        // System preference
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (isDark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
+      // Apply theme change immediately using next-themes
+      setTheme(preferences.theme);
     } else {
       toast({
         title: 'Error',
