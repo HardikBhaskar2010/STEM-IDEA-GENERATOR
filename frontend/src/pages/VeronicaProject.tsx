@@ -140,6 +140,24 @@ const VeronicaProject: React.FC = () => {
     }
   };
 
+  const firstInoFile = useMemo(
+    () => spec?.files?.find((f) => f.path.toLowerCase().endsWith('.ino')),
+    [spec?.files]
+  );
+
+  const handleDownloadIno = () => {
+    if (!firstInoFile) return;
+    const blob = new Blob([firstInoFile.content || ''], { type: 'text/x-arduino' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = firstInoFile.path.split('/').pop() || 'sketch.ino';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleRun = async () => {
     if (!id || isRunning) return;
     try {
@@ -247,6 +265,12 @@ const VeronicaProject: React.FC = () => {
                 <Wrench className="w-4 h-4 mr-2" />
                 {isFixing ? 'Fixing…' : 'Self-fix'}
               </Button>
+              {firstInoFile && (
+                <Button onClick={handleDownloadIno} variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download .ino
+                </Button>
+              )}
               <Button onClick={handleDownloadZip} disabled={!id || isDownloading} className="bg-gradient-primary text-white">
                 <Download className="w-4 h-4 mr-2" />
                 {isDownloading ? 'Downloading…' : 'Download ZIP'}
