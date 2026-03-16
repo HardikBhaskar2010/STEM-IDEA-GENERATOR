@@ -54,11 +54,6 @@ export const FloatingNav = () => {
       href: "/dashboard",
     },
     {
-      title: "Generator",
-      icon: <Zap className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
-      href: "/veronica-ai",
-    },
-    {
       title: "Veronica AI",
       icon: <Code className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
       href: "/veronica-ai",
