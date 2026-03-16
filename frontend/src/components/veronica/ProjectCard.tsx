@@ -5,18 +5,22 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { projectService } from '@/services/projectService';
 import type { VeronicaAIAction } from '@/services/veronicaAIService';
+import { downloadVeronicaProjectZip } from '@/services/veronicaAIService';
 import { useNavigate } from 'react-router-dom';
 import { Download, FolderOpen, Save, Code, Sparkles, Eye } from 'lucide-react';
 
-type GeneratedProject = {
+type ProjectSpec = {
+  project_id: string;
   title: string;
-  description: string;
+  summary: string;
+  platform: string;
   difficulty: string;
-  estimatedTime: string;
-  estimatedCost: string;
-  components: string[];
-  skills: string[];
+  learning_goals?: string[];
   steps: string[];
+  materials?: string[];
+  wiring?: { overview?: string; connections?: string[]; notes?: string[] };
+  files?: { path: string; content: string; description?: string | null; is_main?: boolean }[];
+  readme?: string;
 };
 
 export function ProjectCard({
@@ -25,7 +29,7 @@ export function ProjectCard({
   onActionsChange,
   defaultProjectType,
 }: {
-  project: GeneratedProject;
+  project: ProjectSpec;
   actions: VeronicaAIAction[];
   onActionsChange: (next: VeronicaAIAction[]) => void;
   defaultProjectType?: string;
@@ -33,6 +37,7 @@ export function ProjectCard({
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const actionMap = useMemo(() => {
     const map = new Map<string, VeronicaAIAction>();
@@ -52,18 +57,18 @@ export function ProjectCard({
     try {
       const saved = await projectService.saveProject({
         title: project.title,
-        description: project.description,
+        description: project.summary,
         project_type: defaultProjectType || 'electronics',
         difficulty: project.difficulty,
-        estimated_time: project.estimatedTime,
-        estimated_cost: project.estimatedCost,
-        components: project.components,
-        skills: project.skills,
+        estimated_time: project.steps?.length ? `${project.steps.length * 30}–${project.steps.length * 60} min` : 'TBD',
+        estimated_cost: 'TBD',
+        components: project.materials ?? [],
+        skills: project.learning_goals ?? [],
         steps: project.steps,
         generated_from_params: {
           projectType: defaultProjectType || 'electronics',
           skillLevel: project.difficulty,
-          interests: project.description,
+          interests: project.summary,
           budget: '',
           duration: '',
         },
@@ -86,7 +91,33 @@ export function ProjectCard({
   const handleOpen = () => {
     const id = savedProjectId || actionMap.get('open_project')?.id;
     if (!id) return;
-    navigate(`/project/${id}`);
+    navigate(`/veronica-project/${id}`);
+  };
+
+  const handleDownload = async () => {
+    const id = actionMap.get('download_project')?.id || project.project_id;
+    if (!id || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const zipBlob = await downloadVeronicaProjectZip(id);
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${project.title.replace(/\s+/g, '_')}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast({ title: 'Download started', description: 'Your ZIP is downloading.' });
+    } catch (e) {
+      toast({
+        title: 'Download failed',
+        description: e instanceof Error ? e.message : 'Could not download project ZIP.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleComingSoon = (label: string) => {
@@ -114,7 +145,7 @@ export function ProjectCard({
               <Sparkles className="w-5 h-5 text-primary" />
               <span className="truncate">{project.title}</span>
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{project.description}</p>
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{project.summary}</p>
           </div>
           <Badge className="shrink-0 bg-primary/15 text-primary border-primary/20">
             {project.difficulty}
@@ -125,12 +156,12 @@ export function ProjectCard({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg border border-primary/10 bg-primary/5 p-3">
-            <div className="text-xs text-muted-foreground">Estimated time</div>
-            <div className="text-sm font-semibold">{project.estimatedTime}</div>
+            <div className="text-xs text-muted-foreground">Platform</div>
+            <div className="text-sm font-semibold">{project.platform}</div>
           </div>
           <div className="rounded-lg border border-primary/10 bg-primary/5 p-3">
-            <div className="text-xs text-muted-foreground">Estimated cost</div>
-            <div className="text-sm font-semibold">{project.estimatedCost}</div>
+            <div className="text-xs text-muted-foreground">Files</div>
+            <div className="text-sm font-semibold">{Array.isArray(project.files) ? project.files.length : 0}</div>
           </div>
         </div>
 
@@ -202,11 +233,11 @@ export function ProjectCard({
                       key={action!.type}
                       size="sm"
                       variant="outline"
-                      onClick={() => handleComingSoon('Download project')}
-                      disabled={!action!.enabled}
+                      onClick={handleDownload}
+                      disabled={!action!.enabled || isDownloading}
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Download
+                      {isDownloading ? 'Downloading…' : 'Download ZIP'}
                     </Button>
                   );
 

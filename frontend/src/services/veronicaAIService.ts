@@ -52,9 +52,30 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> 
 }
 
 export async function sendVeronicaMessage(payload: VeronicaAIChatRequest): Promise<VeronicaAIChatResponse> {
-  return apiFetch<VeronicaAIChatResponse>('/veronica-ai/chat', {
+  return apiFetch<VeronicaAIChatResponse>('/veronica-projects/generate', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export async function getVeronicaProject(projectId: string): Promise<Record<string, any>> {
+  return apiFetch<Record<string, any>>(`/veronica-projects/${encodeURIComponent(projectId)}`);
+}
+
+export async function updateVeronicaProjectFile(projectId: string, path: string, content: string): Promise<Record<string, any>> {
+  return apiFetch<Record<string, any>>(`/veronica-projects/${encodeURIComponent(projectId)}/files`, {
+    method: 'PUT',
+    body: JSON.stringify({ path, content }),
+  });
+}
+
+export async function downloadVeronicaProjectZip(projectId: string): Promise<Blob> {
+  const url = `${API_BASE_URL}/veronica-projects/${encodeURIComponent(projectId)}/download/zip`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
+  }
+  return await response.blob();
 }
 

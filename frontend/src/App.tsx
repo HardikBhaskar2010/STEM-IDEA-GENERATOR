@@ -49,6 +49,7 @@ const Learn = React.lazy(() => import("./pages/Learn"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const About = React.lazy(() => import("./pages/About"));
 const ProjectDetail = React.lazy(() => import("./pages/ProjectDetail"));
+const VeronicaProject = React.lazy(() => import("./pages/VeronicaProject"));
 const ComponentComparison = React.lazy(() => import("./pages/ComponentComparison"));
 const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const Presentation = React.lazy(() => import("./pages/Presentation"));
@@ -113,6 +114,7 @@ const App = () => {
                                     <Route path="/dashboard" element={<Dashboard />} />
                                     <Route path="/auth/callback" element={<AuthCallback />} />
                                     <Route path="/project/:id" element={<ProjectDetail />} />
+                                    <Route path="/veronica-project/:id" element={<VeronicaProject />} />
                                     <Route path="/veronica-ai" element={<VeronicaAI />} />
                                     <Route path="/competition" element={<Competition />} />
                                     <Route path="/components" element={<Components />} />
