@@ -117,7 +117,28 @@ async def generate_project_spec(
         error_summary = str(e.details or e)
         repair = _repair_prompt(original_message=message, bad_output=text, error_summary=error_summary)
         text2 = await llm_complete(repair)
-        spec, _raw2 = validate_project_spec_from_text(text2)
+        try:
+            spec, _raw2 = validate_project_spec_from_text(text2)
+        except ProjectSpecValidationError as e2:
+            # Second (final) attempt: force strict JSON-only output.
+            error_summary2 = str(e2.details or e2)
+            strict_repair = (
+                "Return ONLY a single JSON object that starts with '{' and ends with '}'.\n"
+                "No markdown. No commentary. No code fences.\n\n"
+                f"Previous validation error:\n{error_summary2}\n\n"
+                f"Original user request:\n{message}\n\n"
+                f"Your last (invalid) output:\n{text2}\n"
+            )
+            text3 = await llm_complete(strict_repair)
+            try:
+                spec, _raw3 = validate_project_spec_from_text(text3)
+            except ProjectSpecValidationError as e3:
+                # All 3 LLM attempts failed — raise a clean error the FastAPI
+                # route can catch and convert to a structured 422 response.
+                raise ValueError(
+                    f"Veronica could not generate a valid project spec after 3 attempts. "
+                    f"Last validation error: {e3.details or str(e3)}"
+                ) from e3
 
     # Post-process spec to enforce platform-specific expectations.
     files: list[ProjectFile] = list(spec.files or [])
@@ -169,7 +190,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 
 function App() {{
   return (
-    <main style={{{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}}>
+    <main style={{{{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}}}>
       <h1>{spec.title}</h1>
       <p>{spec.summary}</p>
     </main>

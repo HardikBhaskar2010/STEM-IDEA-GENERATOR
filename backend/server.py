@@ -1141,7 +1141,12 @@ class OpenRouterClient:
                 raise ValueError(f"Message {i} must have 'role' and 'content' fields")
             if message['role'] not in ['user', 'assistant', 'system']:
                 raise ValueError(f"Message {i} has invalid role: {message['role']}")
-            if not isinstance(message['content'], str) or not message['content'].strip():
+            if not isinstance(message.get('content'), str):
+                try:
+                    message['content'] = json.dumps(message.get('content'), ensure_ascii=False)
+                except Exception:
+                    message['content'] = str(message.get('content'))
+            if not message['content'].strip():
                 raise ValueError(f"Message {i} content must be a non-empty string")
         
         # Build the base request body with validated parameters
@@ -1291,7 +1296,15 @@ class OpenRouterClient:
         # Validate content is not empty
         content = message['content']
         if not isinstance(content, str):
-            raise ValueError("Message content must be a string")
+            # OpenRouter can occasionally return structured content; coerce to string
+            # so the rest of the pipeline doesn't crash.
+            try:
+                content = json.dumps(content, ensure_ascii=False)
+            except Exception:
+                content = str(content)
+            message['content'] = content
+        if not content.strip():
+            raise ValueError("Message content must be a non-empty string")
         
         # Log successful parsing without exposing sensitive content
         self.secure_logger.debug(f"Successfully parsed response with {len(choices)} choices, "
@@ -3317,71 +3330,64 @@ Return a valid JSON object with EXACTLY these fields:
 
 Return ONLY the JSON object, no markdown, no extra text."""
             
-            # Build real streaming request to OpenRouter
-            import requests
-            
+            # Build streaming request to OpenRouter using httpx (async-safe)
+            # NOTE: requests.post is synchronous and would block the asyncio event loop.
+            # httpx.AsyncClient is already imported at the top of this file.
             if not openrouter_client:
                 raise RuntimeError("OpenRouter client is not initialized.")
-                
+
             config = openrouter_client.config
             headers = {
                 "Authorization": f"Bearer {config.api_key}",
                 "Content-Type": "application/json",
                 "HTTP-Referer": "https://stemidea.vercel.app",
-                "X-Title": "STEM Idea Generator"
+                "X-Title": "STEM Idea Generator",
             }
             body = {
                 "model": "stepfun/step-3.5-flash:free",
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": True,
-                "include_reasoning": False
+                "include_reasoning": False,
             }
-            
-            response = requests.post(
-                f"{config.base_url}/chat/completions",
-                headers=headers,
-                json=body,
-                stream=True,
-                timeout=120
-            )
-            response.raise_for_status()
-            
-            for line in response.iter_lines():
-                if line:
-                    line_str = line.decode('utf-8')
-                    if line_str.startswith('data: '):
+
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                async with client.stream(
+                    "POST",
+                    f"{config.base_url}/chat/completions",
+                    headers=headers,
+                    json=body,
+                ) as response:
+                    response.raise_for_status()
+                    async for raw_line in response.aiter_lines():
+                        line_str = raw_line.strip()
+                        if not line_str or not line_str.startswith("data: "):
+                            continue
                         data_str = line_str[6:]
-                        if data_str == '[DONE]':
+                        if data_str == "[DONE]":
                             continue
                         try:
                             chunk_data = json.loads(data_str)
-                            choice = chunk_data.get('choices', [{}])[0]
-                            delta = choice.get('delta', {})
-                            content = delta.get('content') or ''
-                            reasoning = delta.get('reasoning') or ''
-                            
+                            choice = chunk_data.get("choices", [{}])[0]
+                            delta = choice.get("delta", {})
+                            content = delta.get("content") or ""
+                            reasoning = delta.get("reasoning") or ""
+
                             if content or reasoning:
-                                # Stream the chunk including thinking
                                 yield f"data: {json.dumps({'content': content, 'reasoning': reasoning})}\n\n"
-                                await asyncio.sleep(0.01) # Yield to event loop
+                                await asyncio.sleep(0.01)  # yield to event loop
                         except json.JSONDecodeError:
                             pass
-                        except Exception as e:
-                            logger.error(f"Error parsing chunk: {e}")
-            
+                        except Exception as chunk_err:
+                            logger.error(f"Error parsing SSE chunk: {chunk_err}")
+
             # Send completion signal
             yield f"data: {json.dumps({'content': '', 'reasoning': '', 'complete': True})}\n\n"
             yield "data: [DONE]\n\n"
-            
-        except requests.exceptions.HTTPError as he:
-            err_msg = f"API Error: {he}"
-            if he.response:
-                try:
-                    err_msg += f" {he.response.json()}"
-                except:
-                    err_msg += f" {he.response.text}"
+
+        except httpx.HTTPStatusError as he:
+            err_msg = f"API Error: {he.response.status_code} {he.response.text[:200]}"
             logger.error(err_msg)
-            yield f"data: {json.dumps({'error': str(err_msg)})}\n\n"
+            yield f"data: {json.dumps({'error': err_msg})}\n\n"
         except Exception as e:
             logger.error(f"Streaming error: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

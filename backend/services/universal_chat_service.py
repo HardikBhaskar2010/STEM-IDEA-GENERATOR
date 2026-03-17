@@ -7,6 +7,8 @@ Enhanced with code generation capabilities
 import logging
 import uuid
 import re
+import os
+import json
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from database.connection import get_db_client
@@ -47,6 +49,48 @@ class UniversalChatService:
             'advanced': [r'advanced', r'complex', r'sophisticated', r'enterprise', r'professional'],
             'intermediate': []  # Default fallback
         }
+
+    def _is_uuid(self, value: str) -> bool:
+        try:
+            uuid.UUID(str(value))
+            return True
+        except Exception:
+            return False
+
+    def _local_chat_dir(self, user_id: str, session_id: Optional[str] = None) -> str:
+        # Store guest chats locally so we don't force UUIDs into Supabase.
+        base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "universal_chat")
+        user_dir = os.path.join(base_dir, user_id)
+        return os.path.join(user_dir, session_id) if session_id else user_dir
+
+    def _ensure_dir(self, path: str) -> None:
+        os.makedirs(path, exist_ok=True)
+
+    def _local_messages_path(self, user_id: str, session_id: str) -> str:
+        return os.path.join(self._local_chat_dir(user_id, session_id), "messages.jsonl")
+
+    def _read_local_messages(self, user_id: str, session_id: str) -> List[Dict[str, Any]]:
+        p = self._local_messages_path(user_id, session_id)
+        if not os.path.exists(p):
+            return []
+        messages: List[Dict[str, Any]] = []
+        with open(p, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    messages.append(json.loads(line))
+                except Exception:
+                    continue
+        return messages
+
+    def _append_local_message(self, user_id: str, session_id: str, message: Dict[str, Any]) -> None:
+        d = self._local_chat_dir(user_id, session_id)
+        self._ensure_dir(d)
+        p = self._local_messages_path(user_id, session_id)
+        with open(p, "a", encoding="utf-8") as f:
+            f.write(json.dumps(message, ensure_ascii=False) + "\n")
     
     async def analyze_message_for_code_generation(self, message: str) -> Dict[str, Any]:
         """
@@ -302,6 +346,10 @@ class UniversalChatService:
             Dict with saved message data and any detected actions
         """
         try:
+            # Guest IDs are not UUIDs; Supabase schema expects UUID user_id.
+            # For guests, persist locally to keep chat functional without DB schema changes.
+            use_local_store = not self._is_uuid(user_id)
+
             # Analyze user messages for code generation requests
             detected_action = None
             enhanced_action_parameters = action_parameters or {}
@@ -334,11 +382,47 @@ class UniversalChatService:
                             'timestamp': datetime.now().isoformat()
                         }
                     })
-            
-            # Get database client
+
+            created_at = datetime.now().isoformat()
+
+            if use_local_store:
+                msg_id = f"local_{uuid.uuid4().hex}"
+                row = {
+                    "id": msg_id,
+                    "user_id": user_id,
+                    "session_id": session_id,
+                    "role": role,
+                    "content": content,
+                    "message_type": message_type,
+                    "voice_transcript": voice_transcript,
+                    "voice_duration": voice_duration,
+                    "voice_confidence": voice_confidence,
+                    "action_type": detected_action or action_type,
+                    "action_parameters": enhanced_action_parameters,
+                    "response_metadata": response_metadata or {},
+                    "conversation_context": conversation_context or {},
+                    "created_at": created_at,
+                    "updated_at": created_at,
+                }
+                self._append_local_message(user_id, session_id, row)
+                logger.info(f"Saved local chat message: {msg_id} for guest {user_id}")
+                response = {
+                    "id": msg_id,
+                    "user_id": user_id,
+                    "session_id": session_id,
+                    "role": role,
+                    "content": content,
+                    "message_type": message_type,
+                    "created_at": created_at,
+                    "action_type": detected_action or action_type,
+                    "action_parameters": enhanced_action_parameters,
+                }
+                if detected_action and "code_generation_response" in enhanced_action_parameters:
+                    response["code_generation_response"] = enhanced_action_parameters["code_generation_response"]
+                return response
+
+            # Logged-in users: persist to Supabase
             client = await get_db_client()
-            
-            # Insert message with enhanced data
             result = client.table('universal_chat_messages').insert({
                 'user_id': user_id,
                 'session_id': session_id,
@@ -353,30 +437,29 @@ class UniversalChatService:
                 'response_metadata': response_metadata or {},
                 'conversation_context': conversation_context or {}
             }).execute()
-            
-            if result.data and len(result.data) > 0:
-                message_data = result.data[0]
-                logger.info(f"Saved chat message: {message_data['id']} for user {user_id}")
-                
-                response = {
-                    'id': str(message_data['id']),
-                    'user_id': user_id,
-                    'session_id': session_id,
-                    'role': role,
-                    'content': content,
-                    'message_type': message_type,
-                    'created_at': message_data['created_at'],
-                    'action_type': detected_action or action_type,
-                    'action_parameters': enhanced_action_parameters
-                }
-                
-                # Include code generation response if detected
-                if detected_action and 'code_generation_response' in enhanced_action_parameters:
-                    response['code_generation_response'] = enhanced_action_parameters['code_generation_response']
-                
-                return response
-            else:
+
+            if not (result.data and len(result.data) > 0):
                 raise Exception("No data returned from insert")
+
+            message_data = result.data[0]
+            logger.info(f"Saved chat message: {message_data['id']} for user {user_id}")
+
+            response = {
+                'id': str(message_data['id']),
+                'user_id': user_id,
+                'session_id': session_id,
+                'role': role,
+                'content': content,
+                'message_type': message_type,
+                'created_at': message_data['created_at'],
+                'action_type': detected_action or action_type,
+                'action_parameters': enhanced_action_parameters
+            }
+
+            if detected_action and 'code_generation_response' in enhanced_action_parameters:
+                response['code_generation_response'] = enhanced_action_parameters['code_generation_response']
+
+            return response
             
         except Exception as e:
             logger.error(f"Error saving chat message: {e}")
@@ -402,6 +485,32 @@ class UniversalChatService:
             List of message dictionaries
         """
         try:
+            if not self._is_uuid(user_id):
+                all_msgs = self._read_local_messages(user_id, session_id)
+                sliced = all_msgs[offset: offset + limit]
+                logger.info(f"Retrieved {len(sliced)} local messages for session {session_id}")
+                # Ensure output shape matches DB-backed version
+                out: List[Dict[str, Any]] = []
+                for row in sliced:
+                    out.append({
+                        'id': str(row.get('id')),
+                        'user_id': str(row.get('user_id')),
+                        'session_id': row.get('session_id'),
+                        'role': row.get('role'),
+                        'content': row.get('content'),
+                        'message_type': row.get('message_type', 'text'),
+                        'voice_transcript': row.get('voice_transcript'),
+                        'voice_duration': float(row['voice_duration']) if row.get('voice_duration') else None,
+                        'voice_confidence': float(row['voice_confidence']) if row.get('voice_confidence') else None,
+                        'action_type': row.get('action_type'),
+                        'action_parameters': row.get('action_parameters') or {},
+                        'response_metadata': row.get('response_metadata') or {},
+                        'conversation_context': row.get('conversation_context') or {},
+                        'created_at': row.get('created_at'),
+                        'updated_at': row.get('updated_at'),
+                    })
+                return out
+
             # Get database client
             client = await get_db_client()
             
@@ -514,6 +623,34 @@ class UniversalChatService:
             
             if not title:
                 title = "New Chat Session"
+
+            if not self._is_uuid(user_id):
+                created_at = datetime.now().isoformat()
+                d = self._local_chat_dir(user_id, session_id)
+                self._ensure_dir(d)
+                meta_path = os.path.join(d, "session.json")
+                meta = {
+                    "id": f"local_session_{uuid.uuid4().hex}",
+                    "session_id": session_id,
+                    "user_id": user_id,
+                    "title": title,
+                    "message_count": 0,
+                    "is_active": True,
+                    "created_at": created_at,
+                    "updated_at": created_at,
+                }
+                with open(meta_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, ensure_ascii=False, indent=2)
+                logger.info(f"Created local chat session: {session_id} for guest {user_id}")
+                return {
+                    'id': str(meta["id"]),
+                    'session_id': session_id,
+                    'user_id': user_id,
+                    'title': title,
+                    'message_count': 0,
+                    'is_active': True,
+                    'created_at': created_at
+                }
             
             client = await get_db_client()
             
@@ -590,6 +727,23 @@ class UniversalChatService:
             True if successful
         """
         try:
+            if not self._is_uuid(user_id):
+                # Best-effort local delete
+                d = self._local_chat_dir(user_id, session_id)
+                if os.path.isdir(d):
+                    for root, _dirs, files in os.walk(d, topdown=False):
+                        for name in files:
+                            try:
+                                os.remove(os.path.join(root, name))
+                            except Exception:
+                                pass
+                        try:
+                            os.rmdir(root)
+                        except Exception:
+                            pass
+                logger.info(f"Deleted local chat session: {session_id} for guest {user_id}")
+                return True
+
             client = await get_db_client()
             
             # Delete messages first (due to foreign key constraint)
@@ -623,6 +777,30 @@ class UniversalChatService:
             Dict with conversation context
         """
         try:
+            if not self._is_uuid(user_id):
+                msgs = self._read_local_messages(user_id, session_id)
+                recent = msgs[-limit:]
+                context = {
+                    'session_id': session_id,
+                    'recent_messages': [],
+                    'last_action': None,
+                    'conversation_state': {}
+                }
+                for row in recent:
+                    context['recent_messages'].append({
+                        'role': row.get('role'),
+                        'content': row.get('content'),
+                        'timestamp': row.get('created_at')
+                    })
+                    if row.get('action_type'):
+                        context['last_action'] = row.get('action_type')
+                    if row.get('conversation_context'):
+                        try:
+                            context['conversation_state'].update(row.get('conversation_context') or {})
+                        except Exception:
+                            pass
+                return context
+
             client = await get_db_client()
             result = client.table('universal_chat_messages') \
                 .select('role, content, action_type, conversation_context, created_at') \
