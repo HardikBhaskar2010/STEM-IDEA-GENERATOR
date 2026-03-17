@@ -21,6 +21,10 @@ from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import StreamingResponse
+import httpx
+import websockets
+import asyncio
 
 # ───────────────── ENV + LOGGING ─────────────────
 load_dotenv()
@@ -3397,6 +3401,9 @@ from backend.infrastructure.rate_limiter import InMemoryRateLimiter
 
 _veronica_rate_limiter = InMemoryRateLimiter()
 
+# Concurrency guardrail for expensive operations (run/build/fix).
+_veronica_run_semaphore = asyncio.Semaphore(int(os.getenv("VERONICA_MAX_CONCURRENT_RUNS", "2")))
+
 
 def _client_ip(req: Request) -> str:
     try:
@@ -3647,10 +3654,11 @@ async def veronica_projects_run(request: Request, project_id: str):
     """
     _check_veronica_rate_limit(request, action="run_project", limit=10, window_seconds=60)
     manager = get_sandbox_manager()
-    try:
-        run: SandboxRun = manager.create_run(project_id)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="project not found")
+    async with _veronica_run_semaphore:
+        try:
+            run: SandboxRun = manager.create_run(project_id)
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="project not found")
     return VeronicaRunResponse(
         project_id=run.project_id,
         run_id=run.run_id,
@@ -3691,6 +3699,104 @@ async def veronica_projects_logs(request: Request, project_id: str, run_id: str)
     return VeronicaLogsResponse(run_id=run_id, logs=logs)
 
 
+def _docker_run_host() -> str:
+    """
+    Hostname/IP where published container ports are reachable from this backend.
+    For remote docker hosts, this is usually the docker host itself.
+    Override with VERONICA_RUN_HOST if needed.
+    """
+    override = (os.getenv("VERONICA_RUN_HOST") or "").strip()
+    if override:
+        return override
+    raw = (os.getenv("DOCKER_HOST") or "").strip()
+    if raw.startswith("tcp://"):
+        raw = "http://" + raw[len("tcp://") :]
+    if raw.startswith("http://") or raw.startswith("https://"):
+        # strip scheme and port
+        hostport = raw.split("://", 1)[1]
+        host = hostport.split("/", 1)[0].split(":", 1)[0]
+        return host
+    return raw or "localhost"
+
+
+@api.get("/veronica-preview/{run_id}/{path:path}")
+async def veronica_preview_proxy(request: Request, run_id: str, path: str = ""):
+    """
+    Phase 2: backend-managed HTTP proxy to a running web container.
+    This keeps preview same-origin and avoids frontend CORS issues.
+    """
+    _check_veronica_rate_limit(request, action="preview_http", limit=300, window_seconds=60)
+    manager = get_sandbox_manager()
+    try:
+        run = manager.get_run(run_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="run not found")
+    if not run.host_port:
+        raise HTTPException(status_code=400, detail="run has no published port")
+
+    upstream = f"http://{_docker_run_host()}:{int(run.host_port)}/{path or ''}"
+    if request.url.query:
+        upstream += f"?{request.url.query}"
+
+    async def stream():
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            async with client.stream("GET", upstream, headers={"Accept": request.headers.get("accept", "*/*")}) as resp:
+                if resp.status_code >= 400:
+                    body = await resp.aread()
+                    yield body
+                    return
+                async for chunk in resp.aiter_bytes():
+                    yield chunk
+
+    return StreamingResponse(stream(), media_type=None)
+
+
+@api.websocket("/veronica-preview-ws/{run_id}")
+async def veronica_preview_ws(websocket: WebSocket, run_id: str):
+    """
+    Phase 2: WebSocket proxy for Vite HMR.
+    Client connects to this backend WS; backend bridges to container WS at /.
+    """
+    await websocket.accept()
+    manager = get_sandbox_manager()
+    try:
+        run = manager.get_run(run_id)
+    except KeyError:
+        await websocket.close(code=1008)
+        return
+    if not run.host_port:
+        await websocket.close(code=1008)
+        return
+
+    query = websocket.url.query or ""
+    upstream = f"ws://{_docker_run_host()}:{int(run.host_port)}/"
+    if query:
+        upstream += f"?{query}"
+
+    try:
+        async with websockets.connect(upstream, subprotocols=["vite-hmr"]) as upstream_ws:
+            async def client_to_upstream():
+                while True:
+                    msg = await websocket.receive_text()
+                    await upstream_ws.send(msg)
+
+            async def upstream_to_client():
+                async for msg in upstream_ws:
+                    if isinstance(msg, bytes):
+                        await websocket.send_bytes(msg)
+                    else:
+                        await websocket.send_text(msg)
+
+            await asyncio.gather(client_to_upstream(), upstream_to_client())
+    except WebSocketDisconnect:
+        return
+    except Exception:
+        try:
+            await websocket.close(code=1011)
+        except Exception:
+            pass
+
+
 @api.post("/veronica-projects/{project_id}/runs/{run_id}/self-fix", response_model=VeronicaSelfFixResponse)
 async def veronica_projects_self_fix(request: Request, project_id: str, run_id: str):
     """
@@ -3703,7 +3809,8 @@ async def veronica_projects_self_fix(request: Request, project_id: str, run_id: 
     base_dir = os.path.join(os.path.dirname(__file__), "data")
     runner = SelfFixRunner(base_dir=base_dir)
     try:
-        attempts = runner.run_self_fix(project_id=project_id, run_id=run_id, max_attempts=2)
+        async with _veronica_run_semaphore:
+            attempts = runner.run_self_fix(project_id=project_id, run_id=run_id, max_attempts=2)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="project not found")
     except Exception as e:
@@ -3726,7 +3833,8 @@ async def veronica_agent_start(request: Request, project_id: str, run_id: str):
     base_dir = os.path.join(os.path.dirname(__file__), "data")
     orch = get_agent_orchestrator(base_dir=base_dir)
     job = orch.start_job(project_id=project_id)
-    job = orch.run_job(job.job_id, run_id=run_id)
+    async with _veronica_run_semaphore:
+        job = orch.run_job(job.job_id, run_id=run_id)
     return VeronicaAgentJobResponse(
         job_id=job.job_id,
         project_id=job.project_id,
