@@ -5,11 +5,21 @@
 import logging
 import json
 import os
+import re
 import asyncio
 import hashlib
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any, AsyncGenerator, Tuple
 from enum import Enum
+
+# Regex to extract fenced file blocks from LLM output.
+# Matches: ```[lang ]filename: path/to/file.ext\n<content>```
+# OR:      ```path/to/file.ext\n<content>``` (no language tag)
+# This avoids splitting on every ``` fence (which destroys multi-file output).
+_FILE_BLOCK_RE = re.compile(
+    r"```(?:[a-zA-Z0-9+_-]*\s+)?(?:filename:\s*)?([^\s`]+\.[a-zA-Z0-9]+)[ \t]*\n(.*?)```",
+    re.DOTALL,
+)
 
 # Remove anthropic import and use OpenRouter instead
 from backend.database.connection import get_db_client
@@ -128,33 +138,37 @@ class VeronicaAIService(BaseService):
         self,
         cache=None,
         logger_instance=None,
-        db_client=None
+        db_client=None,
+        openrouter_client=None,
+        openrouter_config=None,
     ):
-        """Initialize the Veronica AI service with BaseService capabilities"""
+        """Initialize the Veronica AI service with BaseService capabilities.
+
+        openrouter_client and openrouter_config are accepted as constructor
+        parameters to avoid a circular import with server.py.
+        They can also be set as attributes after construction:
+            svc = VeronicaAIService()
+            svc.openrouter_client = some_client
+        """
         # Initialize BaseService
         super().__init__(
             cache=cache or get_redis_client(),
             logger_instance=logger_instance or logger,
             db_client=db_client
         )
-        
-        self.openrouter_client = None
-        self.openrouter_config = None
-        
-        # Import OpenRouter client from server
-        try:
-            from server import openrouter_client, openrouter_config
-            self.openrouter_client = openrouter_client
-            self.openrouter_config = openrouter_config
-            
-            if self.openrouter_client:
-                self.logger.info("Veronica AI initialized with OpenRouter - multi-model code generation enabled")
-            else:
-                self.logger.warning("OpenRouter client not available - code generation will be disabled")
-        except ImportError as e:
-            self.logger.error(f"Failed to import OpenRouter client: {e}")
-            self.logger.warning("Code generation will be disabled")
-        
+
+        # Accept client/config directly — no server.py import needed.
+        self.openrouter_client = openrouter_client
+        self.openrouter_config = openrouter_config
+
+        if self.openrouter_client:
+            self.logger.info("Veronica AI initialized with OpenRouter - multi-model code generation enabled")
+        else:
+            self.logger.warning(
+                "OpenRouter client not injected — code generation disabled. "
+                "Set svc.openrouter_client after construction."
+            )
+
         # Get circuit breaker for AI API calls
         self.circuit_breaker = get_circuit_breaker(
             name="openrouter_api",
@@ -600,79 +614,85 @@ class VeronicaAIService(BaseService):
     
     def _parse_generated_code(self, response: str, platform: Platform) -> List[CodeFile]:
         """
-        Parse generated code response into individual files
-        
+        Parse generated code response into individual files.
+
+        Uses a regex (_FILE_BLOCK_RE) to extract fenced code blocks that include
+        a filename header, e.g.:
+
+            ```python filename: src/main.py
+            ...
+            ```
+
+        or the older explicit marker form:
+
+            ```filename: src/main.py
+            ...
+            ```
+
+        Falls back to a single main-file wrapper when no blocks are recognised.
+
         Args:
             response: Generated code response from OpenRouter
             platform: Target platform for code generation
-            
+
         Returns:
             List of CodeFile objects
         """
-        files = []
-        
-        # Split response by file markers
-        file_sections = response.split("```")
-        current_file_info = None
-        
-        for i, section in enumerate(file_sections):
-            section = section.strip()
-            if not section:
-                continue
-                
-            # Check if this section starts with a filename
-            lines = section.split('\n')
-            first_line = lines[0].strip()
-            
-            # Look for filename patterns
-            if any(ext in first_line for ext in ['.py', '.js', '.html', '.css', '.ino', '.cpp', '.h', '.dart', '.json', '.yaml', '.txt', '.md']):
-                # This is a filename
-                file_path = first_line
-                file_name = file_path.split('/')[-1]
-                file_type = file_name.split('.')[-1] if '.' in file_name else 'txt'
-                
-                # Get the content (rest of the lines)
-                content = '\n'.join(lines[1:]) if len(lines) > 1 else ""
-                
-                # Determine if this is the main file
-                is_main_file = (
-                    file_name.startswith("main.") or 
-                    file_name.startswith("index.") or
-                    file_name == self.platform_configs[platform]["main_file"]
-                )
-                
-                # Create CodeFile object
-                code_file = CodeFile(
+        files: List[CodeFile] = []
+
+        for match in _FILE_BLOCK_RE.finditer(response):
+            file_path = match.group(1).strip()
+            content = match.group(2)
+
+            # Normalise path separators
+            file_path = file_path.replace("\\", "/")
+            file_name = file_path.split("/")[-1]
+            file_type = file_name.rsplit(".", 1)[-1] if "." in file_name else "txt"
+
+            is_main_file = (
+                file_name.startswith("main.")
+                or file_name.startswith("index.")
+                or file_name == self.platform_configs[platform]["main_file"]
+            )
+
+            files.append(
+                CodeFile(
                     file_path=file_path,
                     file_name=file_name,
                     file_type=file_type,
                     content=content.strip(),
                     description=f"Generated {file_type} file for {platform.value} project",
-                    is_main_file=is_main_file
+                    is_main_file=is_main_file,
                 )
-                
-                files.append(code_file)
-        
-        # If no files were parsed, create a single main file with all content
-        if not files:
-            main_file_name = self.platform_configs[platform]["main_file"]
-            file_type = main_file_name.split('.')[-1]
-            
-            code_file = CodeFile(
-                file_path=main_file_name,
-                file_name=main_file_name,
-                file_type=file_type,
-                content=response.strip(),
-                description=f"Generated {file_type} file for {platform.value} project",
-                is_main_file=True
             )
-            files.append(code_file)
-        
-        # Add README file if not present
-        if not any(f.file_name.lower().startswith('readme') for f in files):
-            readme_file = self._generate_readme_file(files, platform=platform)
-            files.append(readme_file)
-        
+
+        # --- Fallback: no regex matches → wrap the whole response as main file ---
+        if not files:
+            self.logger.warning(
+                "_parse_generated_code: no file blocks found via regex; "
+                "wrapping entire response as main file."
+            )
+            main_file_name = self.platform_configs[platform]["main_file"]
+            file_type = main_file_name.rsplit(".", 1)[-1]
+            files.append(
+                CodeFile(
+                    file_path=main_file_name,
+                    file_name=main_file_name,
+                    file_type=file_type,
+                    content=response.strip(),
+                    description=f"Generated {file_type} file for {platform.value} project",
+                    is_main_file=True,
+                )
+            )
+
+        # Ensure at least one main-file flag is set
+        if not any(f.is_main_file for f in files):
+            files[0].is_main_file = True
+
+        # Always append README if missing
+        if not any(f.file_name.lower().startswith("readme") for f in files):
+            files.append(self._generate_readme_file(files, platform=platform))
+
         return files
     
     async def _validate_and_enhance_files(
@@ -923,56 +943,71 @@ class VeronicaAIService(BaseService):
             raise
     
     async def _save_generated_files(
-        self, 
-        generation_id: str, 
+        self,
+        generation_id: str,
         files: List[CodeFile]
     ) -> None:
         """
-        Save generated files to database
-        
+        Save generated files to database.
+
+        Non-fatal: if the database is unavailable (e.g. in-memory generation
+        mode), logs a warning and returns without raising so the caller can
+        still yield the files to the frontend.
+
         Args:
             generation_id: ID of the generation
             files: List of code files to save
         """
         try:
             client = await get_db_client()
-            
-            file_data = []
-            for file in files:
-                file_record = {
+
+            file_data = [
+                {
                     "generated_code_id": generation_id,
-                    "file_path": file.file_path,
-                    "file_name": file.file_name,
-                    "file_type": file.file_type,
-                    "content": file.content,
-                    "description": file.description,
-                    "size_bytes": file.size_bytes,
-                    "is_main_file": file.is_main_file,
+                    "file_path": f.file_path,
+                    "file_name": f.file_name,
+                    "file_type": f.file_type,
+                    "content": f.content,
+                    "description": f.description,
+                    "size_bytes": f.size_bytes,
+                    "is_main_file": f.is_main_file,
                     "created_at": datetime.now(timezone.utc).isoformat(),
-                    "updated_at": datetime.now(timezone.utc).isoformat()
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
                 }
-                file_data.append(file_record)
-            
+                for f in files
+            ]
+
             result = client.table("code_files").insert(file_data).execute()
-            
+
             if result.data:
                 logger.info(f"Saved {len(files)} files for generation {generation_id}")
             else:
-                raise Exception("Failed to save generated files")
-                
+                logger.warning(
+                    f"_save_generated_files: DB insert returned no data for generation {generation_id}. "
+                    "Files were generated successfully but not persisted."
+                )
+
         except Exception as e:
-            logger.error(f"Error saving generated files: {e}")
-            raise
+            # Non-fatal — generated files are already yielded to the caller.
+            # Log a warning so operators know persistence failed, but don't
+            # crash the generation pipeline.
+            logger.warning(
+                f"_save_generated_files: could not persist files for generation "
+                f"{generation_id} (DB unavailable?): {e}"
+            )
     
     async def _update_generation_status(
-        self, 
-        generation_id: str, 
+        self,
+        generation_id: str,
         status: GenerationStatus,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """
-        Update generation status in database
-        
+        Update generation status in database.
+
+        Non-fatal: if the database is unavailable (e.g. in-memory generation
+        mode), logs a warning and returns without raising.
+
         Args:
             generation_id: ID of the generation
             status: New status
@@ -980,25 +1015,33 @@ class VeronicaAIService(BaseService):
         """
         try:
             client = await get_db_client()
-            
-            update_data = {
+
+            update_data: Dict[str, Any] = {
                 "status": status.value,
-                "error_message": error_message
+                "error_message": error_message,
             }
-            
+
             if status == GenerationStatus.COMPLETED:
                 update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
-            
-            result = client.table("generated_code").update(update_data).eq("id", generation_id).execute()
-            
+
+            result = (
+                client.table("generated_code")
+                .update(update_data)
+                .eq("id", generation_id)
+                .execute()
+            )
+
             if result.data:
                 logger.info(f"Updated generation {generation_id} status to {status.value}")
             else:
-                logger.warning(f"No generation found with ID {generation_id}")
-                
+                logger.warning(f"No generation row found with ID {generation_id} (in-memory mode?)")
+
         except Exception as e:
-            logger.error(f"Error updating generation status: {e}")
-            raise
+            # Non-fatal — status tracking is best-effort.
+            logger.warning(
+                f"_update_generation_status: could not update status for generation "
+                f"{generation_id} to {status.value} (DB unavailable?): {e}"
+            )
     
     async def get_generation_status(self, generation_id: str) -> Optional[Dict[str, Any]]:
         """

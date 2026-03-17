@@ -23,6 +23,15 @@ def extract_json_object(text: str) -> str:
     if not text:
         raise ProjectSpecValidationError("Empty model output", raw_text=text)
 
+    stripped = text.strip()
+
+    # If the model returned raw JSON (object or array) with no extra text, keep it.
+    # We prefer objects, but allow arrays (we'll handle in validate_project_spec_from_text).
+    if stripped.startswith("{") and stripped.endswith("}"):
+        return stripped
+    if stripped.startswith("[") and stripped.endswith("]"):
+        return stripped
+
     # Prefer fenced json
     m = re.search(r"```json\s*(\{[\s\S]*?\})\s*```", text, re.IGNORECASE)
     if m:
@@ -79,6 +88,17 @@ def validate_project_spec_from_text(text: str) -> Tuple[ProjectSpec, Dict[str, A
         raw = json.loads(json_text)
     except Exception as e:
         raise ProjectSpecValidationError("Invalid JSON in model output", raw_text=text, details=str(e))
+
+    # If model returned a JSON array, try to salvage an object (common "wrapped" responses).
+    if isinstance(raw, list):
+        if len(raw) == 1 and isinstance(raw[0], dict):
+            raw = raw[0]
+        else:
+            raise ProjectSpecValidationError(
+                "ProjectSpec JSON must be an object (received array)",
+                raw_text=text,
+                details={"type": "array", "length": len(raw)},
+            )
 
     if not isinstance(raw, dict):
         raise ProjectSpecValidationError("ProjectSpec JSON must be an object", raw_text=text)
