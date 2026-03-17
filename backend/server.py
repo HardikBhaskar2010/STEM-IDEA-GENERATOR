@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Request, WebSocket
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
