@@ -4971,6 +4971,7 @@ app.add_middleware(
         "https://perfection-v4.vercel.app",
         "https://perfection-v2.vercel.app", 
         "https://perfection-v3.vercel.app",
+        "https://stemidea.vercel.app",
         "http://localhost:3000",
         "http://localhost:5173"
     ],
