@@ -58,6 +58,66 @@ export async function sendVeronicaMessage(payload: VeronicaAIChatRequest): Promi
   });
 }
 
+export type AgentEvent = {
+  event: 'plan' | 'file_start' | 'file_done' | 'fix' | 'error' | 'done';
+  data?: string;
+  path?: string;
+  timestamp: string;
+};
+
+export async function sendVeronicaMessageStream(
+  payload: VeronicaAIChatRequest,
+  onEvent: (event: AgentEvent) => void
+): Promise<VeronicaAIChatResponse> {
+  const url = `${API_BASE_URL}/veronica-projects/generate/agent-stream`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('ReadableStream not supported');
+
+  const decoder = new TextDecoder();
+  let result: VeronicaAIChatResponse | null = null;
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    
+    const lines = buffer.split('\n\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (line.trim().startsWith('data: ')) {
+        const dataStr = line.trim().slice(6);
+        if (dataStr === '[DONE]') continue;
+        try {
+          const data = JSON.parse(dataStr);
+          if (data.event === 'done') {
+             result = data.result;
+          } else {
+             onEvent(data as AgentEvent);
+          }
+        } catch (e) {
+          console.error('Failed to parse SSE line', line, e);
+        }
+      }
+    }
+  }
+
+  if (!result) throw new Error("Stream finished without a valid 'done' event.");
+  return result;
+}
+
 export async function getVeronicaProject(projectId: string): Promise<Record<string, any>> {
   return apiFetch<Record<string, any>>(`/veronica-projects/${encodeURIComponent(projectId)}`);
 }
