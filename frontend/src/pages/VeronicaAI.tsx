@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Layout from '@/components/layout/Layout';
-import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ import Silk from '@/components/veronica/Silk';
 import { VeronicaChatTabs, type ChatTab } from '@/components/veronica/VeronicaChatTabs';
 import { VeronicaCommunity } from '@/components/veronica/VeronicaCommunity';
 import { useNavigate } from 'react-router-dom';
+import { AgentTerminal, type AgentEvent } from '@/components/veronica/AgentTerminal';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,6 +34,8 @@ type ChatMessage = {
   actions?: VeronicaAIAction[];
   project?: Record<string, any> | null;
   projectTypeHint?: string;
+  agentEvents?: AgentEvent[];
+  isStreamingBuild?: boolean;
 };
 
 type VeronicaMode = 'idea' | 'full_build' | 'debug';
@@ -158,6 +160,16 @@ const VeronicaAI: React.FC = () => {
     });
   }, [activeTabId]);
 
+  const updateActiveMessage = useCallback((msgId: string, updater: (m: ChatMessage) => ChatMessage) => {
+    setChatHistory((prev) => {
+      const active = prev[activeTabId] ?? [];
+      return {
+        ...prev,
+        [activeTabId]: active.map(m => m.id === msgId ? updater(m) : m)
+      };
+    });
+  }, [activeTabId]);
+
   // ── Send ──
   const handleSend = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? inputValue).trim();
@@ -169,38 +181,81 @@ const VeronicaAI: React.FC = () => {
 
     try {
       if (mode === 'full_build') {
+        const streamMsgId = newId();
+        const initialAssistantMsg: ChatMessage = {
+          id: streamMsgId,
+          role: 'assistant',
+          content: 'Initializing full build...',
+          timestamp: new Date(),
+          agentEvents: [],
+          isStreamingBuild: true
+        };
+
+        setChatHistory((prev) => ({
+          ...prev,
+          [activeTabId]: [...(prev[activeTabId] ?? []), initialAssistantMsg],
+        }));
+
+        try {
+          // Import this locally if you haven't added it to the top level imports yet,
+          // but we will import it at the top level
+          const { sendVeronicaMessageStream } = await import('@/services/veronicaAIService');
+          
+          const res = await sendVeronicaMessageStream(
+            { message: text },
+            (ev) => {
+              updateActiveMessage(streamMsgId, (m) => ({
+                ...m,
+                agentEvents: [...(m.agentEvents || []), ev]
+              }));
+            }
+          );
+
+          updateActiveMessage(streamMsgId, (m) => ({
+            ...m,
+            content: res.assistant_text,
+            intent: res.intent,
+            confidence: res.confidence,
+            actions: res.actions,
+            project: res.project ?? null,
+            projectTypeHint: inferProjectTypeHint(text),
+            isStreamingBuild: false
+          }));
+
+          const projectId = (res.project as any)?.project_id as string | undefined;
+          if (projectId) {
+            appendToActive({ role: 'assistant', content: 'Agent finished build. Starting live run…' });
+            const runRes = await startVeronicaRun(projectId);
+            appendToActive({
+              role: 'assistant',
+              content: `Run started (run_id: \`${runRes.run_id}\`). Launching build/fix agent…`,
+            });
+            await startVeronicaAgentJob(projectId, runRes.run_id);
+            appendToActive({
+              role: 'assistant',
+              content: 'Agent job started. Opening your project view now so you can watch preview + logs.',
+            });
+            navigate(`/veronica-project/${projectId}`);
+          }
+        } catch (e) {
+          updateActiveMessage(streamMsgId, (m) => ({
+            ...m,
+            content: e instanceof Error ? e.message : 'Build failed.',
+            isStreamingBuild: false
+          }));
+        }
+      } else {
+        const res = await sendVeronicaMessage({ message: text });
+
         appendToActive({
           role: 'assistant',
-          content: "Full Build mode: generating a runnable project, then starting a live run and automatic build/fix loop.",
+          content: res.assistant_text,
+          intent: res.intent,
+          confidence: res.confidence,
+          actions: res.actions,
+          project: res.project ?? null,
+          projectTypeHint: inferProjectTypeHint(text),
         });
-      }
-
-      const res = await sendVeronicaMessage({ message: text });
-
-      appendToActive({
-        role: 'assistant',
-        content: res.assistant_text,
-        intent: res.intent,
-        confidence: res.confidence,
-        actions: res.actions,
-        project: res.project ?? null,
-        projectTypeHint: inferProjectTypeHint(text),
-      });
-
-      const projectId = (res.project as any)?.project_id as string | undefined;
-      if (mode === 'full_build' && projectId) {
-        appendToActive({ role: 'assistant', content: 'Starting live run…' });
-        const runRes = await startVeronicaRun(projectId);
-        appendToActive({
-          role: 'assistant',
-          content: `Run started (run_id: \`${runRes.run_id}\`). Launching build/fix agent…`,
-        });
-        await startVeronicaAgentJob(projectId, runRes.run_id);
-        appendToActive({
-          role: 'assistant',
-          content: 'Agent job started. Opening your project view now so you can watch preview + logs.',
-        });
-        navigate(`/veronica-project/${projectId}`);
       }
     } catch (e) {
       appendToActive({
@@ -210,7 +265,7 @@ const VeronicaAI: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, mode, navigate, appendToActive]);
+  }, [inputValue, isLoading, mode, navigate, appendToActive, updateActiveMessage, activeTabId]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -312,6 +367,12 @@ const VeronicaAI: React.FC = () => {
                             </div>
                           )}
                         </div>
+
+                        {((m.agentEvents && m.agentEvents.length > 0) || m.isStreamingBuild) && (
+                          <div className="mt-4">
+                            <AgentTerminal events={m.agentEvents || []} isStreaming={!!m.isStreamingBuild} />
+                          </div>
+                        )}
 
                         {m.role === 'assistant' && typeof m.confidence === 'number' && m.intent && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
