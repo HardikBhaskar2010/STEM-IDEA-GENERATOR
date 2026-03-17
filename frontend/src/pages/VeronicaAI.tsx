@@ -9,9 +9,10 @@ import { Send, Sparkles, Cpu, Bug, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { sendVeronicaMessage, type VeronicaAIAction, type VeronicaAIChatResponse } from '@/services/veronicaAIService';
+import { sendVeronicaMessage, startVeronicaRun, startVeronicaAgentJob, type VeronicaAIAction, type VeronicaAIChatResponse } from '@/services/veronicaAIService';
 import { ProjectCard } from '@/components/veronica/ProjectCard';
 import Silk from '@/components/veronica/Silk';
+import { useNavigate } from 'react-router-dom';
 
 type ChatMessage = {
   id: string;
@@ -25,6 +26,8 @@ type ChatMessage = {
   projectTypeHint?: string;
 };
 
+type VeronicaMode = 'idea' | 'full_build' | 'debug';
+
 const newId = () => `msg_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
 const inferProjectTypeHint = (message: string) => {
@@ -36,6 +39,7 @@ const inferProjectTypeHint = (message: string) => {
 };
 
 const VeronicaAI: React.FC = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: 'welcome',
@@ -46,6 +50,7 @@ const VeronicaAI: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<VeronicaMode>('idea');
   const endRef = useRef<HTMLDivElement>(null);
 
   const lastUserMessage = useMemo(() => {
@@ -75,6 +80,13 @@ const VeronicaAI: React.FC = () => {
     setIsLoading(true);
 
     try {
+      if (mode === 'full_build') {
+        appendMessage({
+          role: 'assistant',
+          content: "Full Build mode: generating a runnable project, then I’ll start a live run and attempt an automatic build/fix loop.",
+        });
+      }
+
       const res = await sendVeronicaMessage({ message: text });
 
       appendMessage({
@@ -86,6 +98,23 @@ const VeronicaAI: React.FC = () => {
         project: res.project ?? null,
         projectTypeHint: inferProjectTypeHint(text),
       });
+
+      // Full Build: auto-run + agent job, then send the user to the project view.
+      const projectId = (res.project as any)?.project_id as string | undefined;
+      if (mode === 'full_build' && projectId) {
+        appendMessage({ role: 'assistant', content: "Starting live run…" });
+        const runRes = await startVeronicaRun(projectId);
+        appendMessage({
+          role: 'assistant',
+          content: `Run started (run_id: \`${runRes.run_id}\`). Launching build/fix agent…`,
+        });
+        await startVeronicaAgentJob(projectId, runRes.run_id);
+        appendMessage({
+          role: 'assistant',
+          content: "Agent job started. Opening your project view now so you can watch preview + logs.",
+        });
+        navigate(`/veronica-project/${projectId}`);
+      }
     } catch (e) {
       appendMessage({
         role: 'assistant',
@@ -94,7 +123,7 @@ const VeronicaAI: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading]);
+  }, [inputValue, isLoading, mode, navigate]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -136,18 +165,39 @@ const VeronicaAI: React.FC = () => {
 
             {/* Mode pills row */}
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-background/70 px-2 py-1 text-xs shadow-sm">
-              <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-primary">
+              <button
+                type="button"
+                onClick={() => setMode('idea')}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-3 py-1 transition',
+                  mode === 'idea' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-background/60'
+                )}
+              >
                 <Lightbulb className="w-3 h-3" />
                 <span>Project Idea</span>
-              </div>
-              <div className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-muted-foreground">
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('full_build')}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-3 py-1 transition',
+                  mode === 'full_build' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-background/60'
+                )}
+              >
                 <Cpu className="w-3 h-3" />
-                <span>Full Build (soon)</span>
-              </div>
-              <div className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-muted-foreground">
+                <span>Full Build</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('debug')}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-3 py-1 transition',
+                  mode === 'debug' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-background/60'
+                )}
+              >
                 <Bug className="w-3 h-3" />
                 <span>Debug Help</span>
-              </div>
+              </button>
             </div>
 
             <Card className="glass-effect border-primary/20 bg-background/80 backdrop-blur-2xl shadow-[0_18px_45px_rgba(0,0,0,0.55)] overflow-hidden">

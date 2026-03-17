@@ -130,3 +130,19 @@ export async function runVeronicaSelfFix(projectId: string, runId: string): Prom
   );
 }
 
+export interface VeronicaAgentJobResponse {
+  job_id: string;
+  project_id: string;
+  status: string;
+  plan?: any[];
+  result?: Record<string, any>;
+  error?: string | null;
+}
+
+export async function startVeronicaAgentJob(projectId: string, runId: string): Promise<VeronicaAgentJobResponse> {
+  const params = new URLSearchParams({ run_id: runId });
+  return apiFetch<VeronicaAgentJobResponse>(`/veronica-projects/${encodeURIComponent(projectId)}/agent-jobs?${params.toString()}`, {
+    method: 'POST',
+  });
+}
+
