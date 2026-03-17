@@ -132,7 +132,7 @@ async def calculate_achievement_progress(user_id: str, achievement: Dict) -> Opt
                 current_value = result.data.get("streak_days", 0)
         
         elif condition_type == "profile_complete":
-            result = supabase.table("profiles").select("username, bio, interests").eq("id", user_id).single().execute()
+            result = supabase.table("profiles").select("username, bio, interests").eq("user_id", user_id).single().execute()
             if result.data:
                 profile = result.data
                 if profile.get("username") and profile.get("bio") and len(profile.get("interests", [])) > 0:
@@ -140,7 +140,7 @@ async def calculate_achievement_progress(user_id: str, achievement: Dict) -> Opt
                     target_value = 1
         
         elif condition_type == "profile_advanced":
-            result = supabase.table("profiles").select("username, bio, interests, avatar_url").eq("id", user_id).single().execute()
+            result = supabase.table("profiles").select("username, bio, interests, avatar_url").eq("user_id", user_id).single().execute()
             if result.data:
                 profile = result.data
                 if (profile.get("username") and profile.get("bio") and 
@@ -389,7 +389,7 @@ async def get_achievement_leaderboard(limit: int = 50):
         leaderboard = []
         for rank, (user_id, count) in enumerate(sorted_users, 1):
             # Get user profile
-            profile_result = supabase.table("profiles").select("username, avatar_url").eq("id", user_id).execute()
+            profile_result = supabase.table("profiles").select("username, avatar_url").eq("user_id", user_id).execute()
             profile = profile_result.data[0] if profile_result.data else {}
             
             # Get achievement stats
