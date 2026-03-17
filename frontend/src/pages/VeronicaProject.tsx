@@ -67,6 +67,7 @@ const VeronicaProject: React.FC = () => {
   const [runId, setRunId] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fixes, setFixes] = useState<string[]>([]);
   const [isFixing, setIsFixing] = useState(false);
 
@@ -90,6 +91,23 @@ const VeronicaProject: React.FC = () => {
       }
     })();
   }, [id]);
+
+  useEffect(() => {
+    if (!id || !runId || !isRunning) return;
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const logRes = await getVeronicaRunLogs(id, runId);
+        if (!cancelled) setLogs(logRes.logs);
+      } catch {
+        // ignore polling errors
+      }
+    }, 2000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [id, runId, isRunning]);
 
   const editorFiles: EditorFile[] = useMemo(() => {
     const files = spec?.files ?? [];
@@ -164,12 +182,14 @@ const VeronicaProject: React.FC = () => {
       setIsRunning(true);
       const res = await startVeronicaRun(id);
       setRunId(res.run_id);
+      setPreviewUrl(res.preview_url ?? null);
       toast({ title: 'Run started', description: 'Sandbox run has been started.' });
       // Fetch initial logs (stubbed for now)
       const logRes = await getVeronicaRunLogs(id, res.run_id);
       setLogs(logRes.logs);
     } catch (e) {
       setIsRunning(false);
+      setPreviewUrl(null);
       toast({
         title: 'Run failed',
         description: e instanceof Error ? e.message : 'Unable to start run.',
@@ -183,6 +203,7 @@ const VeronicaProject: React.FC = () => {
     try {
       await stopVeronicaRun(id, runId);
       setIsRunning(false);
+      setPreviewUrl(null);
       toast({ title: 'Run stopped', description: 'Sandbox run has been stopped.' });
     } catch (e) {
       toast({
@@ -324,6 +345,27 @@ const VeronicaProject: React.FC = () => {
               </div>
             </Card>
           </div>
+
+          {spec?.platform === 'web' && previewUrl && (
+            <div className="grid grid-cols-12 gap-4">
+              <Card className="col-span-12 glass-effect border-primary/10 overflow-hidden">
+                <div className="p-4 border-b border-primary/10 flex items-center justify-between gap-2">
+                  <div className="text-sm font-semibold">Live Preview</div>
+                  <Badge variant="outline" className="bg-background/40">
+                    {isRunning ? 'running' : 'stopped'}
+                  </Badge>
+                </div>
+                <div className="h-[420px] bg-black/20">
+                  <iframe
+                    src={previewUrl}
+                    title="Veronica Preview"
+                    className="w-full h-full"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups"
+                  />
+                </div>
+              </Card>
+            </div>
+          )}
 
           <div className="grid grid-cols-12 gap-4">
             <Card className="col-span-12 glass-effect border-primary/10 overflow-hidden">
