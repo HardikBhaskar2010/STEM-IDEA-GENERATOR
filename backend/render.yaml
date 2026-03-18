@@ -17,3 +17,7 @@ services:
         value: https://satbswbgkcgaddbesgns.supabase.co
       - key: SUPABASE_KEY
         value: REDACTED_SECRET
+      # CORS: Set this to your Vercel frontend URL (e.g. https://your-app.vercel.app)
+      # Multiple origins can be comma-separated: https://a.vercel.app,https://b.vercel.app
+      - key: FRONTEND_URL
+        value: https://YOUR_APP.vercel.app

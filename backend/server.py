@@ -3448,118 +3448,227 @@ async def veronica_ai_chat(request: VeronicaAIChatRequest):
     if not request.message or not request.message.strip():
         raise HTTPException(status_code=400, detail="message is required")
 
-    async def llm_complete(prompt: str) -> str:
-        # Use existing OpenRouter helper if available.
-        # Falls back to raising if OpenRouter isn't configured.
-        return await call_openrouter(prompt, model="stepfun/step-3.5-flash:free")
+    try:
+        async def llm_complete(prompt: str) -> str:
+            return await call_openrouter(prompt, model="stepfun/step-3.5-flash:free")
 
-    classification = await classify_intent(
-        request.message,
-        llm_complete=(llm_complete if openrouter_client else None),
-        llm_threshold=0.6,
-    )
+        classification = await classify_intent(
+            request.message,
+            llm_complete=(llm_complete if openrouter_client else None),
+            llm_threshold=0.6,
+        )
 
-    async def generate_project_fn(params_dict: Dict[str, Any]) -> Dict[str, Any]:
-        params_obj = ProjectParams(**params_dict)
-        project_result = await generate_project(params_obj)
-        # Normalize pydantic/dict return
-        if hasattr(project_result, "model_dump"):
-            return project_result.model_dump()
-        if hasattr(project_result, "dict"):
-            return project_result.dict()
-        return project_result
+        async def generate_project_fn(params_dict: Dict[str, Any]) -> Dict[str, Any]:
+            params_obj = ProjectParams(**params_dict)
+            project_result = await generate_project(params_obj)
+            if hasattr(project_result, "model_dump"):
+                return project_result.model_dump()
+            if hasattr(project_result, "dict"):
+                return project_result.dict()
+            return project_result
 
-    routed = await route_message(
-        request.message,
-        classification,
-        generate_project_fn=generate_project_fn,
-    )
+        routed = await route_message(
+            request.message,
+            classification,
+            generate_project_fn=generate_project_fn,
+        )
 
-    # Convert actions to response model
-    actions = [VeronicaAIAction(**a) for a in routed.actions]
+        actions = [VeronicaAIAction(**a) for a in routed.actions]
+        return VeronicaAIChatResponse(
+            intent=routed.intent.value,
+            confidence=float(routed.confidence),
+            assistant_text=routed.assistant_text,
+            actions=actions,
+            project=routed.project,
+        )
 
-    return VeronicaAIChatResponse(
-        intent=routed.intent.value,
-        confidence=float(routed.confidence),
-        assistant_text=routed.assistant_text,
-        actions=actions,
-        project=routed.project,
-    )
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        logger.error(f"Veronica chat runtime error: {e}")
+        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+    except Exception as e:
+        logger.error(f"Veronica chat unexpected error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Veronica error: {str(e)}")
 
 
 @api.post("/veronica-projects/generate", response_model=VeronicaAIChatResponse)
+
 async def veronica_projects_generate(request: Request, payload: VeronicaAIChatRequest):
+
     """
+
     Phase 0/1 Veronica generator endpoint:
+
     - classify intent
+
     - for idea intents, generate a canonical ProjectSpec and persist to filesystem
+
     - return VeronicaAIChatResponse with enabled actions (open/download) and `project` as ProjectSpec dict
+
     """
+
     from backend.services.veronica_intent_classifier import classify_intent, VeronicaIntent
+
     from backend.services.veronica_project_generator import generate_project_spec
+
     from backend.services.veronica_project_store import VeronicaProjectStore
+
+
 
     _check_veronica_rate_limit(request, action="generate", limit=10, window_seconds=60)
 
+
+
     if not payload.message or not payload.message.strip():
+
         raise HTTPException(status_code=400, detail="message is required")
 
-    async def llm_complete(prompt: str) -> str:
-        return await call_openrouter(prompt, model="stepfun/step-3.5-flash:free")
 
-    classification = await classify_intent(
-        payload.message,
-        llm_complete=(llm_complete if openrouter_client else None),
-        llm_threshold=0.6,
-    )
 
-    # Non-idea intents: return a helpful preface, no project yet
-    if classification.intent not in (VeronicaIntent.IDEA_ONLY, VeronicaIntent.IDEA_PLUS_CODE):
-        assistant_text = (
-            "Tell me what you want to build and any constraints (platform, budget, time). "
-            "If you have an error log, paste it and I’ll help debug."
-            if classification.intent == VeronicaIntent.DEBUG_HELP
-            else "Got it. Share what you want (platform, constraints, desired behavior) and I’ll generate a complete project."
+    try:
+
+        async def llm_complete(prompt: str) -> str:
+
+            return await call_openrouter(prompt, model="stepfun/step-3.5-flash:free")
+
+
+
+        classification = await classify_intent(
+
+            payload.message,
+
+            llm_complete=(llm_complete if openrouter_client else None),
+
+            llm_threshold=0.6,
+
         )
+
+
+
+        # Non-idea intents: return a helpful preface, no project yet
+
+        if classification.intent not in (VeronicaIntent.IDEA_ONLY, VeronicaIntent.IDEA_PLUS_CODE):
+
+            assistant_text = (
+
+                "Tell me what you want to build and any constraints (platform, budget, time). "
+
+                "If you have an error log, paste it and I'll help debug."
+
+                if classification.intent == VeronicaIntent.DEBUG_HELP
+
+                else "Got it. Share what you want (platform, constraints, desired behavior) and I'll generate a complete project."
+
+            )
+
+            return VeronicaAIChatResponse(
+
+                intent=classification.intent.value,
+
+                confidence=float(classification.confidence),
+
+                assistant_text=assistant_text,
+
+                actions=[
+
+                    VeronicaAIAction(type="save_project", enabled=False),
+
+                    VeronicaAIAction(type="open_project", enabled=False),
+
+                    VeronicaAIAction(type="generate_code", enabled=False),
+
+                    VeronicaAIAction(type="edit_code", enabled=False),
+
+                    VeronicaAIAction(type="download_project", enabled=False),
+
+                    VeronicaAIAction(type="preview_project", enabled=False),
+
+                ],
+
+                project=None,
+
+            )
+
+
+
+        # Generate ProjectSpec (may raise ValueError after 3 LLM repair attempts)
+
+        spec = await generate_project_spec(message=payload.message, llm_complete=llm_complete)
+
+
+
+        # Store on filesystem
+
+        base_dir = os.path.join(os.path.dirname(__file__), "data")
+
+        store = VeronicaProjectStore(base_dir=base_dir)
+
+        store.save_spec(spec)
+
+
+
+        assistant_text = f"Here's a project you can build:\n\n**{spec.title}**\n\n{spec.summary}".strip()
+
         return VeronicaAIChatResponse(
+
             intent=classification.intent.value,
+
             confidence=float(classification.confidence),
+
             assistant_text=assistant_text,
+
             actions=[
-                VeronicaAIAction(type="save_project", enabled=False),
-                VeronicaAIAction(type="open_project", enabled=False),
+
+                VeronicaAIAction(type="save_project", enabled=True, id=spec.project_id),
+
+                VeronicaAIAction(type="open_project", enabled=True, id=spec.project_id),
+
                 VeronicaAIAction(type="generate_code", enabled=False),
-                VeronicaAIAction(type="edit_code", enabled=False),
-                VeronicaAIAction(type="download_project", enabled=False),
+
+                VeronicaAIAction(type="edit_code", enabled=True, id=spec.project_id),
+
+                VeronicaAIAction(type="download_project", enabled=True, id=spec.project_id),
+
                 VeronicaAIAction(type="preview_project", enabled=False),
+
             ],
-            project=None,
+
+            project=spec.model_dump(),
+
         )
 
-    # Generate ProjectSpec
-    spec = await generate_project_spec(message=payload.message, llm_complete=llm_complete)
 
-    # Store on filesystem
-    base_dir = os.path.join(os.path.dirname(__file__), "data")
-    store = VeronicaProjectStore(base_dir=base_dir)
-    store.save_spec(spec)
 
-    assistant_text = f"Here’s a project you can build:\n\n**{spec.title}**\n\n{spec.summary}".strip()
-    return VeronicaAIChatResponse(
-        intent=classification.intent.value,
-        confidence=float(classification.confidence),
-        assistant_text=assistant_text,
-        actions=[
-            VeronicaAIAction(type="save_project", enabled=True, id=spec.project_id),
-            VeronicaAIAction(type="open_project", enabled=True, id=spec.project_id),
-            VeronicaAIAction(type="generate_code", enabled=False),
-            VeronicaAIAction(type="edit_code", enabled=True, id=spec.project_id),
-            VeronicaAIAction(type="download_project", enabled=True, id=spec.project_id),
-            VeronicaAIAction(type="preview_project", enabled=False),
-        ],
-        project=spec.model_dump(),
-    )
+    except HTTPException:
 
+        raise
+
+    except RuntimeError as e:
+
+        logger.error(f"Veronica generate runtime error: {e}")
+
+        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+
+    except ValueError as e:
+
+        # generate_project_spec raises ValueError when LLM fails to produce valid JSON after 3 attempts
+
+        logger.error(f"Veronica generate spec validation error: {e}")
+
+        raise HTTPException(
+
+            status_code=422,
+
+            detail=f"Veronica could not generate a valid project. Please try rephrasing your request. ({str(e)[:200]})"
+
+        )
+
+    except Exception as e:
+
+        logger.error(f"Veronica generate unexpected error: {e}", exc_info=True)
+
+        raise HTTPException(status_code=500, detail=f"Project generation failed: {str(e)[:300]}")
 
 @api.post("/veronica-projects/generate/agent-stream")
 async def veronica_projects_generate_agent_stream(request: Request, payload: VeronicaAIChatRequest):
