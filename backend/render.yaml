@@ -17,3 +17,7 @@ services:
         value: https://satbswbgkcgaddbesgns.supabase.co
       - key: SUPABASE_KEY
         value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdGJzd2Jna2NnYWRkYmVzZ25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5Mjc4NTUsImV4cCI6MjA4MjUwMzg1NX0.vJ7FWirMkmOsO13TzzRfbiUZC6g3hD6i1wmLM23epcg
+      # CORS: Set this to your Vercel frontend URL (e.g. https://your-app.vercel.app)
+      # Multiple origins can be comma-separated: https://a.vercel.app,https://b.vercel.app
+      - key: FRONTEND_URL
+        value: https://YOUR_APP.vercel.app
