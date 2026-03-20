@@ -8,6 +8,7 @@ import ShowcaseSection from "@/components/gateway/ShowcaseSection";
 import BenefitsSection from "@/components/gateway/BenefitsSection";
 import CTASection from "@/components/gateway/CTASection";
 
+
 const ScrollProgress = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
@@ -37,6 +38,7 @@ const Welcome = () => {
         <HeroSection />
         <SectionDivider />
         <EarthScene />
+
         <SectionDivider />
         <FeaturesSection />
         <SectionDivider />
