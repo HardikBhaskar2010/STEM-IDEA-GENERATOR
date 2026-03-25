@@ -1,68 +1,70 @@
-import { Suspense, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, useGLTF } from "@react-three/drei";
-import * as THREE from "three";
-
 /**
- * Placeholder spinning sphere that mimics an Earth.
- * To use your own .glb model:
- * 1. Place your file in public/models/earth.glb
- * 2. Uncomment the EarthModel component below
- * 3. Replace <PlaceholderEarth /> with <EarthModel /> in the Scene
+ * EarthScene.tsx
+ * Replaced with WireGlobe — a fully procedural, data-driven globe system.
+ * ❌ Removed: GLB model, heavy textures, baked lighting, static planet.glb
+ * ✅ Added: GeoJSON-style dots, grid lines, starfield, pins, pulse waves, arc trails, interaction
  */
-// ─── Updated to load planet.glb ───
-const EarthModel = () => {
-  const { scene } = useGLTF("/planet.glb");
-  const ref = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y += delta * 0.15;
-  });
-  return <primitive ref={ref} object={scene} scale={2} />;
-};
 
-const GlowRing = () => {
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.z += delta * 0.1;
-  });
-
-  return (
-    <mesh ref={ref} rotation={[Math.PI / 3, 0, 0]}>
-      <torusGeometry args={[2.6, 0.015, 16, 100]} />
-      <meshBasicMaterial color="#a78bfa" transparent opacity={0.5} />
-    </mesh>
-  );
-};
-
-const Scene = () => (
-  <>
-    <ambientLight intensity={0.3} />
-    <pointLight position={[10, 10, 10]} intensity={1.5} color="#a78bfa" />
-    <pointLight position={[-10, -5, 5]} intensity={0.8} color="#3b82f6" />
-    <Stars radius={50} depth={40} count={1500} factor={3} saturation={0.5} fade speed={1} />
-    <EarthModel />
-    {/* Wireframe placeholder removed in favor of GLB model */}
-    <GlowRing />
-    <OrbitControls
-      enableZoom={false}
-      enablePan={false}
-      autoRotate
-      autoRotateSpeed={0.5}
-      minPolarAngle={Math.PI / 3}
-      maxPolarAngle={Math.PI / 1.5}
-    />
-  </>
-);
+import { motion } from 'framer-motion';
+import { WireGlobe } from '@/components/globe';
 
 const EarthScene = () => {
   return (
-    <div className="w-full h-[500px] sm:h-[600px] relative">
-      <Canvas camera={{ position: [0, 0, 6], fov: 45 }} dpr={[1, 2]}>
-        <Suspense fallback={null}>
-          <Scene />
-        </Suspense>
-      </Canvas>
-    </div>
+    <section 
+      className="relative py-16 w-full globe-section"
+      style={{
+        background: `
+          radial-gradient(circle at 50% 45%, rgba(56,189,248,0.12), transparent 60%),
+          linear-gradient(to bottom, rgba(15,23,42,0.3) 0%, #020617 30%, #000000 100%)
+        `
+      }}
+    >
+      {/* Top blur divider for cinematic fade */}
+      <div 
+        className="absolute top-[-80px] left-0 right-0 h-[160px] pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(99,102,241,0.25), transparent)',
+          filter: 'blur(40px)',
+          zIndex: 0
+        }}
+      />
+
+      {/* Section header */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        className="text-center mb-6 px-4"
+      >
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-background/30 backdrop-blur-md mb-6 text-sm text-foreground/70">
+          🌍 Connected Nodes of Discovery
+        </div>
+        <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
+          <span className="text-gradient-primary">Global Innovation</span> Network
+        </h2>
+        <p className="text-muted-foreground max-w-lg mx-auto text-base leading-relaxed">
+          Tap any glowing node to explore projects, tools, and innovation zones.
+        </p>
+      </motion.div>
+
+      {/* Globe */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+        className="relative"
+      >
+        <WireGlobe
+          height="750px"
+          rotationSpeed={0.055}
+          showGrid={true}
+          showStars
+          enableInteraction
+        />
+      </motion.div>
+    </section>
   );
 };
 
