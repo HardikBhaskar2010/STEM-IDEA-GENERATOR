@@ -13,6 +13,9 @@
     "test": "vitest --run",
     "test:watch": "vitest"
   },
+  "overrides": {
+    "three": "0.160.1"
+  },
   "dependencies": {
     "@babel/standalone": "^7.29.1",
     "@capacitor/android": "^6.2.1",
@@ -51,6 +54,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@react-three/drei": "^9.92.0",
     "@react-three/fiber": "^8.18.0",
+    "@react-three/postprocessing": "^3.0.4",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.70",
     "@supabase/supabase-js": "^2.39.0",
@@ -92,7 +96,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.160.1",
+    "three": "0.160.1",
     "vaul": "^0.9.9",
     "xterm": "^5.3.0",
     "xterm-addon-fit": "^0.8.0",
