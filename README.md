@@ -284,6 +284,31 @@ Teacher Creates Team → Shares Code → Students Join → Generate Ideas → Su
 </tr>
 </table>
 
+### 🔧 **Interactive STEM Workshop (3D Circuit Simulator)**
+
+<table>
+<tr>
+<td width="50%">
+
+#### 🔬 **Virtual 3D Playground**
+- **Interactive Breadboards**: Place and wire components in beautifully rendered 3D space
+- **Live Simulation**: Test complex Arduino circuits safely without physical hardware
+- **Drag-and-Drop Inventory**: Instantly spawn LEDs, resistors, processors, and sensors
+- **Dynamic Wiring**: Connect pins with auto-routed, colorful jumper wires
+
+</td>
+<td width="50%">
+
+#### ⚡ **Real-time Diagnostics**
+- **Execution Engine**: Monitor global simulation states (IDLE vs SIMULATING)
+- **Guided Experiments**: Built-in starter tutorials (e.g., "Blink") and advanced lessons
+- **Dedicated Workspaces**: Multi-panel layout featuring Left/Right sidebars and 3D center stage
+- **Performance Optimized**: Suspense-loaded 3D environments configured for desktop fidelity
+
+</td>
+</tr>
+</table>
+
 ### 📚 **Comprehensive Component Library**
 
 | Feature | Description |
