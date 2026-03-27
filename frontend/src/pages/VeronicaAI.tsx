@@ -16,7 +16,7 @@ import {
   type VeronicaAIChatResponse,
 } from '@/services/veronicaAIService';
 import { ProjectCard } from '@/components/veronica/ProjectCard';
-import Silk from '@/components/veronica/Silk';
+import DarkVeil from '@/components/veronica/DarkVeil';
 import { VeronicaChatTabs, type ChatTab } from '@/components/veronica/VeronicaChatTabs';
 import { VeronicaCommunity } from '@/components/veronica/VeronicaCommunity';
 import { useNavigate } from 'react-router-dom';
@@ -299,7 +299,17 @@ const VeronicaAI: React.FC = () => {
   return (
     <Layout>
       <div className="relative min-h-screen">
-        <Silk speed={5} scale={1.2} rotation={0.15} />
+        {/* DarkVeil WebGL background */}
+        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
+          <DarkVeil
+            hueShift={0}
+            noiseIntensity={0.03}
+            scanlineIntensity={0}
+            speed={0.5}
+            scanlineFrequency={0}
+            warpAmount={0.3}
+          />
+        </div>
 
         <div className="relative container mx-auto px-4 pt-24 pb-12 max-w-7xl">
 
