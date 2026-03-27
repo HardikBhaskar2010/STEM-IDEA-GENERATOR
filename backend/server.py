@@ -80,14 +80,22 @@ app = FastAPI(
 # ----------------------------------------------------------------
 # CORS
 # ----------------------------------------------------------------
-ALLOWED_ORIGINS = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:3000,http://localhost:5173,https://stem-idea-generator.vercel.app",
-).split(",")
+_DEFAULT_ORIGINS = ",".join([
+    "http://localhost:3000",
+    "http://localhost:5173",
+    # Vercel deployments — add any preview URLs as needed
+    "https://stemidea.vercel.app",
+    "https://stem-idea-generator.vercel.app",
+])
+
+ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", _DEFAULT_ORIGINS).split(",")
+# Strip whitespace from each origin (safe guard against env-var formatting)
+ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",   # all Vercel preview URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

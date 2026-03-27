@@ -580,16 +580,15 @@
   left: 50%;
   width: 4px;
   height: 4px;
-  transform: translate(-50%, -50%);
+  /* transform is set inline by React to track rawPosition offset */
   background: rgba(255, 255, 255, 0.95);
   box-shadow:
     0 0 4px rgba(56, 189, 248, 1),
     0 0 10px rgba(59, 130, 246, 0.7);
-  border-radius: 1px;            /* keeps it square with soft corners */
+  border-radius: 1px;
   transition:
     background 120ms ease-out,
-    box-shadow 120ms ease-out,
-    transform 90ms ease-out;
+    box-shadow 120ms ease-out;
   z-index: 1;
 }
 

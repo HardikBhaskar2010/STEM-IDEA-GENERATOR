@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 
 const shouldDisableCustomCursor = () => {
   if (typeof window === "undefined") return true;
-  // Disable only when the primary pointer can't hover (typical phones/tablets).
-  // Many laptops report touch capability; we still want the custom cursor there.
   const mq = window.matchMedia?.("(hover: none) and (pointer: coarse)");
   return mq ? mq.matches : false;
 };
@@ -18,6 +16,9 @@ const isInteractive = (el: Element | null) => {
 
 export const SciFiCursor: React.FC = () => {
   const [position, setPosition] = useState({ x: -100, y: -100 });
+  // rawPosition always holds the true mouse coordinates, unaffected by
+  // the snap-to-element-center logic used for the crosshair wrapper.
+  const [rawPosition, setRawPosition] = useState({ x: -100, y: -100 });
   const [visible, setVisible] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const [enabled, setEnabled] = useState(false);
@@ -40,6 +41,8 @@ export const SciFiCursor: React.FC = () => {
 
       setVisible(true);
       setEnabled(true);
+      // Always keep rawPosition in sync with the real pointer
+      setRawPosition({ x, y });
 
       const under = document.elementFromPoint(x, y);
       const interactiveEl = under?.closest(
@@ -52,6 +55,7 @@ export const SciFiCursor: React.FC = () => {
         const h = Math.max(18, Math.round(rect.height));
         setHoverRect({ w, h });
         setSize({ w, h });
+        // Wrapper snaps to element center — dot compensates via offset below
         setPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
         return;
       }
@@ -99,8 +103,13 @@ export const SciFiCursor: React.FC = () => {
     };
   }, [enabled, disabled]);
 
-  // Do not render on devices without hover/fine pointer
   if (disabled) return null;
+
+  // Dot offset = how far the real pointer is from the wrapper center.
+  // When not hovering, position === rawPosition so offset is (0, 0) → dot stays centered.
+  // When hovering, offset moves the dot to the real cursor hotspot.
+  const dotOffsetX = rawPosition.x - position.x;
+  const dotOffsetY = rawPosition.y - position.y;
 
   return (
     <div
@@ -123,11 +132,16 @@ export const SciFiCursor: React.FC = () => {
       <div className="sci-fi-crosshair tr" />
       <div className="sci-fi-crosshair bl" />
       <div className="sci-fi-crosshair br" />
-      {/* Hotspot dot — marks exact cursor position even during focus states */}
-      <div className="sci-fi-cursor-dot" />
+      {/* Hotspot dot — offset by (rawPosition - wrapperCenter) so it always
+          tracks the real pointer, even when the crosshair is snapped to an element */}
+      <div
+        className="sci-fi-cursor-dot"
+        style={{
+          transform: `translate(calc(-50% + ${dotOffsetX}px), calc(-50% + ${dotOffsetY}px))`,
+        }}
+      />
     </div>
   );
 };
 
 export default SciFiCursor;
-
