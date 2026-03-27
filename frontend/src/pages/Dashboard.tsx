@@ -22,6 +22,8 @@ import { SoftCard, EventCard, EventPreviewCard, CalendarWidget } from '@/compone
 import { generateMockEvents, generateMockCalendarActivities } from '@/types/events';
 import type { EventType } from '@/components/theme';
 import { WebGLDebug } from '@/components/WebGLDebug';
+import { useDebugMode } from '@/hooks/useDebugMode';
+import { DebugPanel } from '@/components/debug/DebugPanel';
 
 import { EnergyGrid } from '@/components/background/EnergyGrid';
 import { ParticleStream } from '@/components/background/ParticleStream';
@@ -70,6 +72,7 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, planning: 0 });
   const [selectedDate, setSelectedDate] = useState<string>();
+  const isDebug = useDebugMode();
   
   // Mock event data
   const [recentEvents] = useState(generateMockEvents(10));
@@ -492,8 +495,15 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Debug Panel — only when ?debug=true */}
+          {isDebug && (
+            <div className="mt-8">
+              <DebugPanel />
+            </div>
+          )}
+
           {/* WebGL Debug Info - Development Only */}
-          {import.meta.env.DEV && (
+          {import.meta.env.DEV && !isDebug && (
             <div className="mt-8">
               <WebGLDebug />
             </div>
