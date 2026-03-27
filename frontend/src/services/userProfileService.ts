@@ -108,15 +108,44 @@ class UserProfileService {
         metadata:            existing?.metadata ?? {},
       };
 
-      // ── Step 4: upsert ───────────────────────────────────────────────────────
-      const { data, error } = await supabase
-        .from('users')
-        .upsert(payload, {
-          onConflict:       'auth_user_id',
-          ignoreDuplicates: false,
-        })
-        .select()
-        .single();
+      // ── Step 4: insert or update manually ────────────────────────────────────
+      // PostgREST ON CONFLICT only works with regular (non-partial) unique constraints.
+      // Since idx_users_auth_user_id is a partial index, we do a manual SELECT → INSERT/UPDATE.
+      let data: UserRow | null = null;
+      let error: { message: string } | null = null;
+
+      if (existing) {
+        // Row exists → UPDATE
+        const { data: updated, error: updateErr } = await supabase
+          .from('users')
+          .update({
+            email:               payload.email,
+            display_name:        payload.display_name,
+            avatar_url:          payload.avatar_url,
+            username:            payload.username,
+            provider:            payload.provider,
+            bio:                 payload.bio,
+            email_notifications: payload.email_notifications,
+            email_marketing:     payload.email_marketing,
+            last_active:         payload.last_active,
+            preferences:         payload.preferences,
+            metadata:            payload.metadata,
+          })
+          .eq('auth_user_id', user.id)
+          .select()
+          .single();
+        data = updated as UserRow | null;
+        error = updateErr;
+      } else {
+        // No row yet → INSERT
+        const { data: inserted, error: insertErr } = await supabase
+          .from('users')
+          .insert(payload)
+          .select()
+          .single();
+        data = inserted as UserRow | null;
+        error = insertErr;
+      }
 
       if (error) {
         console.warn('⚠️ userProfileService.syncOnLogin failed:', error.message);
