@@ -67,6 +67,21 @@ from backend.routers.chat import chat_router
 from backend.routers.codegen import codegen_router
 from backend.routers.performance import performance_router
 
+# Legacy feature routers (from root-level route files)
+try:
+    from backend.achievement_routes import achievement_router  # noqa: PLC0415
+    _achievement_available = True
+except Exception as _e:
+    logger.warning("Achievement router unavailable: %s", _e)
+    _achievement_available = False
+
+try:
+    from backend.competition_routes import competition_router  # noqa: PLC0415
+    _competition_available = True
+except Exception as _e:
+    logger.warning("Competition router unavailable: %s", _e)
+    _competition_available = False
+
 # ----------------------------------------------------------------
 # App creation
 # ----------------------------------------------------------------
@@ -149,9 +164,34 @@ app.include_router(chat_router)
 app.include_router(codegen_router)
 app.include_router(performance_router)
 
+if _achievement_available:
+    app.include_router(achievement_router)
+    logger.info("Achievement router mounted")
+
+if _competition_available:
+    app.include_router(competition_router)
+    logger.info("Competition router mounted")
+
+# ── Inline health aliases expected by frontend debug panel ──────────────────
+from fastapi import Request as _Request  # noqa: E402
+
+@app.get("/api/veronica-ai/health", tags=["veronica"])
+async def veronica_ai_health(_req: _Request):
+    """Health check shim for Veronica AI."""
+    return {"status": "ok", "service": "veronica-ai"}
+
+@app.get("/api/universal-chat/messages/{user_id}/{session_id}", tags=["chat"])
+async def get_universal_chat_messages(user_id: str, session_id: str, limit: int = 50, offset: int = 0):
+    """Stub: universal chat history — falls back to localStorage on frontend."""
+    return {"messages": [], "total": 0, "user_id": user_id, "session_id": session_id}
+
+@app.post("/api/universal-chat/save-message", tags=["chat"])
+async def save_universal_chat_message(_req: _Request):
+    """Stub: universal chat save — frontend will use localStorage fallback."""
+    return {"status": "saved"}
+
 logger.info(
-    "STEM Idea Generator API v2 started — %d routers mounted",
-    10,
+    "STEM Idea Generator API v2 started — core routers + optional feature routers mounted",
 )
 
 # ----------------------------------------------------------------

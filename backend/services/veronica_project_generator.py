@@ -235,3 +235,40 @@ void loop() {{
     spec = spec.model_copy(update={"files": files})
     return spec
 
+
+class VeronicaProjectGenerator:
+    """
+    Thin class wrapper around generate_project_spec so the orchestrator
+    can call  generator.generate(request_data)  and  generator.generate_stream(request_data).
+    """
+
+    def __init__(self, llm_complete=None):
+        self._llm_complete = llm_complete  # injected by orchestrator; falls back lazily
+
+    def _get_llm(self):
+        if self._llm_complete is not None:
+            return self._llm_complete
+        # Lazy default: use OpenRouter via env vars
+        from backend.integrations.openrouter.client import OpenRouterClient  # noqa: PLC0415
+        client = OpenRouterClient()
+        return client.chat_completion_text
+
+    async def generate(self, request_data: dict) -> dict:
+        message = (
+            request_data.get("message")
+            or request_data.get("prompt")
+            or request_data.get("description")
+            or ""
+        )
+        if not message:
+            return {"error": "No message provided", "project": None}
+
+        llm = self._get_llm()
+        spec = await generate_project_spec(message=message, llm_complete=llm)
+        return {"project": spec.model_dump(), "project_id": spec.project_id}
+
+    async def generate_stream(self, request_data: dict):
+        """Yield JSON chunks — delegates to generate() for simplicity."""
+        import json  # noqa: PLC0415
+        result = await self.generate(request_data)
+        yield json.dumps(result)

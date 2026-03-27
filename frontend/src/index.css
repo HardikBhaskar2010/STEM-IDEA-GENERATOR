@@ -758,4 +758,158 @@ body.scifi-cursor-enabled * {
 
 /* End of styles */
 
+/* Avatar Cropper */
+.avatar-cropper-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.avatar-cropper-modal {
+  background: var(--background, #1e1e2e);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.avatar-cropper-header h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground, #fff);
+}
+
+.avatar-cropper-header p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted-foreground, #a1a1aa);
+}
+
+.avatar-cropper-canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 1rem;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.avatar-cropper-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-cropper-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-cropper-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.avatar-cropper-zoom {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+}
+
+.avatar-cropper-zoom-icon {
+  font-size: 1rem;
+  color: var(--muted-foreground, #a1a1aa);
+  user-select: none;
+}
+
+.avatar-cropper-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  background: var(--muted, rgba(255, 255, 255, 0.1));
+  border-radius: 2px;
+  outline: none;
+}
+
+.avatar-cropper-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6366f1;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.avatar-cropper-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.avatar-cropper-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.avatar-cropper-btn-cancel {
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--foreground, #fff);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.avatar-cropper-btn-cancel:hover {
+  background: var(--accent, rgba(255, 255, 255, 0.05));
+}
+
+.avatar-cropper-btn-save {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: #6366f1;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.avatar-cropper-btn-save:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.avatar-cropper-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
