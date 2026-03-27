@@ -102,10 +102,29 @@ const VeronicaAI: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  // Ref to the scrollable viewport inside <ScrollArea>
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
 
+  // Smart auto-scroll: only scroll to bottom when user is already near the bottom
+  // (within 120 px) — so reading history isn't interrupted by new messages.
+  const scrollToBottomIfNear = useCallback(() => {
+    const viewport = scrollViewportRef.current;
+    if (!viewport) return;
+    const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+    if (distanceFromBottom < 120) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
+  // Always jump to bottom when switching tabs (new context)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory, isLoading, activeTabId]);
+    endRef.current?.scrollIntoView({ behavior: 'auto' });
+  }, [activeTabId]);
+
+  // Smart scroll on new messages / loading state
+  useEffect(() => {
+    scrollToBottomIfNear();
+  }, [chatHistory, isLoading, scrollToBottomIfNear]);
 
   // ── Helpers ──
   const appendToActive = useCallback((msg: Omit<ChatMessage, 'id' | 'timestamp'>) => {
@@ -348,7 +367,7 @@ const VeronicaAI: React.FC = () => {
               </div>
 
               {/* Messages */}
-              <ScrollArea className="flex-1">
+              <ScrollArea className="flex-1" viewportRef={scrollViewportRef}>
                 <div className="p-5 space-y-4">
                   {activeMessages.map((m) => (
                     <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
