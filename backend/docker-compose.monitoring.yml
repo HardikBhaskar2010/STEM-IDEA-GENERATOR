@@ -6,7 +6,7 @@
 #
 # Access:
 #   - Prometheus: http://localhost:9090
-#   - Grafana: http://localhost:3000 (admin/admin)
+#   - Grafana: http://localhost:3000 (0478e448-00e1-7009-2be3-fc11533ef853
 
 version: '3.8'
 

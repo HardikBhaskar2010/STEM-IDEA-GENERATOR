@@ -241,3 +241,291 @@ export async function ensureUserExists(): Promise<string | null> {
     return null;
   }
 }
+
+// ============================================================================
+// User Preferences
+// ============================================================================
+
+const PREFS_LOCAL_KEY = 'user_preferences';
+
+/**
+ * Save user preferences.
+ *
+ * - **Authenticated**: upserts into `public.user_preferences` table.
+ * - **Guest**: persists to localStorage under key `user_preferences`.
+ *
+ * @param prefs  Flat preference dict e.g. `{ dark_mode: true, language: 'en' }`
+ * @param category  Preference namespace (default: 'general').
+ */
+export async function saveUserPreferences(
+  prefs: Record<string, unknown>,
+  category = 'general',
+): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // Build upsert rows for each key
+      const rows = Object.entries(prefs).map(([key, value]) => ({
+        user_id: user.id,
+        category,
+        key,
+        value,
+      }));
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert(rows, { onConflict: 'user_id,category,key' });
+      if (error) {
+        console.error('saveUserPreferences (Supabase):', error);
+        return false;
+      }
+      return true;
+    }
+
+    // Fallback: localStorage
+    const existing = JSON.parse(localStorage.getItem(PREFS_LOCAL_KEY) || '{}');
+    localStorage.setItem(
+      PREFS_LOCAL_KEY,
+      JSON.stringify({ ...existing, [category]: { ...existing[category], ...prefs } }),
+    );
+    return true;
+  } catch (err) {
+    console.error('saveUserPreferences:', err);
+    return false;
+  }
+}
+
+/**
+ * Load user preferences.
+ *
+ * - **Authenticated**: reads from `public.user_preferences`.
+ * - **Guest**: reads from localStorage.
+ *
+ * Returns a nested dict: `{ general: { dark_mode: true }, veronica: { ... } }`
+ * or filtered to a single category if `category` is provided.
+ */
+export async function loadUserPreferences(
+  category?: string,
+): Promise<Record<string, unknown>> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      let query = supabase
+        .from('user_preferences')
+        .select('category, key, value')
+        .eq('user_id', user.id);
+      if (category) query = query.eq('category', category);
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('loadUserPreferences (Supabase):', error);
+        return {};
+      }
+      if (category) {
+        return Object.fromEntries((data ?? []).map(r => [r.key, r.value]));
+      }
+      const result: Record<string, Record<string, unknown>> = {};
+      for (const row of data ?? []) {
+        (result[row.category] ??= {})[row.key] = row.value;
+      }
+      return result;
+    }
+
+    // Fallback: localStorage
+    const raw = localStorage.getItem(PREFS_LOCAL_KEY);
+    if (!raw) return {};
+    const all = JSON.parse(raw) as Record<string, Record<string, unknown>>;
+    return category ? (all[category] ?? {}) : all;
+  } catch (err) {
+    console.error('loadUserPreferences:', err);
+    return {};
+  }
+}
+
+// ============================================================================
+// Projects
+// ============================================================================
+
+/**
+ * Upsert a project for the currently authenticated user.
+ * Returns the saved project row, or null for guests / on error.
+ */
+export async function upsertProject(
+  project: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const row = {
+      ...(project.id ? { id: project.id } : {}),
+      user_id:               user.id,
+      title:                 project.title ?? project.name ?? 'Untitled',
+      description:           project.description ?? null,
+      difficulty:            project.difficulty ?? null,
+      estimated_time:        project.estimatedTime ?? project.estimated_time ?? null,
+      estimated_cost:        project.estimatedCost ?? project.estimated_cost ?? null,
+      components:            project.components ?? [],
+      skills:                project.skills ?? [],
+      steps:                 project.steps ?? [],
+      status:                project.status ?? 'planning',
+      progress:              project.progress ?? 0,
+      notes:                 project.notes ?? '',
+      starred:               project.starred ?? false,
+      tags:                  project.tags ?? [],
+      completed_steps:       project.completedSteps ?? project.completed_steps ?? [],
+      generated_from_params: project.generatedFromParams ?? project.generated_from_params ?? {},
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .upsert(row, { onConflict: 'id' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('upsertProject:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('upsertProject:', err);
+    return null;
+  }
+}
+
+/**
+ * List all projects for the current authenticated user, newest first.
+ * Returns empty array for guests.
+ */
+export async function getUserProjects(): Promise<Record<string, unknown>[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('getUserProjects:', error);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error('getUserProjects:', err);
+    return [];
+  }
+}
+
+// ============================================================================
+// Veronica Chats
+// ============================================================================
+
+/**
+ * Upsert a Veronica chat session for the current user.
+ * Returns the saved chat row, or null for guests / on error.
+ */
+export async function upsertVeronicaChat(chat: {
+  id?: string;
+  title?: string;
+  mode?: 'idea' | 'full_build' | 'debug';
+  project_id?: string;
+  is_archived?: boolean;
+}): Promise<Record<string, unknown> | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const row = {
+      ...(chat.id ? { id: chat.id } : {}),
+      user_id:    user.id,
+      title:      chat.title ?? 'New Chat',
+      mode:       chat.mode ?? 'idea',
+      project_id: chat.project_id ?? null,
+      is_archived: chat.is_archived ?? false,
+    };
+
+    const { data, error } = await supabase
+      .from('veronica_project_chats')
+      .upsert(row, { onConflict: 'id' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('upsertVeronicaChat:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('upsertVeronicaChat:', err);
+    return null;
+  }
+}
+
+/**
+ * Append a message to a Veronica chat.
+ * The DB trigger auto-updates message_count and last_message_at on the parent chat.
+ */
+export async function saveVeronicaMessage(
+  chatId: string,
+  role: 'user' | 'assistant',
+  content: string,
+  meta?: { intent?: string; confidence?: number; actions?: unknown[]; projectSnap?: unknown },
+): Promise<Record<string, unknown> | null> {
+  try {
+    const { data, error } = await supabase
+      .from('veronica_chat_messages')
+      .insert({
+        chat_id:     chatId,
+        role,
+        content,
+        intent:      meta?.intent ?? null,
+        confidence:  meta?.confidence ?? null,
+        actions:     meta?.actions ?? [],
+        project_snap: meta?.projectSnap ?? null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('saveVeronicaMessage:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('saveVeronicaMessage:', err);
+    return null;
+  }
+}
+
+/**
+ * Load all non-archived Veronica chats for the current user,
+ * with their messages nested inline.
+ */
+export async function getVeronicaChats(): Promise<Record<string, unknown>[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('veronica_project_chats')
+      .select('*, veronica_chat_messages(id, role, content, intent, confidence, actions, created_at)')
+      .eq('user_id', user.id)
+      .eq('is_archived', false)
+      .order('last_message_at', { ascending: false });
+
+    if (error) {
+      console.error('getVeronicaChats:', error);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error('getVeronicaChats:', err);
+    return [];
+  }
+}
+
