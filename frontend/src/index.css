@@ -573,6 +573,26 @@
   border-right: 3px solid;
 }
 
+/* ── Hotspot dot — always shows exact cursor position ── */
+.sci-fi-cursor-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 4px rgba(56, 189, 248, 1),
+    0 0 10px rgba(59, 130, 246, 0.7);
+  border-radius: 1px;            /* keeps it square with soft corners */
+  transition:
+    background 120ms ease-out,
+    box-shadow 120ms ease-out,
+    transform 90ms ease-out;
+  z-index: 1;
+}
+
 /* Hovered interactive elements: slightly larger corners + purple accent */
 .sci-fi-cursor-wrapper.is-hovering .sci-fi-crosshair {
   width: 16px;
@@ -582,9 +602,22 @@
     drop-shadow(0 0 18px rgba(56, 189, 248, 0.5));
 }
 
+/* Dot colour shift on hover */
+.sci-fi-cursor-wrapper.is-hovering .sci-fi-cursor-dot {
+  background: rgba(216, 180, 254, 0.95);
+  box-shadow:
+    0 0 5px rgba(168, 85, 247, 1),
+    0 0 12px rgba(168, 85, 247, 0.7);
+}
+
 /* Click feedback */
 .sci-fi-cursor-wrapper.is-pressed {
   --cursor-scale: 0.985;
+}
+
+/* Dot shrinks slightly on click */
+.sci-fi-cursor-wrapper.is-pressed .sci-fi-cursor-dot {
+  transform: translate(-50%, -50%) scale(0.6);
 }
 
 @media (prefers-reduced-motion: reduce) {

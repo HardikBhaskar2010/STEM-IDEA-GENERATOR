@@ -123,6 +123,8 @@ export const SciFiCursor: React.FC = () => {
       <div className="sci-fi-crosshair tr" />
       <div className="sci-fi-crosshair bl" />
       <div className="sci-fi-crosshair br" />
+      {/* Hotspot dot — marks exact cursor position even during focus states */}
+      <div className="sci-fi-cursor-dot" />
     </div>
   );
 };
