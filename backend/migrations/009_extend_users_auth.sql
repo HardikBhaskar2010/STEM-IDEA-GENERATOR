@@ -3,56 +3,74 @@
 -- ============================================================================
 -- Run this on your Supabase project AFTER 007 and 008.
 -- Safe to re-run: uses IF NOT EXISTS / ON CONFLICT DO UPDATE.
---
--- What this does:
---   • Adds email, auth_user_id, display_name, avatar_url, email_marketing,
---     email_notifications, provider columns to public.users
---   • guest_id = 'N/A' for email/OAuth authenticated users
---   • Updates the handle_new_user() trigger to ALSO upsert into public.users
---   • Adds proper RLS policy so auth users can see/edit their own row
 -- ============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 1. Add new columns to public.users (all safe with IF NOT EXISTS equivalent
---    — Postgres uses DO blocks for conditional DDL)
+-- 1. Add new columns FIRST (indexes depend on these columns existing)
 -- ─────────────────────────────────────────────────────────────────────────────
 
 ALTER TABLE public.users
-    ADD COLUMN IF NOT EXISTS auth_user_id       UUID        REFERENCES auth.users(id) ON DELETE CASCADE,
-    ADD COLUMN IF NOT EXISTS email              TEXT,
-    ADD COLUMN IF NOT EXISTS display_name       TEXT,
-    ADD COLUMN IF NOT EXISTS avatar_url         TEXT,
-    ADD COLUMN IF NOT EXISTS provider           TEXT        DEFAULT 'guest',  -- 'guest' | 'email' | 'google'
-    ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN    DEFAULT true,
-    ADD COLUMN IF NOT EXISTS email_marketing    BOOLEAN     DEFAULT false,
-    ADD COLUMN IF NOT EXISTS bio                TEXT,
-    ADD COLUMN IF NOT EXISTS username           TEXT,
-    ADD COLUMN IF NOT EXISTS updated_at         TIMESTAMPTZ DEFAULT NOW();
+    ADD COLUMN IF NOT EXISTS auth_user_id        UUID        REFERENCES auth.users(id) ON DELETE CASCADE,
+    ADD COLUMN IF NOT EXISTS email               TEXT,
+    ADD COLUMN IF NOT EXISTS display_name        TEXT,
+    ADD COLUMN IF NOT EXISTS avatar_url          TEXT,
+    ADD COLUMN IF NOT EXISTS provider            TEXT        DEFAULT 'guest',
+    ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN     DEFAULT true,
+    ADD COLUMN IF NOT EXISTS email_marketing     BOOLEAN     DEFAULT false,
+    ADD COLUMN IF NOT EXISTS bio                 TEXT,
+    ADD COLUMN IF NOT EXISTS username            TEXT,
+    ADD COLUMN IF NOT EXISTS updated_at          TIMESTAMPTZ DEFAULT NOW();
 
--- Unique index on auth_user_id (one row per auth user)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 2. Fix the guest_id uniqueness constraint
+--    Replace the global UNIQUE on guest_id with two partial unique indexes:
+--      • guest rows → unique on guest_id WHERE auth_user_id IS NULL
+--      • auth rows  → unique on auth_user_id WHERE auth_user_id IS NOT NULL
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Drop the old global unique constraint if it exists
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema    = 'public'
+          AND table_name      = 'users'
+          AND constraint_name = 'users_guest_id_key'
+    ) THEN
+        ALTER TABLE public.users DROP CONSTRAINT users_guest_id_key;
+    END IF;
+END;
+$$;
+
+-- Drop any leftover plain indexes on guest_id
+DROP INDEX IF EXISTS public.users_guest_id_key;
+DROP INDEX IF EXISTS public.idx_users_guest_id;
+
+-- Partial unique index: guest_id unique only for pure guest rows
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_guest_id_unique
+    ON public.users(guest_id)
+    WHERE auth_user_id IS NULL;
+
+-- Partial unique index: one row per authenticated Supabase user
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_auth_user_id
     ON public.users(auth_user_id)
     WHERE auth_user_id IS NOT NULL;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 2. Drop and recreate RLS policies for the extended table
+-- 3. RLS policies
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- Allow authenticated users to read/update THEIR OWN row (by auth_user_id)
 DROP POLICY IF EXISTS "Auth users manage own user row" ON public.users;
 CREATE POLICY "Auth users manage own user row"
     ON public.users FOR ALL
     USING  (auth.uid() = auth_user_id)
     WITH CHECK (auth.uid() = auth_user_id);
 
--- Keep existing guest policy (auth.uid()::text = guest_id)
--- already exists from 007 as "Users manage own guest row"
-
--- Anon insert still allowed for guest self-registration
--- already exists from 007 as "Anon can insert guest row"
+-- Guest policies from 007 are preserved:
+--   "Users manage own guest row" and "Anon can insert guest row"
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 3. Update handle_new_user() trigger to also upsert into public.users
+-- 4. Update handle_new_user() trigger
 -- ─────────────────────────────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -67,7 +85,6 @@ DECLARE
     v_username     TEXT;
     v_provider     TEXT;
 BEGIN
-    -- Extract from OAuth / email metadata
     v_display_name := COALESCE(
         NEW.raw_user_meta_data->>'full_name',
         NEW.raw_user_meta_data->>'name',
@@ -84,7 +101,7 @@ BEGIN
     );
     v_provider := COALESCE(NEW.raw_app_meta_data->>'provider', 'email');
 
-    -- ── Upsert into public.profiles (existing behaviour) ──────────────────────
+    -- ── Upsert into public.profiles ───────────────────────────────────────────
     INSERT INTO public.profiles (user_id, display_name, avatar_url, username)
     VALUES (NEW.id, v_display_name, v_avatar_url, v_username)
     ON CONFLICT (user_id) DO UPDATE
@@ -92,10 +109,12 @@ BEGIN
             avatar_url   = COALESCE(EXCLUDED.avatar_url, public.profiles.avatar_url),
             updated_at   = NOW();
 
-    -- ── Upsert into public.users (NEW — auth user row) ────────────────────────
+    -- ── Upsert into public.users (auth row) ───────────────────────────────────
+    -- guest_id = 'auth:<uuid>' is unique per user and distinguishable from
+    -- real guest IDs. The partial index on auth_user_id handles dedup.
     INSERT INTO public.users (
         auth_user_id,
-        guest_id,          -- 'N/A' for all email/OAuth users
+        guest_id,
         email,
         display_name,
         avatar_url,
@@ -106,7 +125,7 @@ BEGIN
     )
     VALUES (
         NEW.id,
-        'N/A',
+        'auth:' || NEW.id::text,
         NEW.email,
         v_display_name,
         v_avatar_url,
@@ -128,14 +147,14 @@ BEGIN
 END;
 $$;
 
--- Re-attach trigger (DROP + CREATE is idempotent)
+-- Re-attach trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 4. updated_at auto-trigger for public.users
+-- 5. updated_at auto-trigger
 -- ─────────────────────────────────────────────────────────────────────────────
 
 CREATE OR REPLACE TRIGGER users_updated_at
@@ -143,9 +162,8 @@ CREATE OR REPLACE TRIGGER users_updated_at
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 5. Backfill existing auth users who signed up before this migration
+-- 6. Backfill existing auth users
 -- ─────────────────────────────────────────────────────────────────────────────
--- Reads from auth.users (requires service_role — run this in the Supabase SQL editor)
 
 INSERT INTO public.users (
     auth_user_id,
@@ -160,7 +178,7 @@ INSERT INTO public.users (
 )
 SELECT
     au.id,
-    'N/A',
+    'auth:' || au.id::text,
     au.email,
     COALESCE(
         au.raw_user_meta_data->>'full_name',
@@ -188,7 +206,7 @@ DO UPDATE
         updated_at   = NOW();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 6. Grants
+-- 7. Grants
 -- ─────────────────────────────────────────────────────────────────────────────
 
 GRANT SELECT, INSERT, UPDATE ON public.users TO anon, authenticated;
