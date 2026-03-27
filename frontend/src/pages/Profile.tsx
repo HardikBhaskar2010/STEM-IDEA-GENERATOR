@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Settings, LogOut, Save, Camera, Eye, EyeOff, School, Palette, Check, Zap, Lock, Bell, Trophy, TrendingUp, Flame, Upload, X, Plus, Loader2, Copy, CheckCheck } from 'lucide-react';
+import { User, Mail, Calendar, Settings, LogOut, Save, Camera, Eye, EyeOff, School, Palette, Check, Zap, Lock, Bell, Trophy, Flame, X, Plus, Loader2, Copy, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ import EmailPreferencesDialog from '@/components/EmailPreferencesDialog';
 import { LockedFeatureCard } from '@/components/auth/LockedFeatureCard';
 import { AchievementList } from '@/components/achievements/AchievementList';
 import { AchievementStats } from '@/components/achievements/AchievementStats';
+import AvatarCropper from '@/components/profile/AvatarCropper';
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,7 @@ const Profile: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [userIdCopied, setUserIdCopied] = useState(false);
   
   const { userMode, setUserMode, colorTheme, setColorTheme } = usePreferences();
@@ -237,20 +239,12 @@ const Profile: React.FC = () => {
     }
   };
 
-  // Handler: Upload avatar image
+  // Handler: File selected → open cropper
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset input so selecting the same file again still triggers onChange
+    e.target.value = '';
     if (!file || !user || isGuest) return;
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: 'File Too Large',
-        description: 'Please select an image smaller than 2MB',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -262,38 +256,36 @@ const Profile: React.FC = () => {
       return;
     }
 
+    // Open the crop UI instead of uploading directly
+    setCropFile(file);
+  };
+
+  // Handler: Cropper confirmed — upload the circular crop
+  const handleCropConfirm = useCallback(async (blob: Blob) => {
+    if (!user || isGuest) return;
+    setCropFile(null);
     setIsUploadingAvatar(true);
     try {
-      const avatarUrl = await profileService.uploadAvatar(user.id, file);
+      const croppedFile = new File([blob], `avatar-${Date.now()}.png`, { type: 'image/png' });
+      const avatarUrl   = await profileService.uploadAvatar(user.id, croppedFile);
       if (avatarUrl) {
-        // Update profile with new avatar URL
-        const updatedProfile = await profileService.updateProfile(user.id, {
-          avatar_url: avatarUrl,
-        });
-
+        const updatedProfile = await profileService.updateProfile(user.id, { avatar_url: avatarUrl });
         if (updatedProfile) {
           setProfile(updatedProfile);
           setEditedProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
-          toast({
-            title: 'Avatar Updated',
-            description: 'Your profile picture has been updated',
-          });
-          
-          // Check for achievement unlocks after avatar upload
+          toast({ title: 'Avatar Updated', description: 'Your profile picture has been updated 🎉' });
           await checkForNewAchievements();
         }
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      toast({
-        title: 'Upload Failed',
-        description: 'Failed to upload avatar. Please try again.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Upload Failed', description: 'Failed to upload avatar. Please try again.', variant: 'destructive' });
     } finally {
       setIsUploadingAvatar(false);
     }
-  };
+  }, [user, isGuest]);
+
+  const handleCropCancel = useCallback(() => setCropFile(null), []);
 
   // Handler: Add interest
   const handleAddInterest = (interest: string) => {
@@ -475,6 +467,15 @@ const Profile: React.FC = () => {
 
   return (
     <Layout>
+      {/* Avatar Crop Modal */}
+      {cropFile && (
+        <AvatarCropper
+          file={cropFile}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
+
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
