@@ -86,7 +86,7 @@ class UserProfileService {
       // ── Step 3: build upsert payload (existing values take priority) ─────────
       const payload: Partial<UserRow> & { auth_user_id: string } = {
         auth_user_id:        user.id,
-        guest_id:            existing?.guest_id ?? 'N/A',
+        guest_id:            existing?.guest_id ?? `auth:${user.id}`,
         email:               user.email ?? existing?.email ?? null,
         // Preserve manually set display_name; fall back to auth metadata
         display_name:
