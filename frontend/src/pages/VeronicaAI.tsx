@@ -21,6 +21,8 @@ import { VeronicaChatTabs, type ChatTab } from '@/components/veronica/VeronicaCh
 import { VeronicaCommunity } from '@/components/veronica/VeronicaCommunity';
 import { useNavigate } from 'react-router-dom';
 import { AgentTerminal, type AgentEvent } from '@/components/veronica/AgentTerminal';
+import { useDebugMode } from '@/hooks/useDebugMode';
+import { DebugBar } from '@/components/debug/DebugPanel';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -85,6 +87,7 @@ const makeDefaultTab = (mode: VeronicaMode = 'idea'): { tab: ChatTab; messages: 
 const VeronicaAI: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const isDebug = useDebugMode();
 
   // ── Tab state ──
   const initialTab = useMemo(() => makeDefaultTab('idea'), []);
@@ -367,6 +370,10 @@ const VeronicaAI: React.FC = () => {
                     );
                   })}
                 </div>
+
+                {/* Debug bar — only when ?debug=true */}
+                {isDebug && <DebugBar className="shrink-0" />}
+
                 {/* Collapse toggle (mobile fallback) */}
                 <button
                   onClick={() => setSidebarCollapsed((v) => !v)}
