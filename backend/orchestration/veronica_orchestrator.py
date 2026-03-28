@@ -30,19 +30,11 @@ class VeronicaOrchestrator:
 
     def __init__(self, openrouter_client: OpenRouterClient) -> None:
         self.openrouter_client = openrouter_client
-        # Existing service singletons are imported lazily to avoid circular imports
-        self._veronica_router = None
         self._project_generator = None
 
     # ------------------------------------------------------------------
     # Lazy service accessors
     # ------------------------------------------------------------------
-
-    def _get_veronica_router(self):
-        if self._veronica_router is None:
-            from backend.services.veronica_ai_router import VeronicaAIRouter  # noqa: PLC0415
-            self._veronica_router = VeronicaAIRouter()
-        return self._veronica_router
 
     def _get_project_generator(self):
         if self._project_generator is None:
@@ -77,27 +69,35 @@ class VeronicaOrchestrator:
         Requirements: 16.11
         """
         try:
-            router = self._get_veronica_router()
-            route_result = await router.route(message, context or {})
+            from backend.services.veronica_intent_classifier import classify_intent  # noqa: PLC0415
+            from backend.services.veronica_ai_router import route_message  # noqa: PLC0415
 
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are Veronica, an expert AI programming assistant. "
-                        "Help the user with their coding and project questions."
-                    ),
-                },
-                {"role": "user", "content": message},
-            ]
-            assistant_text = await self.openrouter_client.chat_completion(messages)
+            generator = self._get_project_generator()
+
+            # Wrap chat_completion (which takes a messages list) into a simple
+            # string-in / string-out callable that classify_intent expects.
+            async def _llm_complete(prompt: str) -> str:
+                return await self.openrouter_client.chat_completion(
+                    [{"role": "user", "content": prompt}]
+                )
+
+            classification = await classify_intent(
+                message,
+                llm_complete=_llm_complete,
+            )
+
+            result = await route_message(
+                message,
+                classification,
+                generate_project_fn=generator.generate,
+            )
 
             return {
-                "intent": route_result.get("intent", "general"),
-                "confidence": route_result.get("confidence", 0.8),
-                "assistant_text": assistant_text,
-                "actions": route_result.get("actions", []),
-                "project": route_result.get("project"),
+                "intent": result.intent.value,
+                "confidence": result.confidence,
+                "assistant_text": result.assistant_text,
+                "actions": list(result.actions),
+                "project": result.project,
             }
         except Exception as exc:
             logger.error("Veronica chat failed: %s", exc)
