@@ -40,6 +40,18 @@ class ProjectSpec(BaseModel):
     project_id: str = Field(..., min_length=1, max_length=100)
     title: str = Field(..., min_length=3, max_length=200)
     platform: VeronicaPlatform
+
+    from pydantic import field_validator
+    @field_validator('platform', mode='before')
+    @classmethod
+    def lowercase_platform(cls, v):
+        if isinstance(v, str):
+            v_lower = v.lower()
+            if v_lower == 'raspberry_pi':
+                return 'raspberry-pi'
+            return v_lower
+        return v
+
     difficulty: str = Field(..., min_length=1, max_length=50)
 
     summary: str = Field(..., min_length=10, max_length=5000)
