@@ -43,6 +43,27 @@ class E2BRunner:
     # Public API
     # ------------------------------------------------------------------
 
+    async def create_empty_sandbox(self):
+        """
+        Create a fresh E2B sandbox without any files.
+        
+        Returns:
+            Sandbox object with id attribute.
+            
+        Raises:
+            RuntimeError: If sandbox creation fails.
+        """
+        from e2b import AsyncSandbox  # noqa: PLC0415
+        
+        try:
+            sandbox = await AsyncSandbox.create(api_key=self._api_key, timeout=300)
+            _active_sandboxes[sandbox.sandbox_id] = sandbox
+            logger.info("E2B empty sandbox created: %s", sandbox.sandbox_id)
+            return sandbox
+        except Exception as exc:
+            logger.error("E2B empty sandbox creation failed: %s", exc, exc_info=True)
+            raise RuntimeError(f"Empty sandbox creation failed: {exc}") from exc
+
     async def create_sandbox(
         self, project_id: str, files: Dict[str, str]
     ) -> SandboxRun:

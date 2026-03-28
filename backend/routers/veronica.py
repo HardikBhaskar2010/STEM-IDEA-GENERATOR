@@ -118,8 +118,43 @@ async def veronica_generate_project_stream(
         body = await request.json()
 
         async def stream_gen():
-            async for chunk in orchestrator.generate_project_stream(body):
-                yield f"data: {chunk}\n\n"
+            """
+            Stream wrapper that ensures all events from generate_project_stream
+            are fully consumed and properly formatted as SSE events.
+            
+            Includes error handling to ensure error events are yielded and
+            the stream closes gracefully even if exceptions occur.
+            """
+            event_count = 0
+            logger.info("Starting project generation stream for request")
+            
+            try:
+                async for chunk in orchestrator.generate_project_stream(body):
+                    event_count += 1
+                    # Format as SSE and yield immediately
+                    sse_event = f"data: {chunk}\n\n"
+                    yield sse_event
+                    logger.debug(f"Yielded event #{event_count}")
+                
+                logger.info(f"Stream completed successfully. Total events yielded: {event_count}")
+                
+            except Exception as stream_error:
+                # If an error occurs during streaming, log it and yield an error event
+                logger.error(f"Error during stream generation: {stream_error}", exc_info=True)
+                
+                # Yield error event to frontend
+                import json
+                error_event = json.dumps({
+                    "event": "error",
+                    "data": f"Stream error: {str(stream_error)}"
+                })
+                yield f"data: {error_event}\n\n"
+                
+                # Yield done_failed event to signal stream termination
+                done_failed_event = json.dumps({"event": "done_failed"})
+                yield f"data: {done_failed_event}\n\n"
+                
+                logger.info(f"Stream terminated with error after {event_count} events")
 
         return StreamingResponse(stream_gen(), media_type="text/event-stream")
     except AppError as exc:

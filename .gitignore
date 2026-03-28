@@ -46,3 +46,17 @@ backend/data/projects/
 backend/data/universal_chat/
 
 frontend/dist_electron/win-unpacked/resources/app.asar
+.kiro/specs/veronica-agentic-builder/.config.kiro
+.kiro/specs/veronica-stream-generation-fix/.config.kiro
+.hypothesis/unicode_data/13.0.0/charmap.json.gz
+.hypothesis/unicode_data/13.0.0/codec-utf-8.json.gz
+backend/tests/unit/test_token_budget.py
+backend/tests/unit/test_sandbox_service_file_operations.py
+.kiro/specs/veronica-agentic-builder/design.md
+.kiro/specs/veronica-agentic-builder/requirements.md
+.kiro/specs/veronica-stream-generation-fix/bugfix.md
+.kiro/specs/veronica-stream-generation-fix/design.md
+.kiro/specs/veronica-stream-generation-fix/BUG_INVESTIGATION_RESULTS.md
+.kiro/specs/veronica-agentic-builder/tasks.md
+.kiro/specs/veronica-stream-generation-fix/PRESERVATION_TEST_RESULTS.md
+.kiro/specs/veronica-stream-generation-fix/tasks.md

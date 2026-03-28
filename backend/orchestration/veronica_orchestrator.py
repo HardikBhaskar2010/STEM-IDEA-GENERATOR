@@ -212,17 +212,27 @@ class VeronicaOrchestrator:
         ).strip()
 
         if not message:
+            logger.debug("[STREAM] No message provided, yielding error events")
             yield json.dumps({"event": "error", "data": "No message provided"})
             yield json.dumps({"event": "done_failed"})
+            logger.debug("[STREAM] Error events yielded, exiting")
             return
 
         import datetime
         def emit(event_type: str, **kwargs) -> str:
             now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-            return json.dumps({"event": event_type, "timestamp": now_iso, **kwargs})
+            event_json = json.dumps({"event": event_type, "timestamp": now_iso, **kwargs})
+            logger.debug(f"[STREAM] Emitting event: {event_type}")
+            return event_json
 
+        event_count = 0
         try:
+            logger.info(f"[STREAM] Starting project generation stream for message: {message[:50]}...")
+            
+            # Yield initial plan event
+            event_count += 1
             yield emit("plan", data="Analyzing your idea and planning architecture...")
+            logger.debug(f"[STREAM] Event #{event_count} yielded: plan (analyzing)")
 
             call_count = [0]
 
@@ -230,6 +240,7 @@ class VeronicaOrchestrator:
                 call_count[0] += 1
                 if call_count[0] > 1:
                     # This is a repair attempt — tell the UI
+                    logger.debug(f"[STREAM] LLM repair attempt #{call_count[0]}")
                     pass  # caller will emit fix events
                 return await self.openrouter_client.chat_completion(
                     [{"role": "user", "content": prompt}],
@@ -237,21 +248,39 @@ class VeronicaOrchestrator:
                     temperature=0.4,
                 )
 
+            # Yield generating files event
+            event_count += 1
             yield emit("plan", data="Generating project files with AI...")
+            logger.debug(f"[STREAM] Event #{event_count} yielded: plan (generating)")
 
+            # Generate project spec
+            logger.debug("[STREAM] Calling generate_project_spec...")
             spec = await generate_project_spec(message=message, llm_complete=_llm)
+            logger.info(f"[STREAM] Project spec generated: {spec.project_id}, {len(spec.files or [])} files")
 
             # Emit a file_start/file_done pair for each generated file
             for pf in (spec.files or []):
+                event_count += 1
                 yield emit("file_start", path=pf.path)
+                logger.debug(f"[STREAM] Event #{event_count} yielded: file_start ({pf.path})")
+                
+                event_count += 1
                 yield emit("file_done", path=pf.path, lines=len((pf.content or "").splitlines()))
+                logger.debug(f"[STREAM] Event #{event_count} yielded: file_done ({pf.path})")
 
+            # Yield saving event
+            event_count += 1
             yield emit("plan", data="Saving project to Veronica memory...")
+            logger.debug(f"[STREAM] Event #{event_count} yielded: plan (saving)")
 
+            # CRITICAL: Save spec to disk BEFORE yielding done event
             base_dir = os.getenv("VERONICA_PROJECT_DIR", "/tmp/veronica_projects")
             store = VeronicaProjectStore(base_dir=base_dir)
+            logger.debug(f"[STREAM] Saving spec to disk at {base_dir}...")
             store.save_spec(spec)
+            logger.info(f"[STREAM] Spec saved successfully to disk: {spec.project_id}")
 
+            # Build result payload
             platform = spec.platform.value if spec.platform else "unknown"
             can_run = platform == "web"
 
@@ -268,12 +297,28 @@ class VeronicaOrchestrator:
                 ],
                 "project": spec.model_dump(),
             }
+            
+            # CRITICAL: Yield done event as the LAST event before generator exits
+            event_count += 1
             yield emit("done", result=result_payload)
+            logger.info(f"[STREAM] Event #{event_count} yielded: done (final event)")
+            logger.info(f"[STREAM] Stream completed successfully. Total events: {event_count}")
 
         except Exception as exc:
-            logger.error("Veronica streaming generation failed: %s", exc, exc_info=True)
-            yield emit("error", data=f"Build failed: {exc}")
-            yield emit("done_failed")
+            logger.error(f"[STREAM] Streaming generation failed after {event_count} events: {exc}", exc_info=True)
+            
+            # Ensure error events are properly yielded
+            try:
+                event_count += 1
+                yield emit("error", data=f"Build failed: {exc}")
+                logger.debug(f"[STREAM] Event #{event_count} yielded: error")
+                
+                event_count += 1
+                yield emit("done_failed")
+                logger.debug(f"[STREAM] Event #{event_count} yielded: done_failed")
+                logger.info(f"[STREAM] Stream terminated with error. Total events: {event_count}")
+            except Exception as emit_error:
+                logger.error(f"[STREAM] Failed to yield error events: {emit_error}", exc_info=True)
 
     # ------------------------------------------------------------------
     # File management
