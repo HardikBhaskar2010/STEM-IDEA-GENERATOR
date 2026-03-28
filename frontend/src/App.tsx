@@ -54,6 +54,7 @@ const ComponentComparison = React.lazy(() => import("./pages/ComponentComparison
 const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const Presentation = React.lazy(() => import("./pages/Presentation"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const AdminLogs = React.lazy(() => import("./pages/AdminLogs"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const STEMWorkshop = React.lazy(() => import("./pages/STEMWorkshop"));
 
@@ -124,6 +125,7 @@ const App = () => {
                                     <Route path="/profile" element={<Profile />} />
                                     <Route path="/about" element={<About />} />
                                     <Route path="/admin" element={<AdminDashboard />} />
+                                    <Route path="/admin/logs" element={<AdminLogs />} />
                                     <Route path="/presentation" element={<Presentation />} />
                                     <Route path="/workshop" element={<STEMWorkshop />} />
                                     <Route path="*" element={<NotFound />} />

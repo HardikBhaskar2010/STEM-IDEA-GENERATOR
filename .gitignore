@@ -45,3 +45,4 @@ backend/data/
 backend/data/projects/
 backend/data/universal_chat/
 
+frontend/dist_electron/win-unpacked/resources/app.asar

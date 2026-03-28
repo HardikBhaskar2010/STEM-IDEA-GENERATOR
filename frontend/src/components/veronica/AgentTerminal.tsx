@@ -37,7 +37,7 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ events, isStreamin
       
       <div ref={scrollRef} className="p-4 overflow-y-auto flex-1 space-y-2">
         {events.map((ev, i) => {
-          const timeStr = new Date(ev.timestamp).toLocaleTimeString([], { hour12: false });
+          const timeStr = ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString([], { hour12: false }) : new Date().toLocaleTimeString([], { hour12: false });
           
           if (ev.event === 'plan') {
             return (
