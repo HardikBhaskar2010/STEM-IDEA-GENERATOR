@@ -10,11 +10,14 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
   sendVeronicaMessage,
+  sendVeronicaMessageStream,
   startVeronicaRun,
-  startVeronicaAgentJob,
+  downloadProjectZip,
   type VeronicaAIAction,
   type VeronicaAIChatResponse,
 } from '@/services/veronicaAIService';
+import { AgentBuildPanel } from '@/components/veronica/AgentBuildPanel';
+import { LivePreview } from '@/components/veronica/LivePreview';
 import { ProjectCard } from '@/components/veronica/ProjectCard';
 import DarkVeil from '@/components/veronica/DarkVeil';
 import { VeronicaChatTabs, type ChatTab } from '@/components/veronica/VeronicaChatTabs';
@@ -147,8 +150,67 @@ const VeronicaAI: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-  // Ref to the scrollable viewport inside <ScrollArea>
   const scrollViewportRef = useRef<HTMLDivElement>(null);
+
+  // ── E2B Sandbox state ──
+  type SandboxStatus = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
+  type SandboxInfo = { runId: string | null; status: SandboxStatus; previewUrl: string | null; startupLogs: string[] };
+  const [sandboxState, setSandboxState] = useState<Record<string, SandboxInfo>>({});
+
+  const handleRunProject = useCallback(async (projectId: string) => {
+    setSandboxState(prev => ({ ...prev, [projectId]: { runId: null, status: 'starting', previewUrl: null, startupLogs: ['🚀 Initializing E2B sandbox…'] } } as Record<string, SandboxInfo>));
+    try {
+      const result = await startVeronicaRun(projectId);
+      setSandboxState(prev => ({
+        ...prev,
+        [projectId]: {
+          runId: result.run_id,
+          status: 'running' as SandboxStatus,
+          previewUrl: result.preview_url ?? null,
+          startupLogs: result.startup_logs ?? [],
+        }
+      } as Record<string, SandboxInfo>));
+    } catch (e) {
+      setSandboxState(prev => ({
+        ...prev,
+        [projectId]: {
+          runId: prev[projectId]?.runId ?? null,
+          previewUrl: prev[projectId]?.previewUrl ?? null,
+          status: 'error' as SandboxStatus,
+          startupLogs: [...(prev[projectId]?.startupLogs ?? []), `❌ ${e instanceof Error ? e.message : 'Sandbox failed'}`],
+        }
+      } as Record<string, SandboxInfo>));
+    }
+  }, []);
+
+  const handleStopProject = useCallback(async (projectId: string) => {
+    setSandboxState(prev => ({
+      ...prev,
+      [projectId]: {
+        runId: prev[projectId]?.runId ?? null,
+        previewUrl: prev[projectId]?.previewUrl ?? null,
+        startupLogs: prev[projectId]?.startupLogs ?? [],
+        status: 'stopped' as SandboxStatus,
+      }
+    } as Record<string, SandboxInfo>));
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://perfection-v2.onrender.com/api';
+    const runId = sandboxState[projectId]?.runId;
+    if (runId) {
+      await fetch(`${API_BASE}/veronica-projects/${projectId}/stop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ run_id: runId }),
+      }).catch(() => {});
+    }
+  }, [sandboxState]);
+
+  const handleDownload = useCallback((projectId: string) => {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://perfection-v2.onrender.com/api';
+    const a = document.createElement('a');
+    a.href = `${API_BASE}/veronica-projects/${projectId}/download/zip`;
+    a.download = `veronica-project-${projectId.slice(0, 8)}.zip`;
+    a.click();
+  }, []);
 
   // Smart auto-scroll: only scroll to bottom when user is already near the bottom
   // (within 120 px) — so reading history isn't interrupted by new messages.
@@ -269,27 +331,24 @@ const VeronicaAI: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Both idea and full_build use the same generate endpoint
+      // full_build uses streaming agent events, idea uses simple mode
       if (mode === 'full_build') {
         const streamMsgId = newId();
         const initialAssistantMsg: ChatMessage = {
           id: streamMsgId,
           role: 'assistant',
-          content: 'Initializing full build...',
+          content: 'Building your project…',
           timestamp: new Date(),
           agentEvents: [],
           isStreamingBuild: true
         };
-
         setChatHistory((prev) => ({
           ...prev,
           [activeTabId]: [...(prev[activeTabId] ?? []), initialAssistantMsg],
         }));
 
         try {
-          // Import this locally if you haven't added it to the top level imports yet,
-          // but we will import it at the top level
-          const { sendVeronicaMessageStream } = await import('@/services/veronicaAIService');
-          
           const res = await sendVeronicaMessageStream(
             { message: text },
             (ev) => {
@@ -299,7 +358,6 @@ const VeronicaAI: React.FC = () => {
               }));
             }
           );
-
           updateActiveMessage(streamMsgId, (m) => ({
             ...m,
             content: res.assistant_text,
@@ -310,22 +368,6 @@ const VeronicaAI: React.FC = () => {
             projectTypeHint: inferProjectTypeHint(text),
             isStreamingBuild: false
           }));
-
-          const projectId = (res.project as any)?.project_id as string | undefined;
-          if (projectId) {
-            appendToActive({ role: 'assistant', content: 'Agent finished build. Starting live run…' });
-            const runRes = await startVeronicaRun(projectId);
-            appendToActive({
-              role: 'assistant',
-              content: `Run started (run_id: \`${runRes.run_id}\`). Launching build/fix agent…`,
-            });
-            await startVeronicaAgentJob(projectId, runRes.run_id);
-            appendToActive({
-              role: 'assistant',
-              content: 'Agent job started. Opening your project view now so you can watch preview + logs.',
-            });
-            navigate(`/veronica-project/${projectId}`);
-          }
         } catch (e) {
           updateActiveMessage(streamMsgId, (m) => ({
             ...m,
@@ -334,8 +376,8 @@ const VeronicaAI: React.FC = () => {
           }));
         }
       } else {
+        // idea / debug mode — simple send
         const res = await sendVeronicaMessage({ message: text });
-
         appendToActive({
           role: 'assistant',
           content: res.assistant_text,
@@ -354,7 +396,7 @@ const VeronicaAI: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, mode, navigate, appendToActive, updateActiveMessage, activeTabId]);
+  }, [inputValue, isLoading, mode, appendToActive, updateActiveMessage, activeTabId]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -483,7 +525,39 @@ const VeronicaAI: React.FC = () => {
                           </div>
                         )}
 
-                        {m.role === 'assistant' && m.project && Array.isArray(m.actions) && (
+                        {/* AgentBuildPanel for messages with full file trees */}
+                        {m.role === 'assistant' && m.project && Array.isArray((m.project as any).files) && (m.project as any).files.length > 0 && !m.isStreamingBuild && (() => {
+                          const proj = m.project as any;
+                          const sb = sandboxState[proj.project_id];
+                          return (
+                            <>
+                              <div className="mt-4">
+                                <AgentBuildPanel
+                                  project={proj}
+                                  onRun={handleRunProject}
+                                  onDownload={handleDownload}
+                                  isRunning={sb?.status === 'starting' || sb?.status === 'running'}
+                                  className="w-full"
+                                />
+                              </div>
+                              {sb && sb.status !== 'idle' && (
+                                <div className="mt-3">
+                                  <LivePreview
+                                    projectId={proj.project_id}
+                                    previewUrl={sb.previewUrl}
+                                    runId={sb.runId}
+                                    status={sb.status}
+                                    startupLogs={sb.startupLogs}
+                                    onStop={() => handleStopProject(proj.project_id)}
+                                  />
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+
+                        {/* Fallback ProjectCard for idea-only (no files) */}
+                        {m.role === 'assistant' && m.project && Array.isArray(m.actions) && !(Array.isArray((m.project as any).files) && (m.project as any).files.length > 0) && (
                           <ProjectCard
                             project={m.project as any}
                             actions={m.actions}
