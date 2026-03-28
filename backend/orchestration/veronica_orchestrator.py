@@ -114,15 +114,80 @@ class VeronicaOrchestrator:
     async def generate_project(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a Veronica project synchronously.
 
+        Calls the LLM to produce a full ProjectSpec, saves to disk, and
+        returns a VeronicaAIChatResponse-shaped dict.
+
         Requirements: 16.12
         """
+        import os  # noqa: PLC0415
+        import json  # noqa: PLC0415
+        from backend.services.veronica_project_generator import generate_project_spec, infer_platform  # noqa: PLC0415
+        from backend.services.veronica_project_store import VeronicaProjectStore  # noqa: PLC0415
+
+        message = (
+            request_data.get("message")
+            or request_data.get("prompt")
+            or request_data.get("description")
+            or ""
+        ).strip()
+
+        if not message:
+            return {
+                "intent": "IDEA_ONLY",
+                "confidence": 0.0,
+                "assistant_text": "Please describe what you want to build.",
+                "actions": [],
+                "project": None,
+            }
+
         try:
-            generator = self._get_project_generator()
-            return await generator.generate(request_data)
+            async def _llm(prompt: str) -> str:
+                return await self.openrouter_client.chat_completion(
+                    [{"role": "user", "content": prompt}],
+                    max_tokens=8192,
+                    temperature=0.4,
+                )
+
+            spec = await generate_project_spec(message=message, llm_complete=_llm)
+
+            # Save spec to disk
+            base_dir = os.getenv("VERONICA_PROJECT_DIR", "/tmp/veronica_projects")
+            store = VeronicaProjectStore(base_dir=base_dir)
+            store.save_spec(spec)
+
+            file_summary = ", ".join(
+                f"`{f.path}`" for f in (spec.files or [])[:5]
+            )
+            if len(spec.files or []) > 5:
+                file_summary += f" and {len(spec.files) - 5} more"
+
+            assistant_text = (
+                f"Here's your project: **{spec.title}**\n\n"
+                f"{spec.summary}\n\n"
+                f"Generated {len(spec.files or [])} files: {file_summary}"
+            )
+
+            platform = spec.platform.value if spec.platform else "unknown"
+            can_run = platform == "web"
+
+            return {
+                "intent": "IDEA_PLUS_CODE",
+                "confidence": 0.95,
+                "assistant_text": assistant_text,
+                "actions": [
+                    {"type": "save_project", "enabled": True, "id": spec.project_id},
+                    {"type": "open_project", "enabled": True, "id": spec.project_id},
+                    {"type": "run_project", "enabled": can_run, "id": spec.project_id},
+                    {"type": "download_project", "enabled": True, "id": spec.project_id},
+                    {"type": "edit_code", "enabled": True, "id": spec.project_id},
+                ],
+                "project": spec.model_dump(),
+            }
+
         except Exception as exc:
-            logger.error("Veronica project generation failed: %s", exc)
+            logger.error("Veronica project generation failed: %s", exc, exc_info=True)
             raise UpstreamError(
-                "Project generation is temporarily unavailable.",
+                f"Project generation failed: {exc}",
                 service="VeronicaProjectGenerator",
                 upstream_status=503,
             ) from exc
@@ -130,21 +195,83 @@ class VeronicaOrchestrator:
     async def generate_project_stream(
         self, request_data: Dict[str, Any]
     ) -> AsyncIterator[str]:
-        """Stream Veronica project generation.
+        """Stream Veronica project generation via SSE events.
 
+        Yields JSON event strings the frontend AgentTerminal can render.
         Requirements: 16.12
         """
+        import json  # noqa: PLC0415
+        import os  # noqa: PLC0415
+        from backend.services.veronica_project_generator import generate_project_spec  # noqa: PLC0415
+        from backend.services.veronica_project_store import VeronicaProjectStore  # noqa: PLC0415
+
+        message = (
+            request_data.get("message")
+            or request_data.get("prompt")
+            or ""
+        ).strip()
+
+        if not message:
+            yield json.dumps({"event": "error", "data": "No message provided"})
+            yield json.dumps({"event": "done_failed"})
+            return
+
+        def emit(event_type: str, **kwargs) -> str:
+            return json.dumps({"event": event_type, **kwargs})
+
         try:
-            generator = self._get_project_generator()
-            async for chunk in generator.generate_stream(request_data):
-                yield chunk
+            yield emit("plan", data="Analyzing your idea and planning architecture...")
+
+            call_count = [0]
+
+            async def _llm(prompt: str) -> str:
+                call_count[0] += 1
+                if call_count[0] > 1:
+                    # This is a repair attempt — tell the UI
+                    pass  # caller will emit fix events
+                return await self.openrouter_client.chat_completion(
+                    [{"role": "user", "content": prompt}],
+                    max_tokens=8192,
+                    temperature=0.4,
+                )
+
+            yield emit("plan", data="Generating project files with AI...")
+
+            spec = await generate_project_spec(message=message, llm_complete=_llm)
+
+            # Emit a file_start/file_done pair for each generated file
+            for pf in (spec.files or []):
+                yield emit("file_start", path=pf.path)
+                yield emit("file_done", path=pf.path, lines=len((pf.content or "").splitlines()))
+
+            yield emit("plan", data="Saving project to Veronica memory...")
+
+            base_dir = os.getenv("VERONICA_PROJECT_DIR", "/tmp/veronica_projects")
+            store = VeronicaProjectStore(base_dir=base_dir)
+            store.save_spec(spec)
+
+            platform = spec.platform.value if spec.platform else "unknown"
+            can_run = platform == "web"
+
+            result_payload = {
+                "intent": "IDEA_PLUS_CODE",
+                "confidence": 0.95,
+                "assistant_text": f"Built **{spec.title}** — {len(spec.files or [])} files ready. {('Click Run to launch a live preview!' if can_run else '')}",
+                "actions": [
+                    {"type": "save_project", "enabled": True, "id": spec.project_id},
+                    {"type": "open_project", "enabled": True, "id": spec.project_id},
+                    {"type": "run_project", "enabled": can_run, "id": spec.project_id},
+                    {"type": "download_project", "enabled": True, "id": spec.project_id},
+                    {"type": "edit_code", "enabled": True, "id": spec.project_id},
+                ],
+                "project": spec.model_dump(),
+            }
+            yield emit("done", result=result_payload)
+
         except Exception as exc:
-            logger.error("Veronica streaming generation failed: %s", exc)
-            raise UpstreamError(
-                "Project generation streaming is temporarily unavailable.",
-                service="VeronicaProjectGenerator",
-                upstream_status=503,
-            ) from exc
+            logger.error("Veronica streaming generation failed: %s", exc, exc_info=True)
+            yield emit("error", data=f"Build failed: {exc}")
+            yield emit("done_failed")
 
     # ------------------------------------------------------------------
     # File management
