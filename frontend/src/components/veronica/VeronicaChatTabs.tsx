@@ -168,7 +168,7 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <span className={cn('text-sm font-medium truncate', isActive ? 'text-foreground' : 'text-muted-foreground')}>
+                          <span className={cn('text-sm font-medium truncate max-w-[120px] block', isActive ? 'text-foreground' : 'text-muted-foreground')}>
                             {tab.title}
                           </span>
                           <span className="text-[10px] text-muted-foreground shrink-0">
