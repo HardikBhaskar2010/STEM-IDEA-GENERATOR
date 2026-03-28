@@ -120,6 +120,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
         token_cookie = request.cookies.get("token")
         if token_cookie:
             return token_cookie
+            
+        # Check query string (required for native browser EventSource connections)
+        query_token = request.query_params.get("token")
+        if query_token:
+            return query_token
         
         return None
     

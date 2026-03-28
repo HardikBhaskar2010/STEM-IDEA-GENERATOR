@@ -39,11 +39,19 @@ load_dotenv()
 # Logging
 # ----------------------------------------------------------------
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
+from backend.core.log_stream import global_log_streamer
+
 logging.basicConfig(
     level=LOG_LEVEL,
     format="%(asctime)s %(levelname)s  %(name)s — %(message)s",
+    handlers=[logging.StreamHandler(), global_log_streamer]
 )
 logger = logging.getLogger("stem-backend")
+
+# Also ensure uvicorn loggers broadcast to the streamer
+logging.getLogger("uvicorn.access").addHandler(global_log_streamer)
+logging.getLogger("uvicorn.error").addHandler(global_log_streamer)
 
 # ----------------------------------------------------------------
 # FastAPI application
@@ -66,6 +74,8 @@ from backend.routers.guidance import guidance_router
 from backend.routers.chat import chat_router
 from backend.routers.codegen import codegen_router
 from backend.routers.performance import performance_router
+
+from backend.routers.system import system_router
 
 # Legacy feature routers (from root-level route files)
 try:
@@ -163,6 +173,7 @@ app.include_router(guidance_router)
 app.include_router(chat_router)
 app.include_router(codegen_router)
 app.include_router(performance_router)
+app.include_router(system_router)
 
 if _achievement_available:
     app.include_router(achievement_router)
@@ -180,15 +191,7 @@ async def veronica_ai_health(_req: _Request):
     """Health check shim for Veronica AI."""
     return {"status": "ok", "service": "veronica-ai"}
 
-@app.get("/api/universal-chat/messages/{user_id}/{session_id}", tags=["chat"])
-async def get_universal_chat_messages(user_id: str, session_id: str, limit: int = 50, offset: int = 0):
-    """Stub: universal chat history — falls back to localStorage on frontend."""
-    return {"messages": [], "total": 0, "user_id": user_id, "session_id": session_id}
 
-@app.post("/api/universal-chat/save-message", tags=["chat"])
-async def save_universal_chat_message(_req: _Request):
-    """Stub: universal chat save — frontend will use localStorage fallback."""
-    return {"status": "saved"}
 
 logger.info(
     "STEM Idea Generator API v2 started — core routers + optional feature routers mounted",

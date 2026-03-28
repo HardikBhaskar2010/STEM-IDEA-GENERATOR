@@ -98,6 +98,86 @@ async def get_chat_history(
         return await service.get_history(session_id)
     except AppError as exc:
         raise _http_from_app_error(exc)
+
+# Universal Chat History Management Models
+class UniversalChatMessage(BaseModel):
+    user_id: str
+    session_id: str
+    role: str
+    content: str
+    message_type: str = "text"
+    voice_transcript: Optional[str] = None
+    voice_duration: Optional[float] = None
+    voice_confidence: Optional[float] = None
+    action_type: Optional[str] = None
+    action_parameters: Optional[Dict[str, Any]] = None
+    response_metadata: Optional[Dict[str, Any]] = None
+    conversation_context: Optional[Dict[str, Any]] = None
+
+class UniversalChatResponse(BaseModel):
+    id: str
+    user_id: str
+    session_id: str
+    role: str
+    content: str
+    message_type: str = "text"
+    created_at: str
+    action_type: Optional[str] = None
+    action_parameters: Optional[Dict[str, Any]] = None
+
+@chat_router.post("/universal-chat/save-message", response_model=UniversalChatResponse)
+async def save_universal_chat_message(
+    message: UniversalChatMessage,
+    service=Depends(get_chat_service),
+):
+    try:
+        result = await service.save_message(
+            user_id=message.user_id,
+            session_id=message.session_id,
+            role=message.role,
+            content=message.content,
+            message_type=message.message_type,
+            voice_transcript=message.voice_transcript,
+            voice_duration=message.voice_duration,
+            voice_confidence=message.voice_confidence,
+            action_type=message.action_type,
+            action_parameters=message.action_parameters,
+            response_metadata=message.response_metadata,
+            conversation_context=message.conversation_context
+        )
+        return UniversalChatResponse(**result)
+    except Exception as e:
+        logger.error(f"Error saving universal chat message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@chat_router.get("/universal-chat/sessions/{user_id}")
+async def get_user_chat_sessions(
+    user_id: str, 
+    limit: int = 20, 
+    offset: int = 0,
+    service=Depends(get_chat_service),
+):
+    try:
+        sessions = await service.get_user_sessions(user_id=user_id, limit=limit, offset=offset)
+        return {"sessions": sessions, "total": len(sessions)}
+    except Exception as e:
+        logger.error(f"Error getting user chat sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@chat_router.get("/universal-chat/messages/{user_id}/{session_id}")
+async def get_session_messages(
+    user_id: str, 
+    session_id: str, 
+    limit: int = 50, 
+    offset: int = 0,
+    service=Depends(get_chat_service),
+):
+    try:
+        messages = await service.get_session_messages(user_id=user_id, session_id=session_id, limit=limit, offset=offset)
+        return {"messages": messages, "total": len(messages)}
+    except Exception as e:
+        logger.error(f"Error getting session messages: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     except Exception:
         logger.exception("History retrieval failed")
         raise HTTPException(status_code=500, detail={"error": "InternalServerError", "message": "History unavailable"})

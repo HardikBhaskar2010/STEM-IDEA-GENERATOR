@@ -216,8 +216,10 @@ class VeronicaOrchestrator:
             yield json.dumps({"event": "done_failed"})
             return
 
+        import datetime
         def emit(event_type: str, **kwargs) -> str:
-            return json.dumps({"event": event_type, **kwargs})
+            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            return json.dumps({"event": event_type, "timestamp": now_iso, **kwargs})
 
         try:
             yield emit("plan", data="Analyzing your idea and planning architecture...")

@@ -84,6 +84,7 @@ User request:
 
 
 def _repair_prompt(*, original_message: str, bad_output: str, error_summary: str) -> str:
+    truncated_bad = bad_output[:2000] + ("..." if len(bad_output) > 2000 else "")
     return f"""
 The previous JSON did not validate against the ProjectSpec schema.
 Fix it and return ONLY corrected JSON (no markdown, no commentary).
@@ -95,7 +96,7 @@ Original user request:
 {original_message}
 
 Previous invalid output:
-{bad_output}
+{truncated_bad}
 """.strip()
 
 
@@ -127,7 +128,7 @@ async def generate_project_spec(
                 "No markdown. No commentary. No code fences.\n\n"
                 f"Previous validation error:\n{error_summary2}\n\n"
                 f"Original user request:\n{message}\n\n"
-                f"Your last (invalid) output:\n{text2}\n"
+                f"Your last (invalid) output:\n{text2[:2000]}{'...' if len(text2) > 2000 else ''}\n"
             )
             text3 = await llm_complete(strict_repair)
             try:
@@ -139,6 +140,9 @@ async def generate_project_spec(
                     f"Veronica could not generate a valid project spec after 3 attempts. "
                     f"Last validation error: {e3.details or str(e3)}"
                 ) from e3
+
+    # Force the explicitly generated UUID (Nemotron sometimes hallucinates its own slug here)
+    spec.project_id = project_id
 
     # Post-process spec to enforce platform-specific expectations.
     files: list[ProjectFile] = list(spec.files or [])
