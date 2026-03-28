@@ -23,6 +23,8 @@ import { useNavigate } from 'react-router-dom';
 import { AgentTerminal, type AgentEvent } from '@/components/veronica/AgentTerminal';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import { DebugBar } from '@/components/debug/DebugPanel';
+import { upsertVeronicaChat, saveVeronicaMessage, getVeronicaChats } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,8 +46,8 @@ type VeronicaMode = 'idea' | 'full_build' | 'debug';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const newId = () => `msg_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-const newTabId = () => `tab_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+const newId = () => crypto.randomUUID();
+const newTabId = () => crypto.randomUUID();
 
 const WELCOME_MSG = (mode: VeronicaMode): ChatMessage => ({
   id: 'welcome',
@@ -88,6 +90,7 @@ const VeronicaAI: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isDebug = useDebugMode();
+  const { user } = useAuth();
 
   // ── Tab state ──
   const initialTab = useMemo(() => makeDefaultTab('idea'), []);
@@ -101,6 +104,45 @@ const VeronicaAI: React.FC = () => {
   const activeMessages = chatHistory[activeTabId] ?? [];
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const [mode, setMode] = useState<VeronicaMode>('idea');
+
+  // Load Database Chats
+  useEffect(() => {
+    async function initChats() {
+      if (!user) return;
+      const dbChats = await getVeronicaChats();
+      if (dbChats && dbChats.length > 0) {
+        const loadedTabs: ChatTab[] = dbChats.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          mode: c.mode as VeronicaMode,
+          messageCount: c.message_count,
+          createdAt: new Date(c.created_at),
+          lastMessage: c.veronica_chat_messages?.[0]?.content?.slice(0, 60)
+        }));
+        
+        const loadedHistory: Record<string, ChatMessage[]> = {};
+        dbChats.forEach((c: any) => {
+           const dbMsgs = c.veronica_chat_messages || [];
+           loadedHistory[c.id] = dbMsgs.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).map((m: any) => ({
+             id: m.id,
+             role: m.role,
+             content: m.content,
+             timestamp: new Date(m.created_at),
+             intent: m.intent,
+             confidence: m.confidence,
+             actions: m.actions,
+           }));
+        });
+        
+        setTabs(loadedTabs);
+        setChatHistory(loadedHistory);
+        setActiveTabId(loadedTabs[0].id);
+      } else {
+        upsertVeronicaChat({ id: initialTab.tab.id, title: initialTab.tab.title, mode: initialTab.tab.mode });
+      }
+    }
+    initChats();
+  }, [user, initialTab]);
 
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -136,25 +178,48 @@ const VeronicaAI: React.FC = () => {
       ...prev,
       [activeTabId]: [...(prev[activeTabId] ?? []), fullMsg],
     }));
+    
+    // Save to DB
+    if (msg.role === 'user' || msg.id !== 'welcome') {
+      saveVeronicaMessage(activeTabId, fullMsg.role, fullMsg.content, { 
+        intent: fullMsg.intent, 
+        confidence: fullMsg.confidence, 
+        actions: fullMsg.actions,
+        projectSnap: fullMsg.project
+      });
+    }
+
     // Update tab metadata
-    setTabs((prev) =>
-      prev.map((t) =>
-        t.id === activeTabId
-          ? {
-              ...t,
-              messageCount: t.messageCount + 1,
-              lastMessage: msg.content.slice(0, 60),
-              // Auto-name tab from first user message
-              title:
-                t.title === 'New Chat' && msg.role === 'user'
-                  ? msg.content.length > 40
-                    ? msg.content.slice(0, 37) + '…'
-                    : msg.content
-                  : t.title,
-            }
-          : t
-      )
-    );
+    setTabs((prev) => {
+      let requiresTitleUpdate = false;
+      let newTitle = '';
+      
+      const next = prev.map((t) => {
+        if (t.id === activeTabId) {
+          const autoTitle = t.title === 'New Chat' && msg.role === 'user'
+            ? msg.content.length > 40 ? msg.content.slice(0, 37) + '…' : msg.content
+            : t.title;
+            
+          if (autoTitle !== t.title) {
+            requiresTitleUpdate = true;
+            newTitle = autoTitle;
+          }
+
+          return {
+            ...t,
+            messageCount: t.messageCount + 1,
+            lastMessage: msg.content.slice(0, 60),
+            title: autoTitle,
+          };
+        }
+        return t;
+      });
+      
+      if (requiresTitleUpdate) {
+        upsertVeronicaChat({ id: activeTabId, title: newTitle });
+      }
+      return next;
+    });
   }, [activeTabId]);
 
   const createNewChat = useCallback((seedMessage?: string) => {
@@ -163,6 +228,8 @@ const VeronicaAI: React.FC = () => {
     setTabs((prev) => [...prev, tab]);
     setChatHistory((prev) => ({ ...prev, [tab.id]: messages }));
     setActiveTabId(tab.id);
+    upsertVeronicaChat({ id: tab.id, title: tab.title, mode: tab.mode });
+    
     if (seedMessage) {
       setInputValue(seedMessage);
     }
@@ -331,8 +398,7 @@ const VeronicaAI: React.FC = () => {
           </div>
 
           {/* ───────── Two-column layout ───────── */}
-          <div className="flex gap-0 rounded-2xl overflow-hidden border border-primary/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] bg-background/40 backdrop-blur-2xl"
-               style={{ height: 'calc(100vh - 280px)', minHeight: '520px' }}>
+          <div className="flex gap-0 rounded-2xl overflow-hidden border border-primary/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] bg-background/40 backdrop-blur-2xl h-[500px] sm:h-[600px] lg:h-[700px] max-h-[75vh]">
 
             {/* Sidebar */}
             <VeronicaChatTabs
@@ -346,7 +412,7 @@ const VeronicaAI: React.FC = () => {
             />
 
             {/* Chat area */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0">
               {/* Mode pills */}
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-primary/10 bg-background/50 shrink-0">
                 <div className="inline-flex items-center gap-1 rounded-full border border-primary/10 bg-background/60 px-1.5 py-0.5 text-xs">
