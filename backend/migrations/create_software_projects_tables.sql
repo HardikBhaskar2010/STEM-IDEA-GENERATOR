@@ -54,59 +54,75 @@ CREATE INDEX IF NOT EXISTS idx_software_projects_project_type ON software_projec
 -- ============================================
 CREATE TABLE IF NOT EXISTS architecture_diagrams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_id UUID NOT NULL REFERENCES software_projects(id) ON DELETE CASCADE,
-    diagram_type VARCHAR(50) NOT NULL DEFAULT 'flowchart', -- flowchart, sequence, class, er, component
-    mermaid_code TEXT NOT NULL, -- Mermaid diagram syntax
+    diagram_type VARCHAR(50) NOT NULL DEFAULT 'flowchart',
+    mermaid_code TEXT NOT NULL,
     description TEXT NOT NULL,
     components TEXT[] DEFAULT ARRAY[]::TEXT[],
     metadata JSONB DEFAULT '{}'::jsonb,
-    
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_architecture_diagrams_project_id ON architecture_diagrams(project_id);
-CREATE INDEX IF NOT EXISTS idx_architecture_diagrams_diagram_type ON architecture_diagrams(diagram_type);
+ALTER TABLE architecture_diagrams ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES software_projects(id) ON DELETE CASCADE;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_architecture_diagrams_project_id') THEN
+    CREATE INDEX idx_architecture_diagrams_project_id ON architecture_diagrams(project_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_architecture_diagrams_diagram_type') THEN
+    CREATE INDEX idx_architecture_diagrams_diagram_type ON architecture_diagrams(diagram_type);
+  END IF;
+END $$;
 
 -- ============================================
 -- 3. DATABASE SCHEMAS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS database_schemas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_id UUID NOT NULL REFERENCES software_projects(id) ON DELETE CASCADE,
-    database_type VARCHAR(50) NOT NULL, -- postgresql, mongodb, mysql, sqlite, firebase
-    tables JSONB DEFAULT '[]'::jsonb, -- Table definitions
-    relationships JSONB DEFAULT '[]'::jsonb, -- Foreign key relationships
-    indexes JSONB DEFAULT '[]'::jsonb, -- Index definitions
-    schema_sql TEXT, -- Generated SQL for relational databases
-    schema_json JSONB, -- JSON schema for NoSQL databases
-    
+    database_type VARCHAR(50) NOT NULL,
+    tables JSONB DEFAULT '[]'::jsonb,
+    relationships JSONB DEFAULT '[]'::jsonb,
+    indexes JSONB DEFAULT '[]'::jsonb,
+    schema_sql TEXT,
+    schema_json JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_database_schemas_project_id ON database_schemas(project_id);
-CREATE INDEX IF NOT EXISTS idx_database_schemas_database_type ON database_schemas(database_type);
+ALTER TABLE database_schemas ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES software_projects(id) ON DELETE CASCADE;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_database_schemas_project_id') THEN
+    CREATE INDEX idx_database_schemas_project_id ON database_schemas(project_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_database_schemas_database_type') THEN
+    CREATE INDEX idx_database_schemas_database_type ON database_schemas(database_type);
+  END IF;
+END $$;
 
 -- ============================================
 -- 4. API SPECIFICATIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS api_specifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_id UUID NOT NULL REFERENCES software_projects(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     version VARCHAR(20) DEFAULT '1.0.0',
     description TEXT NOT NULL,
     base_url VARCHAR(500),
-    endpoints JSONB DEFAULT '[]'::jsonb, -- Array of endpoint definitions
-    authentication_scheme VARCHAR(100), -- jwt, oauth2, api_key, basic
-    openapi_spec JSONB, -- Complete OpenAPI 3.0 specification
-    
+    endpoints JSONB DEFAULT '[]'::jsonb,
+    authentication_scheme VARCHAR(100),
+    openapi_spec JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_api_specifications_project_id ON api_specifications(project_id);
+ALTER TABLE api_specifications ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES software_projects(id) ON DELETE CASCADE;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_api_specifications_project_id') THEN
+    CREATE INDEX idx_api_specifications_project_id ON api_specifications(project_id);
+  END IF;
+END $$;
 
 -- ============================================
 -- 5. CODE TEMPLATES TABLE
@@ -165,12 +181,12 @@ CREATE INDEX IF NOT EXISTS idx_project_templates_is_active ON project_templates(
 -- ============================================
 -- 7. GENERATED CODE TABLE (Link to existing)
 -- ============================================
--- Note: This table may already exist from code_generation_service
--- We'll create it only if it doesn't exist
+-- Note: This table may already exist from code_generation_service, 
+-- or from 007_clean_schema.sql which uses 'project_id' for hardware projects.
+-- We alter it to ensure software project compatibility without conflict.
 
 CREATE TABLE IF NOT EXISTS generated_code (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_id UUID REFERENCES software_projects(id) ON DELETE CASCADE,
     user_id UUID NOT NULL,
     generation_request JSONB NOT NULL,
     status VARCHAR(50) DEFAULT 'generating', -- generating, completed, failed
@@ -182,7 +198,9 @@ CREATE TABLE IF NOT EXISTS generated_code (
     completed_at TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_generated_code_project_id ON generated_code(project_id);
+ALTER TABLE generated_code ADD COLUMN IF NOT EXISTS software_project_id UUID REFERENCES software_projects(id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS idx_generated_code_software_project_id ON generated_code(software_project_id);
 CREATE INDEX IF NOT EXISTS idx_generated_code_user_id ON generated_code(user_id);
 CREATE INDEX IF NOT EXISTS idx_generated_code_status ON generated_code(status);
 
@@ -221,27 +239,30 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Triggers for automatic updated_at
-CREATE TRIGGER update_software_projects_updated_at BEFORE UPDATE ON software_projects
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_architecture_diagrams_updated_at BEFORE UPDATE ON architecture_diagrams
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_database_schemas_updated_at BEFORE UPDATE ON database_schemas
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_api_specifications_updated_at BEFORE UPDATE ON api_specifications
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_code_templates_updated_at BEFORE UPDATE ON code_templates
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_project_templates_updated_at BEFORE UPDATE ON project_templates
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_code_files_updated_at BEFORE UPDATE ON code_files
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Triggers for automatic updated_at (wrapped in DO blocks to prevent duplicate errors)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_software_projects_updated_at') THEN
+    CREATE TRIGGER update_software_projects_updated_at BEFORE UPDATE ON software_projects FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_architecture_diagrams_updated_at') THEN
+    CREATE TRIGGER update_architecture_diagrams_updated_at BEFORE UPDATE ON architecture_diagrams FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_database_schemas_updated_at') THEN
+    CREATE TRIGGER update_database_schemas_updated_at BEFORE UPDATE ON database_schemas FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_api_specifications_updated_at') THEN
+    CREATE TRIGGER update_api_specifications_updated_at BEFORE UPDATE ON api_specifications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_code_templates_updated_at') THEN
+    CREATE TRIGGER update_code_templates_updated_at BEFORE UPDATE ON code_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_project_templates_updated_at') THEN
+    CREATE TRIGGER update_project_templates_updated_at BEFORE UPDATE ON project_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_code_files_updated_at') THEN
+    CREATE TRIGGER update_code_files_updated_at BEFORE UPDATE ON code_files FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
 -- ============================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
