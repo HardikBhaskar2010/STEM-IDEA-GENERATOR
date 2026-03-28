@@ -30,7 +30,8 @@ class OpenRouterConfig:
         self.api_key = self._load_api_key(api_key_override)
         self.base_url = "https://openrouter.ai/api/v1"
         self.model = "stepfun/step-3.5-flash:free"
-        self.timeout = 60
+        # Increased timeout for heavy models that may take longer to respond
+        self.timeout = int(os.getenv("OPENROUTER_TIMEOUT", "300"))  # Default 5 minutes
         self.max_retries = 3
 
     # ------------------------------------------------------------------
