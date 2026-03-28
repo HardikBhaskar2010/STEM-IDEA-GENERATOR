@@ -144,6 +144,7 @@ export interface VeronicaRunResponse {
   run_id: string;
   status: string;
   preview_url?: string | null;
+  startup_logs?: string[];
 }
 
 export interface VeronicaLogsResponse {
@@ -155,6 +156,14 @@ export async function startVeronicaRun(projectId: string): Promise<VeronicaRunRe
   return apiFetch<VeronicaRunResponse>(`/veronica-projects/${encodeURIComponent(projectId)}/run`, {
     method: 'POST',
   });
+}
+
+/** Triggers a browser download of the project ZIP */
+export function downloadProjectZip(projectId: string): void {
+  const a = document.createElement('a');
+  a.href = `${API_BASE_URL}/veronica-projects/${encodeURIComponent(projectId)}/download/zip`;
+  a.download = `veronica-project-${projectId.slice(0, 8)}.zip`;
+  a.click();
 }
 
 export async function stopVeronicaRun(projectId: string, runId: string): Promise<VeronicaRunResponse> {
