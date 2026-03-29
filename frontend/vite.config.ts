@@ -10,8 +10,8 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist'
   },
   server: {
-    port: 3000,
-    strictPort: true, // ← added this
+    port: 5000,
+    strictPort: true,
     host: '0.0.0.0',
     allowedHosts: true,
     proxy: {
