@@ -532,7 +532,7 @@ const VeronicaAI: React.FC = () => {
             />
 
             {/* Chat area */}
-            <div className="flex-1 flex flex-col min-w-0 min-h-0">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
               {/* Mode Tabs and Actions Header */}
               <div className="flex items-center justify-between px-6 py-0 border-b border-white/[0.08] bg-[#0A0A0F] shrink-0 h-14">
                 {/* Tabs */}
@@ -602,8 +602,8 @@ const VeronicaAI: React.FC = () => {
               {/* Messages + optional preview split */}
               <div className="flex flex-1 min-h-0 overflow-hidden">
                 {/* Chat messages column */}
-                <div className={cn('flex flex-col min-w-0 min-h-0 transition-all duration-300', showPreview ? 'w-1/2 border-r border-white/[0.08]' : 'flex-1')}>
-                <ScrollArea className="flex-1" viewportRef={scrollViewportRef}>
+                <div className={cn('flex flex-col min-w-0 min-h-0 overflow-hidden transition-all duration-300', showPreview ? 'w-1/2 border-r border-white/[0.08]' : 'flex-1')}>
+                <ScrollArea className="flex-1 h-full" viewportRef={scrollViewportRef}>
                   {/* Empty state */}
                   {activeMessages.length <= 1 && !isLoading && (
                     <div className="flex flex-col items-center justify-center min-h-[300px] py-16 px-6">
