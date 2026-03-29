@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Send, Sparkles, Cpu, Bug, Lightbulb, PanelLeftClose, PanelLeftOpen, Clock, AppWindowMac, Activity, Clock3, Filter, ArrowRight } from 'lucide-react';
+import { Send, Sparkles, Cpu, Bug, Lightbulb, PanelLeftClose, PanelLeftOpen, Clock, AppWindowMac, Activity, Clock3, Filter, ArrowRight, Columns2, ExternalLink, RotateCcw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import { AgentTerminal, type AgentEvent } from '@/components/veronica/AgentTerminal';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import { DebugBar } from '@/components/debug/DebugPanel';
+import ErrorBoundary from '@/components/ui/error-boundary';
 import { upsertVeronicaChat, saveVeronicaMessage, getVeronicaChats, deleteVeronicaChat, upsertVeronicaMessage } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -92,6 +93,8 @@ const makeDefaultTab = (mode: VeronicaMode = 'idea'): { tab: ChatTab; messages: 
 const VeronicaAI: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const isDebug = useDebugMode();
   const { user } = useAuth();
 
@@ -159,6 +162,12 @@ const VeronicaAI: React.FC = () => {
   type SandboxStatus = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
   type SandboxInfo = { runId: string | null; status: SandboxStatus; previewUrl: string | null; startupLogs: string[] };
   const [sandboxState, setSandboxState] = useState<Record<string, SandboxInfo>>({});
+
+  // Sync preview URL from any running sandbox
+  useEffect(() => {
+    const running = Object.values(sandboxState).find(s => s.previewUrl);
+    if (running?.previewUrl) setPreviewUrl(running.previewUrl);
+  }, [sandboxState]);
 
   const handleRunProject = useCallback(async (projectId: string) => {
     setSandboxState(prev => ({ ...prev, [projectId]: { runId: null, status: 'starting', previewUrl: null, startupLogs: ['🚀 Initializing E2B sandbox…'] } } as Record<string, SandboxInfo>));
@@ -465,16 +474,18 @@ const VeronicaAI: React.FC = () => {
     <Layout>
       <div className="relative min-h-screen">
         {/* DarkVeil WebGL background */}
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
-          <DarkVeil
-            hueShift={0}
-            noiseIntensity={0.03}
-            scanlineIntensity={0}
-            speed={0.5}
-            scanlineFrequency={0}
-            warpAmount={0.3}
-          />
-        </div>
+        <ErrorBoundary fallback={<div className="absolute inset-0 w-full h-full bg-[#0a0a0f]" />}>
+          <div className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
+            <DarkVeil
+              hueShift={0}
+              noiseIntensity={0.03}
+              scanlineIntensity={0}
+              speed={0.5}
+              scanlineFrequency={0}
+              warpAmount={0.3}
+            />
+          </div>
+        </ErrorBoundary>
 
         <div className="relative container mx-auto px-4 pt-24 pb-12 max-w-7xl">
 
@@ -502,6 +513,20 @@ const VeronicaAI: React.FC = () => {
               onSelectTab={setActiveTabId}
               onNewChat={() => createNewChat()}
               onDeleteTab={deleteTab}
+              onRenameTab={(id, title) => {
+                setTabs(prev => prev.map(t => t.id === id ? { ...t, title } : t));
+                upsertVeronicaChat({ id, title });
+              }}
+              onDuplicateTab={(id) => {
+                const source = tabs.find(t => t.id === id);
+                if (!source) return;
+                const { tab, messages } = makeDefaultTab(source.mode);
+                const newTab = { ...tab, title: `${source.title} (copy)` };
+                setTabs(prev => [...prev, newTab]);
+                setChatHistory(prev => ({ ...prev, [newTab.id]: chatHistory[id] ?? messages }));
+                setActiveTabId(newTab.id);
+                upsertVeronicaChat({ id: newTab.id, title: newTab.title, mode: newTab.mode });
+              }}
               collapsed={sidebarCollapsed}
               onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
             />
@@ -537,12 +562,28 @@ const VeronicaAI: React.FC = () => {
                   })}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md text-gray-500 hover:text-gray-200 border border-white/5 bg-white/[0.02]">
                     <Clock3 className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md text-gray-500 hover:text-gray-200 border border-white/5 bg-white/[0.02]">
                     <Filter className="w-4 h-4" />
+                  </Button>
+
+                  {/* Split-view preview toggle */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPreview(v => !v)}
+                    className={cn(
+                      'w-8 h-8 rounded-md border transition-colors',
+                      showPreview
+                        ? 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10'
+                        : 'text-gray-500 hover:text-gray-200 border-white/5 bg-white/[0.02]'
+                    )}
+                    title="Toggle preview pane"
+                  >
+                    <Columns2 className="w-4 h-4" />
                   </Button>
                   
                   {/* Debug bar — only when ?debug=true */}
@@ -558,8 +599,32 @@ const VeronicaAI: React.FC = () => {
                 </div>
               </div>
 
-              {/* Messages */}
-              <ScrollArea className="flex-1" viewportRef={scrollViewportRef}>
+              {/* Messages + optional preview split */}
+              <div className="flex flex-1 min-h-0 overflow-hidden">
+                {/* Chat messages column */}
+                <div className={cn('flex flex-col min-w-0 min-h-0 transition-all duration-300', showPreview ? 'w-1/2 border-r border-white/[0.08]' : 'flex-1')}>
+                <ScrollArea className="flex-1" viewportRef={scrollViewportRef}>
+                  {/* Empty state */}
+                  {activeMessages.length <= 1 && !isLoading && (
+                    <div className="flex flex-col items-center justify-center min-h-[300px] py-16 px-6">
+                      <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-5">
+                        <ArrowRight className="w-7 h-7 text-indigo-400" />
+                      </div>
+                      <h2 className="text-xl font-semibold text-white mb-1">What will you build today?</h2>
+                      <p className="text-sm text-gray-500 mb-8">Describe an idea, paste an error, or pick a prompt below.</p>
+                      <div className="grid grid-cols-2 gap-2 w-full max-w-sm">
+                        {QUICK_PROMPTS.map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => handleSend(p)}
+                            className="px-3 py-2.5 rounded-xl border border-white/[0.08] text-[12px] text-gray-400 bg-white/[0.02] hover:bg-indigo-500/5 hover:border-indigo-500/20 hover:text-indigo-300 transition-all text-center leading-snug"
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 <div className="p-5 space-y-4">
                   {activeMessages.map((m) => (
                     <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
@@ -699,22 +764,70 @@ const VeronicaAI: React.FC = () => {
                   )}
                   <div ref={endRef} />
                 </div>
-              </ScrollArea>
+                </ScrollArea>
+                </div>{/* end chat messages column */}
+
+                {/* Preview pane */}
+                {showPreview && (
+                  <div className="w-1/2 flex flex-col bg-[#08080e] min-h-0">
+                    {/* URL bar */}
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] shrink-0 bg-[#0d0d14]">
+                      <div className="flex-1 flex items-center gap-2 bg-white/[0.04] border border-white/[0.07] rounded-md px-3 py-1">
+                        <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-400/70" />
+                        <span className="text-[11px] text-gray-500 font-mono truncate flex-1">
+                          {previewUrl ?? 'Preview not ready'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => { if (previewUrl) { const el = document.querySelector<HTMLIFrameElement>('#veronica-preview-frame'); if (el) el.src = previewUrl; } }}
+                        className="p-1.5 rounded hover:bg-white/[0.06] text-gray-500 hover:text-gray-200 transition-colors"
+                        title="Reload"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                      {previewUrl && (
+                        <a href={previewUrl} target="_blank" rel="noopener noreferrer"
+                          className="p-1.5 rounded hover:bg-white/[0.06] text-gray-500 hover:text-gray-200 transition-colors">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                    {/* iframe or placeholder */}
+                    {previewUrl ? (
+                      <iframe
+                        id="veronica-preview-frame"
+                        src={previewUrl}
+                        className="flex-1 w-full border-0"
+                        title="Veronica preview"
+                        sandbox="allow-scripts allow-same-origin allow-forms"
+                      />
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-600">
+                        <Loader2 className="w-8 h-8 animate-spin opacity-30" />
+                        <p className="text-[13px]">Preview not ready</p>
+                        <p className="text-[11px] text-gray-700 text-center px-8">Run your project to see a live preview here</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>{/* end flex split */}
 
               {/* Input area */}
               <div className="border-t border-white/[0.08] px-6 py-5 bg-[#0A0A0F] shrink-0">
-                {/* Quick prompts */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {QUICK_PROMPTS.map((p) => (
-                    <button
-                      key={p}
-                      className="px-4 py-1.5 rounded-full border border-white/10 text-[12px] text-gray-400 bg-transparent hover:bg-white/5 transition-colors"
-                      onClick={() => handleSend(p)}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
+                {/* Quick prompts — hide when empty state is shown to avoid duplication */}
+                {activeMessages.length > 1 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {QUICK_PROMPTS.map((p) => (
+                      <button
+                        key={p}
+                        className="px-4 py-1.5 rounded-full border border-white/10 text-[12px] text-gray-400 bg-transparent hover:bg-white/5 transition-colors"
+                        onClick={() => handleSend(p)}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-3">
                   <div className="flex-1 rounded-xl border border-white/10 bg-[#12121A] flex items-center shadow-inner overflow-hidden">
@@ -736,8 +849,8 @@ const VeronicaAI: React.FC = () => {
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
+            </div>{/* end chat area */}
+          </div>{/* end two-column layout */}
 
           {/* ───────── Community Section ───────── */}
           <VeronicaCommunity
