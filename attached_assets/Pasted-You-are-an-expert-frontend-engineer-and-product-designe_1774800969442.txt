@@ -1,0 +1,85 @@
+You are an expert frontend engineer and product designer. I'm building Veronica — an autonomous AI coding agent platform (similar to emergent.sh) that takes a user's project description and builds a full React + Vite app inside an E2B sandbox.
+Design system:
+
+Base: #0a0a0f, surface: #0d0d14, border: #1e1e2e
+Accent purple: #7c6cf0, active purple dark: #534AB7
+Success green: #3bb87a, warning amber: #d4a043, error red: #d45c5c, info blue: #6b8ed4
+Terminal font: DM Mono, UI chrome font: Syne
+Inspired by Linear + Vercel — flat, precise, no gradients on chrome, no glow effects
+
+Current frontend has:
+
+Sidebar with chat history list, mode tabs (Project Idea / Full Build / Debug Help), "New project" button, model status pill at footer
+Top navigation with 3 tabs and icon buttons
+Build header showing project title + agent version + start time
+Progress bar with percentage label
+Stage pills: Plan → Scaffold → Install → Build → QA → Preview — each with done/active/pending states
+Agent terminal panel with macOS-style dot bar, timestamped log lines color-coded by type (success/error/warn/heal/info/gen), self-healing card that appears inline when healing is active
+Suggestion pills + text input + send button at the bottom
+Footer hint text
+
+What the frontend is missing (build all of these):
+
+Healing badge states — the amber "Self-healing…" badge in the terminal bar should have 3 distinct states driven by a prop or class:
+
+attempting: amber background, pulsing dot, text "Self-healing…"
+succeeded: green background, static checkmark icon, text "Auto-fixed"
+failed: red background, X icon, text "Fix failed" + a "View patch ↓" button that expands a collapsible diff viewer inside the terminal showing what the patch attempted
+
+
+Auto-answer decision card — when the planner hits an ambiguous decision mid-build, show an inline card inside the terminal (above the log stream) with:
+
+Title: "Veronica is making a call…"
+The question being resolved (e.g. "Which auth strategy?")
+The AI's chosen answer in a highlighted pill
+A muted "Override" button that opens an inline dropdown of alternatives
+Smooth slide-down entrance animation
+
+
+QA stage panel — after the Build stage completes, show a dedicated QA results section below the terminal (not inside it) with:
+
+A header row: "QA checks" label + pass/fail summary badge (e.g. "4 / 5 passed")
+Each check as a row: icon (pass/fail), route or element name, response code or result, latency in ms
+Failed rows highlighted with a subtle red left border
+A "Re-run QA" button that resets the rows to a loading skeleton state
+
+
+Intent enrichment preview — before the build log appears, show a brief expandable card:
+
+Title: "Veronica understood your prompt as…"
+Bullet list of inferred requirements (e.g. "User authentication", "Dashboard with charts", "localStorage persistence")
+Collapsed by default, expands on click
+A subtle "Edit" button that lets the user remove individual inferred items before the build starts
+
+
+Preview pane toggle — add a split-view button to the top-right of the main area that slides in a live iframe preview panel to the right of the terminal (50/50 split), with:
+
+A URL bar showing the sandbox preview URL
+Reload and open-in-new-tab icon buttons
+A "Preview not ready" placeholder state with a spinner when build hasn't completed
+
+
+Sidebar enhancements:
+
+Add a search bar at the top of the chat list (below the New project button) that filters items in real time
+Each chat item should show a faint status dot on the left edge — green for completed builds, amber for in-progress, red for failed
+On hover, show a "..." menu button on the right of each chat item with options: Rename, Duplicate, Delete
+
+
+Empty state — when no project is selected, replace the main area with a centered empty state:
+
+Large Veronica logomark (the arrow icon, ~48px, purple)
+Headline: "What will you build today?"
+The 4 suggestion pills arranged in a 2×2 grid
+A full-width input below
+
+
+
+Constraints:
+
+React + Vite + TailwindCSS (or plain CSS-in-JS if easier)
+No new npm packages — use only what's already in the base template or CDN imports via esm.sh
+All animations via CSS keyframes or Tailwind's transition utilities only
+All states should be drivable by props or local React state — no backend calls needed, use mock data and setTimeout to simulate async
+Every component must work in the existing dark theme — no hardcoded light-mode colors
+Show complete file output for every file you create or modify
