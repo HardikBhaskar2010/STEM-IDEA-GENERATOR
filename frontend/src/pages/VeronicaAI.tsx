@@ -472,10 +472,11 @@ const VeronicaAI: React.FC = () => {
 
   return (
     <Layout>
-      <div className="relative min-h-screen">
+      {/* ── Full-screen chat section ── */}
+      <div className="relative flex flex-col" style={{ height: '100dvh' }}>
         {/* DarkVeil WebGL background */}
-        <ErrorBoundary fallback={<div className="absolute inset-0 w-full h-full bg-[#0a0a0f]" />}>
-          <div className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
+        <ErrorBoundary fallback={<div className="absolute inset-0 bg-[#0a0a0f]" />}>
+          <div className="absolute inset-0" style={{ zIndex: 0 }}>
             <DarkVeil
               hueShift={0}
               noiseIntensity={0.03}
@@ -487,24 +488,25 @@ const VeronicaAI: React.FC = () => {
           </div>
         </ErrorBoundary>
 
-        <div className="relative container mx-auto px-4 pt-24 pb-12 max-w-7xl">
-
-          {/* ───────── Header ───────── */}
-          <div className="mb-6 space-y-2">
+        {/* ───────── Compact header ───────── */}
+        <div className="relative z-10 container mx-auto px-4 pt-6 pb-3 flex-shrink-0 max-w-7xl">
+          <div className="flex items-center gap-3 flex-wrap">
             <Badge variant="outline" className="border-primary/30 bg-primary/5 text-xs uppercase tracking-wide">
               Veronica Studio
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-gradient flex items-center gap-2">
-              <Sparkles className="w-7 h-7 text-primary" />
+            <h1 className="text-xl font-semibold tracking-tight text-gradient flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
               Where STEM ideas become reality
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-sm">
-              Describe what you want to build and Veronica will turn it into a structured STEM project you can actually ship.
+            <p className="text-muted-foreground text-xs hidden sm:block">
+              Describe what you want to build and Veronica will turn it into a structured STEM project.
             </p>
           </div>
+        </div>
 
-          {/* ───────── Two-column layout ───────── */}
-          <div className="flex gap-0 rounded-2xl overflow-hidden border border-primary/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] bg-background/40 backdrop-blur-2xl h-[500px] sm:h-[600px] lg:h-[700px] max-h-[75vh]">
+        {/* ───────── Panel – fills remaining viewport height ───────── */}
+        <div className="relative z-10 flex-1 min-h-0 container mx-auto px-4 pb-20 max-w-7xl">
+          <div className="h-full flex gap-0 rounded-2xl overflow-hidden border border-primary/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] bg-background/40 backdrop-blur-2xl">
 
             {/* Sidebar */}
             <VeronicaChatTabs
@@ -850,18 +852,18 @@ const VeronicaAI: React.FC = () => {
                 </div>
               </div>
             </div>{/* end chat area */}
-          </div>{/* end two-column layout */}
+          </div>{/* end panel (h-full flex) */}
+        </div>{/* end panel wrapper (flex-1) */}
+      </div>{/* end full-screen chat section */}
 
-          {/* ───────── Community Section ───────── */}
-          <VeronicaCommunity
-            onRemixWithVeronica={(msg) => {
-              // open a new chat tab pre-seeded with the remix message
-              createNewChat(msg);
-              // scroll back up to the chat
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
-        </div>
+      {/* ───────── Community Section (below the fold) ───────── */}
+      <div className="relative container mx-auto px-4 py-12 max-w-7xl">
+        <VeronicaCommunity
+          onRemixWithVeronica={(msg) => {
+            createNewChat(msg);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
       </div>
     </Layout>
   );
