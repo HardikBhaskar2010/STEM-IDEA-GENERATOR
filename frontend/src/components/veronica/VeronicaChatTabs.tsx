@@ -11,6 +11,7 @@ import {
   Bug,
   Trash2,
   ChevronRight,
+  ArrowRight,
 } from 'lucide-react';
 
 export type ChatTab = {
@@ -24,9 +25,9 @@ export type ChatTab = {
 };
 
 const MODE_META = {
-  idea: { icon: Lightbulb, label: 'Idea', color: 'text-amber-400' },
-  full_build: { icon: Cpu, label: 'Build', color: 'text-primary' },
-  debug: { icon: Bug, label: 'Debug', color: 'text-rose-400' },
+  idea: { label: 'Idea', pillColor: 'text-indigo-400 border-indigo-400/30 bg-indigo-500/10' },
+  full_build: { label: 'Full Build', pillColor: 'text-emerald-400 border-emerald-400/30 bg-emerald-500/10' },
+  debug: { label: 'Debug', pillColor: 'text-orange-400 border-orange-400/30 bg-orange-500/10' },
 };
 
 function formatRelative(date: Date): string {
@@ -64,151 +65,141 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
         collapsed ? 'w-14' : 'w-64'
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-3 border-b border-primary/10 shrink-0">
+      {/* Header / Logo Area */}
+      <div className="flex items-center justify-between px-5 pt-6 pb-4 shrink-0">
         {!collapsed && (
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-            Chats
-          </span>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
+              <ArrowRight className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-white font-sans">
+              Veronica
+            </span>
+            <Badge variant="outline" className="border-indigo-500/40 text-indigo-400 bg-indigo-500/10 text-[9px] px-1.5 py-0">
+              V2.1
+            </Badge>
+          </div>
         )}
-        <div className={cn('flex items-center gap-1', collapsed && 'w-full justify-center')}>
-          {!collapsed && (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={onNewChat}
-              className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary"
-              title="New Chat"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          )}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={onToggleCollapse}
-            className="h-7 w-7 rounded-full hover:bg-primary/10"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <ChevronRight
-              className={cn(
-                'w-4 h-4 transition-transform duration-300',
-                collapsed ? '' : 'rotate-180'
-              )}
-            />
-          </Button>
-        </div>
+        {collapsed && (
+          <div className="w-full flex justify-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
+              <ArrowRight className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Collapsed: new chat only */}
-      {collapsed && (
-        <div className="flex flex-col items-center gap-2 py-3">
+      {/* New Project Button */}
+      {!collapsed && (
+        <div className="px-4 pb-4 shrink-0">
           <Button
-            size="icon"
-            variant="ghost"
             onClick={onNewChat}
-            className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-            title="New Chat"
+            className="w-full justify-start gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-xl h-10 shadow-lg"
           >
             <Plus className="w-4 h-4" />
+            New project
           </Button>
-          {tabs.map((tab) => {
-            const ModeIcon = MODE_META[tab.mode].icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onSelectTab(tab.id)}
-                title={tab.title}
-                className={cn(
-                  'h-8 w-8 rounded-full flex items-center justify-center transition',
-                  tab.id === activeTabId
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:bg-primary/5'
-                )}
-              >
-                <ModeIcon className="w-4 h-4" />
-              </button>
-            );
-          })}
+        </div>
+      )}
+
+      {/* "RECENT" Subhead */}
+      {!collapsed && tabs.length > 0 && (
+        <div className="px-5 pb-2 shrink-0 flex items-center justify-between">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">
+            RECENT
+          </span>
+          <Button
+             size="icon"
+             variant="ghost"
+             onClick={onToggleCollapse}
+             className="h-6 w-6 rounded hover:bg-white/5 opacity-50 hover:opacity-100"
+          >
+             <ChevronRight className="w-3.5 h-3.5 rotate-180" />
+          </Button>
+        </div>
+      )}
+
+      {/* Collapsed: Expansion toggle */}
+      {collapsed && (
+        <div className="flex flex-col items-center gap-4 py-3 border-t border-primary/10">
+           <Button
+             size="icon"
+             variant="ghost"
+             onClick={onToggleCollapse}
+             className="h-8 w-8 rounded-full hover:bg-white/10"
+             title="Expand sidebar"
+           >
+             <ChevronRight className="w-4 h-4" />
+           </Button>
+           <Button
+             size="icon"
+             variant="ghost"
+             onClick={onNewChat}
+             className="h-8 w-8 rounded-full hover:bg-indigo-500/20 text-indigo-400"
+             title="New Chat"
+           >
+             <Plus className="w-4 h-4" />
+           </Button>
         </div>
       )}
 
       {/* Expanded list */}
       {!collapsed && (
         <ScrollArea className="flex-1 min-h-0">
-          <div className="p-2 space-y-1">
-            {tabs.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-6 px-2">
-                No chats yet. Click <strong>+</strong> to start.
-              </p>
-            )}
+          <div className="flex flex-col gap-1 px-3 pb-4">
             {tabs.map((tab) => {
               const meta = MODE_META[tab.mode];
-              const ModeIcon = meta.icon;
               const isActive = tab.id === activeTabId;
+              
               return (
-                <div key={tab.id} className="group relative">
+                <div key={tab.id} className="group relative flex items-center w-full min-w-0">
                   <button
                     onClick={() => onSelectTab(tab.id)}
                     className={cn(
-                      'w-full text-left rounded-xl px-3 py-2.5 transition-all',
+                      'w-full min-w-0 text-left rounded-xl p-3 transition-colors duration-200 border border-transparent flex flex-col gap-2 relative overflow-hidden',
                       isActive
-                        ? 'bg-primary/10 border border-primary/20 shadow-sm'
-                        : 'hover:bg-primary/5 border border-transparent'
+                        ? 'bg-[#151722] border-indigo-500/20' // active background
+                        : 'hover:bg-white/[0.03]' // hover background
                     )}
                   >
-                    <div className="flex items-start gap-2">
-                      <div
+                    {/* The specific purple left border overlay for active state */}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-indigo-500 rounded-none opacity-100" />
+                    )}
+                    
+                    {/* Title */}
+                    <span className={cn(
+                      'text-[13px] font-medium truncate w-full block',
+                      isActive ? 'text-gray-100' : 'text-gray-300'
+                    )}>
+                      {tab.title}
+                    </span>
+                    
+                    {/* Meta row: Mode badge + note count */}
+                    <div className="flex items-center justify-between w-full">
+                      <Badge
+                        variant="outline"
                         className={cn(
-                          'mt-0.5 shrink-0 w-6 h-6 rounded-full flex items-center justify-center',
-                          isActive ? 'bg-primary/15' : 'bg-muted/40'
+                          'h-5 px-2 text-[10px] font-medium border rounded-full font-sans tracking-wide',
+                          meta.pillColor
                         )}
                       >
-                        <ModeIcon className={cn('w-3.5 h-3.5', isActive ? 'text-primary' : meta.color)} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className={cn('text-sm font-medium truncate max-w-[120px] block', isActive ? 'text-foreground' : 'text-muted-foreground')}>
-                            {tab.title}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground shrink-0">
-                            {formatRelative(tab.createdAt)}
-                          </span>
-                        </div>
-                        {tab.lastMessage && (
-                          <p className="text-[11px] text-muted-foreground/70 truncate mt-0.5">
-                            {tab.lastMessage}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'h-4 px-1.5 text-[9px] border-0',
-                              isActive ? 'bg-primary/10 text-primary' : 'bg-muted/40 text-muted-foreground'
-                            )}
-                          >
-                            {meta.label}
-                          </Badge>
-                          {tab.messageCount > 0 && (
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                              <MessageSquare className="w-2.5 h-2.5" />
-                              {tab.messageCount}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                        {meta.label}
+                      </Badge>
+                      <span className="text-[11px] text-gray-500">
+                        {tab.messageCount} notes
+                      </span>
                     </div>
                   </button>
 
-                  {/* Delete button - shows on hover, only for non-active or if >1 tab */}
+                  {/* Delete button on hover */}
                   {tabs.length > 1 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onDeleteTab(tab.id); }}
-                      className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 rounded-full flex items-center justify-center hover:bg-destructive/10 hover:text-destructive"
+                      className="absolute right-3 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-red-500/20 text-red-400"
                       title="Delete chat"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>

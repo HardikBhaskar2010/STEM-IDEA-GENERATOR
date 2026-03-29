@@ -163,3 +163,54 @@ class VeronicaProjectStore:
         self.append_event(project_id, event_type="zip_downloaded", meta={})
         return buf.getvalue()
 
+    # ------------------------------------------------------------------
+    # Generation state persistence (Task 10.1)
+    # ------------------------------------------------------------------
+
+    def _get_state_path(self, project_id: str) -> Path:
+        """Return the path to the generation state file for a project.
+
+        Requirements: 12.1, 12.2
+        """
+        root = self._project_root(project_id)
+        return root / ".generation_state.json"
+
+    def save_generation_state(self, project_id: str, state: "GenerationState") -> None:
+        """Persist generation state to disk for resumability.
+
+        Serialises the GenerationState model to JSON and writes it to
+        ``<project_root>/.generation_state.json``.  Parent directories are
+        created automatically.
+
+        Args:
+            project_id: The unique project identifier (UUID-like).
+            state: GenerationState instance to persist.
+
+        Requirements: 12.1, 12.2
+        """
+        state_path = self._get_state_path(project_id)
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_path.write_text(state.model_dump_json(), encoding="utf-8")
+
+    def load_generation_state(self, project_id: str) -> Optional["GenerationState"]:
+        """Load persisted generation state to resume interrupted generation.
+
+        Returns ``None`` if no state has been saved for the project.
+
+        Args:
+            project_id: The unique project identifier (UUID-like).
+
+        Returns:
+            GenerationState if found on disk, otherwise None.
+
+        Requirements: 12.4, 12.5
+        """
+        from backend.models.generation_state import GenerationState  # noqa: PLC0415
+
+        state_path = self._get_state_path(project_id)
+        if not state_path.exists():
+            return None
+
+        data = json.loads(state_path.read_text(encoding="utf-8"))
+        return GenerationState(**data)
+

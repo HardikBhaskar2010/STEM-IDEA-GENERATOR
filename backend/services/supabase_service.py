@@ -118,6 +118,8 @@ class SupabaseService:
                 "completed_steps":       project.get("completedSteps") or project.get("completed_steps", []),
                 "generated_from_params": project.get("generated_from_params") or project.get("generatedFromParams", {}),
             }
+            if "project_files" in project:
+                row["project_files"] = project["project_files"]
             project_id = project.get("id")
             if project_id:
                 row["id"] = project_id
@@ -133,6 +135,26 @@ class SupabaseService:
             return saved
         except Exception as exc:
             logger.error("SupabaseService.upsert_project failed: %s", exc)
+            return None
+
+    async def load_project_spec(self, user_id: str | None, project_id: str) -> dict[str, Any] | None:
+        """Load a full project row by ID (including project_files)."""
+        if not user_id:
+            return None
+        client = _get_client()
+        if client is None:
+            return None
+        try:
+            res = (
+                client.table("projects")
+                      .select("*")
+                      .eq("user_id", user_id)
+                      .eq("id", project_id)
+                      .execute()
+            )
+            return res.data[0] if res.data else None
+        except Exception as exc:
+            logger.error("SupabaseService.load_project_spec failed: %s", exc)
             return None
 
     async def list_projects(self, user_id: str | None) -> list[dict]:

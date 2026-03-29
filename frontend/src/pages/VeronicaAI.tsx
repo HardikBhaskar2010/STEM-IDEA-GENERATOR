@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Send, Sparkles, Cpu, Bug, Lightbulb, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Send, Sparkles, Cpu, Bug, Lightbulb, PanelLeftClose, PanelLeftOpen, Clock, AppWindowMac, Activity, Clock3, Filter, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -26,7 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import { AgentTerminal, type AgentEvent } from '@/components/veronica/AgentTerminal';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import { DebugBar } from '@/components/debug/DebugPanel';
-import { upsertVeronicaChat, saveVeronicaMessage, getVeronicaChats } from '@/lib/supabase';
+import { upsertVeronicaChat, saveVeronicaMessage, getVeronicaChats, deleteVeronicaChat, upsertVeronicaMessage } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -134,6 +134,9 @@ const VeronicaAI: React.FC = () => {
              intent: m.intent,
              confidence: m.confidence,
              actions: m.actions,
+             agentEvents: (Array.isArray(m.actions) && m.actions.length > 0 && (m.actions[0] as any).event)
+               ? (m.actions as any[])
+               : undefined,
            }));
         });
         
@@ -219,13 +222,16 @@ const VeronicaAI: React.FC = () => {
     if (!viewport) return;
     const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
     if (distanceFromBottom < 120) {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
   }, []);
 
   // Always jump to bottom when switching tabs (new context)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'auto' });
+    const viewport = scrollViewportRef.current;
+    if (viewport) {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'auto' });
+    }
   }, [activeTabId]);
 
   // Smart scroll on new messages / loading state
@@ -297,7 +303,7 @@ const VeronicaAI: React.FC = () => {
     }
   }, [activeTab]);
 
-  const deleteTab = useCallback((id: string) => {
+  const deleteTab = useCallback(async (id: string) => {
     setTabs((prev) => {
       const next = prev.filter((t) => t.id !== id);
       if (activeTabId === id) {
@@ -309,6 +315,8 @@ const VeronicaAI: React.FC = () => {
       const { [id]: _, ...rest } = prev;
       return rest;
     });
+    // Delete from DB directly
+    await deleteVeronicaChat(id);
   }, [activeTabId]);
 
   const updateActiveMessage = useCallback((msgId: string, updater: (m: ChatMessage) => ChatMessage) => {
@@ -348,26 +356,65 @@ const VeronicaAI: React.FC = () => {
           [activeTabId]: [...(prev[activeTabId] ?? []), initialAssistantMsg],
         }));
 
+        // Save initial placeholder to DB
+        saveVeronicaMessage(activeTabId, 'assistant', initialAssistantMsg.content);
+
         try {
+          // Find the most recent project_id in this chat to enable "Edit Mode"
+          const projectMsgs = activeMessages.filter(m => m.project && (m.project as any).project_id);
+          const lastProjectId = projectMsgs.length > 0 
+            ? (projectMsgs[projectMsgs.length - 1].project as any).project_id 
+            : undefined;
+
           const res = await sendVeronicaMessageStream(
-            { message: text },
+            { message: text, project_id: lastProjectId },
             (ev) => {
-              updateActiveMessage(streamMsgId, (m) => ({
-                ...m,
-                agentEvents: [...(m.agentEvents || []), ev]
-              }));
+              updateActiveMessage(streamMsgId, (m) => {
+                const nextEvents = [...(m.agentEvents || []), ev];
+                
+                // Real-time sync to Supabase (throttle or async)
+                upsertVeronicaMessage(streamMsgId, activeTabId, 'assistant', m.content, {
+                    intent: m.intent,
+                    confidence: m.confidence,
+                    actions: nextEvents // Store events in 'actions' column
+                });
+
+                return {
+                  ...m,
+                  agentEvents: nextEvents
+                };
+              });
             }
           );
-          updateActiveMessage(streamMsgId, (m) => ({
-            ...m,
-            content: res.assistant_text,
-            intent: res.intent,
-            confidence: res.confidence,
-            actions: res.actions,
-            project: res.project ?? null,
-            projectTypeHint: inferProjectTypeHint(text),
-            isStreamingBuild: false
-          }));
+          updateActiveMessage(streamMsgId, (m) => {
+            const finalMsg = {
+              ...m,
+              content: res.assistant_text,
+              intent: res.intent,
+              confidence: res.confidence,
+              actions: m.agentEvents, // Keep events
+              project: res.project ?? null,
+              projectTypeHint: inferProjectTypeHint(text),
+              isStreamingBuild: false
+            };
+
+            // Final sync to Supabase with content and project data
+            upsertVeronicaMessage(streamMsgId, activeTabId, 'assistant', res.assistant_text, {
+              intent: res.intent,
+              confidence: res.confidence,
+              actions: m.agentEvents,
+              projectSnap: res.project
+            });
+
+            return finalMsg;
+          });
+
+          // Update sidebar metadata
+          setTabs((prev) => prev.map((t) => (t.id === activeTabId ? {
+            ...t,
+            messageCount: t.messageCount + 1,
+            lastMessage: res.assistant_text.slice(0, 60),
+          } : t)));
         } catch (e) {
           updateActiveMessage(streamMsgId, (m) => ({
             ...m,
@@ -402,10 +449,16 @@ const VeronicaAI: React.FC = () => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  // When mode changes, update the active tab's mode label
+  // When mode changes, update the active tab's mode label and persistence
   const handleModeChange = (m: VeronicaMode) => {
     setMode(m);
     setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, mode: m } : t)));
+    
+    // Save state to IndexedDB so it survives navigation
+    if (activeTabId) {
+      const title = tabs.find(t => t.id === activeTabId)?.title || 'New Project';
+      upsertVeronicaChat({ id: activeTabId, mode: m, title });
+    }
   };
 
   return (
@@ -455,40 +508,54 @@ const VeronicaAI: React.FC = () => {
 
             {/* Chat area */}
             <div className="flex-1 flex flex-col min-w-0 min-h-0">
-              {/* Mode pills */}
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-primary/10 bg-background/50 shrink-0">
-                <div className="inline-flex items-center gap-1 rounded-full border border-primary/10 bg-background/60 px-1.5 py-0.5 text-xs">
+              {/* Mode Tabs and Actions Header */}
+              <div className="flex items-center justify-between px-6 py-0 border-b border-white/[0.08] bg-[#0A0A0F] shrink-0 h-14">
+                {/* Tabs */}
+                <div className="flex items-center gap-6 h-full">
                   {(['idea', 'full_build', 'debug'] as VeronicaMode[]).map((m) => {
-                    const icons = { idea: Lightbulb, full_build: Cpu, debug: Bug };
-                    const labels = { idea: 'Project Idea', full_build: 'Full Build', debug: 'Debug Help' };
+                    const icons = { idea: Clock, full_build: AppWindowMac, debug: Activity };
+                    const labels = { idea: 'Project idea', full_build: 'Full build', debug: 'Debug help' };
                     const Icon = icons[m];
+                    const isActive = mode === m;
                     return (
                       <button
                         key={m}
                         type="button"
                         onClick={() => handleModeChange(m)}
                         className={cn(
-                          'inline-flex items-center gap-1 rounded-full px-3 py-1 transition',
-                          mode === m ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-background/60'
+                          'relative h-full inline-flex items-center gap-2 px-1 transition-colors text-sm font-medium',
+                          isActive ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'
                         )}
                       >
-                        <Icon className="w-3 h-3" />
+                        <Icon className="w-4 h-4" />
                         <span>{labels[m]}</span>
+                        {isActive && (
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-t-full" />
+                        )}
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Debug bar — only when ?debug=true */}
-                {isDebug && <DebugBar className="shrink-0" />}
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md text-gray-500 hover:text-gray-200 border border-white/5 bg-white/[0.02]">
+                    <Clock3 className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-md text-gray-500 hover:text-gray-200 border border-white/5 bg-white/[0.02]">
+                    <Filter className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Debug bar — only when ?debug=true */}
+                  {isDebug && <DebugBar className="shrink-0" />}
 
-                {/* Collapse toggle (mobile fallback) */}
-                <button
-                  onClick={() => setSidebarCollapsed((v) => !v)}
-                  className="md:hidden p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground"
-                >
-                  {sidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-                </button>
+                  {/* Collapse toggle (mobile fallback) */}
+                  <button
+                    onClick={() => setSidebarCollapsed((v) => !v)}
+                    className="md:hidden p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground ml-2"
+                  >
+                    {sidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               {/* Messages */}
@@ -497,36 +564,78 @@ const VeronicaAI: React.FC = () => {
                   {activeMessages.map((m) => (
                     <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
                       <div className={cn('max-w-[80%] space-y-2', m.role === 'user' ? 'text-right' : 'text-left')}>
-                        <div className={cn(
-                          'rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm',
-                          m.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-gradient-to-br from-background/80 to-background/40 border border-primary/10 text-foreground'
-                        )}>
-                          {m.role === 'user' ? (
-                            <p className="whitespace-pre-wrap">{m.content}</p>
-                          ) : (
-                            <div className="chat-markdown prose prose-invert max-w-none text-sm">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                        {/* Special Render for Assistant Builds */}
+                        {m.role === 'assistant' && activeTab?.mode === 'full_build' && (m.isStreamingBuild || (m.agentEvents && m.agentEvents.length > 0)) ? (
+                          <div className="w-full text-left space-y-5 px-1 py-2">
+                            {/* Header row */}
+                            <div className="space-y-1">
+                              <h2 className="text-2xl font-bold text-white tracking-tight">{activeTab?.title || 'Building project...'}</h2>
+                              <p className="text-[13px] text-gray-500">veronica_agent_v2.1.0 • started {new Date(m.timestamp).toLocaleTimeString([], { hour12: false })}</p>
                             </div>
-                          )}
-                        </div>
 
+                            {/* Progress bar area */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between text-[13px] text-gray-400 font-medium">
+                                <span>{m.isStreamingBuild ? 'Building...' : m.agentEvents?.some(e => e.event === 'error') ? 'Build failed' : 'Build complete'}</span>
+                                <span className="text-indigo-400 font-mono font-bold">{m.isStreamingBuild ? '72%' : '100%'}</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: m.isStreamingBuild ? '72%' : '100%' }} />
+                              </div>
+                              
+                              {/* Pipeline stages */}
+                              <div className="flex flex-wrap items-center gap-3 pt-2">
+                                {[
+                                  { id: 'plan', label: 'Plan', done: true, current: false },
+                                  { id: 'scaffold', label: 'Scaffold', done: true, current: false },
+                                  { id: 'install', label: 'Install', done: false, current: m.isStreamingBuild },
+                                  { id: 'build', label: 'Build', done: false, current: false },
+                                  { id: 'qa', label: 'QA', done: false, current: false },
+                                  { id: 'preview', label: 'Preview', done: !m.isStreamingBuild, current: false }
+                                ].map((stage) => (
+                                  <div key={stage.id} className={cn(
+                                    "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border",
+                                    stage.done ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" :
+                                    stage.current ? "border-indigo-500/30 text-indigo-400 bg-indigo-500/10 shadow-[0_0_10px_rgba(99,102,241,0.2)]" :
+                                    "border-white/5 text-gray-600 bg-white/[0.02]"
+                                  )}>
+                                    <div className={cn(
+                                      "w-1.5 h-1.5 rounded-full",
+                                      stage.done ? "bg-emerald-400" :
+                                      stage.current ? "bg-indigo-400" :
+                                      "bg-gray-600"
+                                    )} />
+                                    {stage.label}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Standard Chat Bubble */
+                          <div className={cn(
+                            'rounded-2xl px-5 py-3.5 text-[14px] leading-relaxed shadow-sm',
+                            m.role === 'user'
+                              ? 'bg-[#151722] text-gray-200 border border-white/5'
+                              : 'bg-transparent text-gray-300'
+                          )}>
+                            {m.role === 'user' ? (
+                              <p className="whitespace-pre-wrap">{m.content}</p>
+                            ) : (
+                              <div className="chat-markdown prose prose-invert max-w-none text-sm">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Terminal Panel */}
                         {((m.agentEvents && m.agentEvents.length > 0) || m.isStreamingBuild) && (
-                          <div className="mt-4">
+                          <div className="mt-6 w-full px-1">
                             <AgentTerminal events={m.agentEvents || []} isStreaming={!!m.isStreamingBuild} />
                           </div>
                         )}
-
-                        {m.role === 'assistant' && typeof m.confidence === 'number' && m.intent && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Badge variant="outline" className="bg-background/40 border-primary/20">{m.intent}</Badge>
-                            <span>confidence: {(m.confidence * 100).toFixed(0)}%</span>
-                          </div>
-                        )}
-
-                        {/* AgentBuildPanel for messages with full file trees */}
-                        {m.role === 'assistant' && m.project && Array.isArray((m.project as any).files) && (m.project as any).files.length > 0 && !m.isStreamingBuild && (() => {
+                        {m.role === 'assistant' && m.project && (m.project as any).project_id && !m.isStreamingBuild && (() => {
                           const proj = m.project as any;
                           const sb = sandboxState[proj.project_id];
                           return (
@@ -593,44 +702,39 @@ const VeronicaAI: React.FC = () => {
               </ScrollArea>
 
               {/* Input area */}
-              <div className="border-t border-primary/10 px-4 py-3 bg-background/70 shrink-0">
+              <div className="border-t border-white/[0.08] px-6 py-5 bg-[#0A0A0F] shrink-0">
                 {/* Quick prompts */}
-                <div className="flex flex-wrap gap-1.5 mb-2.5 text-xs">
-                  <span className="text-muted-foreground mr-1 self-center">Try:</span>
+                <div className="flex flex-wrap gap-2 mb-4">
                   {QUICK_PROMPTS.map((p) => (
-                    <Badge
+                    <button
                       key={p}
-                      variant="outline"
-                      className="cursor-pointer bg-background/80 hover:bg-primary/10 hover:text-primary transition-colors"
+                      className="px-4 py-1.5 rounded-full border border-white/10 text-[12px] text-gray-400 bg-transparent hover:bg-white/5 transition-colors"
                       onClick={() => handleSend(p)}
                     >
                       {p}
-                    </Badge>
+                    </button>
                   ))}
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 rounded-full border border-primary/20 bg-background/80 px-4 py-1 flex items-center gap-3 shadow-inner">
+                  <div className="flex-1 rounded-xl border border-white/10 bg-[#12121A] flex items-center shadow-inner overflow-hidden">
                     <Input
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={onKeyDown}
-                      placeholder="Describe what you want to build…"
+                      placeholder="Describe what you want to build..."
                       disabled={isLoading}
-                      className="h-10 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+                      className="h-12 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[14px] px-4 text-gray-200 placeholder:text-gray-600"
                     />
                   </div>
                   <Button
                     onClick={() => handleSend()}
                     disabled={isLoading || !inputValue.trim()}
-                    className="h-11 px-5 bg-gradient-primary text-white rounded-full shadow-lg"
+                    className="h-12 w-12 p-0 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl shadow-[0_4px_14px_rgba(99,102,241,0.3)] shrink-0"
                   >
-                    <Send className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   </Button>
                 </div>
-                <p className="mt-2 text-[10px] text-muted-foreground text-center">
-                  Veronica focuses on structured STEM project ideas. Code generation and live runs are enabled from your project view.
-                </p>
               </div>
             </div>
           </div>
