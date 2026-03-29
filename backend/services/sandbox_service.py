@@ -29,6 +29,10 @@ class SandboxService:
 
     def __init__(self) -> None:
         self._runner = None
+        # Store last console output per sandbox for get_console_output()
+        self._last_console: Dict[str, str] = {}
+        # Per-path locks for concurrent-safe directory creation (Brain Upgrade v2)
+        self._dir_locks: Dict[str, asyncio.Lock] = {}
 
     def _get_runner(self):
         if self._runner is None:
@@ -62,12 +66,12 @@ class SandboxService:
         try:
             runner = self._get_runner()
             sandbox = await runner.create_empty_sandbox()
-            viewer_url = self._generate_viewer_url(sandbox.id)
+            viewer_url = self._generate_viewer_url(sandbox.sandbox_id)
             
-            logger.info(f"Created sandbox {sandbox.id} with viewer URL: {viewer_url}")
+            logger.info(f"Created sandbox {sandbox.sandbox_id} with viewer URL: {viewer_url}")
             
             return {
-                "sandbox_id": sandbox.id,
+                "sandbox_id": sandbox.sandbox_id,
                 "viewer_url": viewer_url,
                 "status": "ready"
             }
@@ -306,20 +310,24 @@ class SandboxService:
         try:
             runner = self._get_runner()
             sandbox = runner.get_sandbox(sandbox_id)
-            
+
             if sandbox is None:
                 raise NotFoundError(f"Sandbox {sandbox_id} not found")
-            
-            # Ensure parent directory exists
+
+            # Ensure parent directory exists with per-path lock (race prevention)
             import os
             dir_path = os.path.dirname(path)
             if dir_path:
-                await sandbox.commands.run(f"mkdir -p {dir_path}", timeout=10)
-            
-            # Write file using E2B SDK
+                lock_key = f"{sandbox_id}:{dir_path}"
+                if lock_key not in self._dir_locks:
+                    self._dir_locks[lock_key] = asyncio.Lock()
+                async with self._dir_locks[lock_key]:
+                    await sandbox.commands.run(f"mkdir -p {dir_path}", timeout=10)
+
+            # Write file using E2B SDK (idempotent overwrite)
             await sandbox.files.write(path, content)
             logger.info(f"Wrote file {path} to sandbox {sandbox_id}")
-            
+
         except NotFoundError:
             raise
         except Exception as exc:
@@ -356,20 +364,24 @@ class SandboxService:
         try:
             runner = self._get_runner()
             sandbox = runner.get_sandbox(sandbox_id)
-            
+
             if sandbox is None:
                 raise NotFoundError(f"Sandbox {sandbox_id} not found")
-            
-            # Ensure parent directory exists
+
+            # Ensure parent directory exists with per-path lock (race prevention)
             import os
             dir_path = os.path.dirname(path)
             if dir_path:
-                await sandbox.commands.run(f"mkdir -p {dir_path}", timeout=10)
-            
-            # Create file using E2B SDK
+                lock_key = f"{sandbox_id}:{dir_path}"
+                if lock_key not in self._dir_locks:
+                    self._dir_locks[lock_key] = asyncio.Lock()
+                async with self._dir_locks[lock_key]:
+                    await sandbox.commands.run(f"mkdir -p {dir_path}", timeout=10)
+
+            # Create/overwrite file using E2B SDK (idempotent)
             await sandbox.files.write(path, content)
             logger.info(f"Created file {path} in sandbox {sandbox_id}")
-            
+
         except NotFoundError:
             raise
         except Exception as exc:
@@ -505,9 +517,15 @@ class SandboxService:
                 duration_ms=duration_ms,
             )
             
+            # Store combined output as last console output for this sandbox
+            combined = f"$ {command}\n{result.stdout or ''}"
+            if result.stderr:
+                combined += f"\n[stderr]\n{result.stderr}"
+            self._last_console[sandbox_id] = combined
+            
             logger.info(
-                f"Executed command in sandbox {sandbox_id}: {command[:50]}... "
-                f"(exit_code={result.exit_code}, duration={duration_ms}ms)"
+                "Executed command in sandbox %s: %s (exit_code=%d, duration=%dms)",
+                sandbox_id, command[:50], result.exit_code, duration_ms,
             )
             
             return command_result
@@ -517,16 +535,150 @@ class SandboxService:
         except ValidationError:
             raise
         except asyncio.TimeoutError as exc:
-            logger.error(f"Command timeout in sandbox {sandbox_id}: {command}")
+            logger.error("Command timeout in sandbox %s: %s", sandbox_id, command)
             raise UpstreamError(
                 f"Command execution timeout after {timeout}s",
                 service="E2B",
                 upstream_status=504,
             ) from exc
         except Exception as exc:
-            logger.error(f"Failed to execute command in sandbox {sandbox_id}: {exc}")
+            logger.error("Failed to execute command in sandbox %s: %s", sandbox_id, exc)
             raise UpstreamError(
                 f"Failed to execute command: {command[:50]}...",
                 service="E2B",
                 upstream_status=503,
             ) from exc
+
+    async def get_logs(self, sandbox_id: str, lines: int = 50) -> str:
+        """Retrieve recent error logs from the sandbox.
+
+        Runs journalctl or reads system log files to fetch recent log entries.
+        Output is formatted to highlight errors, warnings, and stack traces.
+        Limited to the most recent ``lines`` entries to avoid token limits.
+
+        Args:
+            sandbox_id: E2B sandbox identifier.
+            lines: Maximum number of log lines to return (default: 50).
+
+        Returns:
+            Formatted log string with error highlighting.
+
+        Raises:
+            ValidationError: When sandbox_id is empty.
+            NotFoundError: When sandbox doesn't exist.
+            UpstreamError: When log retrieval fails.
+
+        Requirements: 8.1, 8.3, 8.4
+        """
+        if not sandbox_id:
+            raise ValidationError("sandbox_id is required", details={"field": "sandbox_id"})
+
+        try:
+            runner = self._get_runner()
+            sandbox = runner.get_sandbox(sandbox_id)
+
+            if sandbox is None:
+                raise NotFoundError(f"Sandbox {sandbox_id} not found")
+
+            # Try to read from common log locations
+            log_command = (
+                f"(journalctl -n {lines} --no-pager 2>/dev/null || "
+                f"tail -n {lines} /var/log/syslog 2>/dev/null || "
+                f"tail -n {lines} /tmp/dev-server.log 2>/dev/null || "
+                f"echo 'No logs available') 2>&1"
+            )
+            result = await sandbox.commands.run(log_command, timeout=15)
+            raw_logs = result.stdout or ""
+
+            # Format output to highlight errors/warnings/stack traces
+            formatted_lines = []
+            for line in raw_logs.splitlines()[-lines:]:
+                lower = line.lower()
+                if any(kw in lower for kw in ("error", "exception", "traceback", "fatal", "critical")):
+                    formatted_lines.append(f"[ERROR] {line}")
+                elif any(kw in lower for kw in ("warn", "warning")):
+                    formatted_lines.append(f"[WARN] {line}")
+                else:
+                    formatted_lines.append(line)
+
+            logger.info("Retrieved %d log lines from sandbox %s", len(formatted_lines), sandbox_id)
+            return "\n".join(formatted_lines)
+
+        except NotFoundError:
+            raise
+        except ValidationError:
+            raise
+        except Exception as exc:
+            logger.error("Failed to get logs from sandbox %s: %s", sandbox_id, exc)
+            raise UpstreamError(
+                "Failed to retrieve sandbox logs",
+                service="E2B",
+                upstream_status=503,
+            ) from exc
+
+    async def get_console_output(self, sandbox_id: str) -> str:
+        """Get console output from the last command execution in this sandbox.
+
+        Returns the cached stdout/stderr from the most recent ``run_command``
+        call. If no command has been run, returns an empty string.
+
+        Args:
+            sandbox_id: E2B sandbox identifier.
+
+        Returns:
+            Combined stdout and stderr from the last command execution.
+
+        Raises:
+            ValidationError: When sandbox_id is empty.
+
+        Requirements: 8.2, 8.4
+        """
+        if not sandbox_id:
+            raise ValidationError("sandbox_id is required", details={"field": "sandbox_id"})
+
+        output = self._last_console.get(sandbox_id, "")
+        logger.info(
+            "Retrieved console output for sandbox %s (%d chars)",
+            sandbox_id, len(output),
+        )
+        return output
+
+    async def cleanup_sandbox(self, sandbox_id: str) -> None:
+        """Clean up and kill a sandbox instance.
+
+        Called on generation completion or failure to release sandbox resources.
+
+        Args:
+            sandbox_id: E2B sandbox identifier to clean up.
+
+        Requirements: 15.5
+        """
+        if not sandbox_id:
+            return
+
+        try:
+            runner = self._get_runner()
+            await runner.kill(sandbox_id)
+            # Remove cached console output
+            self._last_console.pop(sandbox_id, None)
+            # Release per-path dir locks for this sandbox (Brain Upgrade v2)
+            self._cleanup_dir_locks(sandbox_id)
+            logger.info("Cleaned up sandbox %s", sandbox_id)
+        except Exception as exc:
+            # Log but don't raise — cleanup should not prevent normal flow
+            logger.warning("Failed to cleanup sandbox %s: %s", sandbox_id, exc)
+
+    def _cleanup_dir_locks(self, sandbox_id: str) -> None:
+        """Remove all per-path asyncio.Locks associated with a sandbox session.
+
+        Prevents _dir_locks from growing unbounded across the lifetime of the
+        server process. Called automatically by cleanup_sandbox.
+
+        Requirements: Brain Upgrade v2 — lock cleanup
+        """
+        prefix = f"{sandbox_id}:"
+        stale_keys = [k for k in self._dir_locks if k.startswith(prefix)]
+        for key in stale_keys:
+            del self._dir_locks[key]
+        if stale_keys:
+            logger.debug("Cleaned up %d dir locks for sandbox %s", len(stale_keys), sandbox_id)

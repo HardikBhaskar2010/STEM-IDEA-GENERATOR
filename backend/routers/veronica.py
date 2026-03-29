@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from backend.core.dependencies import get_veronica_orchestrator
+from backend.core.dependencies import get_veronica_orchestrator, get_authenticated_user_id
 from backend.core.exceptions import AppError
 from backend.core.rate_limit import rate_limit
 from backend.orchestration.veronica_orchestrator import VeronicaOrchestrator
@@ -109,6 +109,7 @@ async def veronica_generate_project(
 async def veronica_generate_project_stream(
     request: Request,
     orchestrator: VeronicaOrchestrator = Depends(get_veronica_orchestrator),
+    user_id: Optional[str] = Depends(get_authenticated_user_id),
 ) -> StreamingResponse:
     """Stream Veronica project generation.
 
@@ -116,6 +117,7 @@ async def veronica_generate_project_stream(
     """
     try:
         body = await request.json()
+        body["user_id"] = user_id
 
         async def stream_gen():
             """
@@ -139,6 +141,11 @@ async def veronica_generate_project_stream(
                 logger.info(f"Stream completed successfully. Total events yielded: {event_count}")
                 
             except Exception as stream_error:
+                import asyncio
+                if isinstance(stream_error, asyncio.CancelledError):
+                    logger.info("Client disconnected, stream cancelled gracefully.")
+                    return
+                    
                 # If an error occurs during streaming, log it and yield an error event
                 logger.error(f"Error during stream generation: {stream_error}", exc_info=True)
                 
@@ -155,6 +162,12 @@ async def veronica_generate_project_stream(
                 yield f"data: {done_failed_event}\n\n"
                 
                 logger.info(f"Stream terminated with error after {event_count} events")
+            except BaseException as base_exc:
+                import asyncio
+                if isinstance(base_exc, asyncio.CancelledError):
+                    logger.info("Client disconnected natively, stream cancelled gracefully.")
+                    return
+                raise
 
         return StreamingResponse(stream_gen(), media_type="text/event-stream")
     except AppError as exc:

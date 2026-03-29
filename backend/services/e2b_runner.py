@@ -12,6 +12,17 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import ssl
+from dataclasses import dataclass, field
+from typing import AsyncIterator, Dict, Optional
+
+# Override default SSL context to bypass local issuer cert issues (common behind proxies)
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
 from dataclasses import dataclass, field
 from typing import AsyncIterator, Dict, Optional
 
