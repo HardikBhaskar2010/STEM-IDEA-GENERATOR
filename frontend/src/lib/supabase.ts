@@ -467,6 +467,46 @@ export async function upsertVeronicaChat(chat: {
 }
 
 /**
+ * Append or update a message in a Veronica chat.
+ * Used for syncing real-time build logs to the DB.
+ */
+export async function upsertVeronicaMessage(
+  msgId: string,
+  chatId: string,
+  role: 'user' | 'assistant',
+  content: string,
+  meta?: { intent?: string; confidence?: number; actions?: unknown[]; projectSnap?: unknown },
+): Promise<Record<string, unknown> | null> {
+  try {
+    const row = {
+      id:          msgId,
+      chat_id:     chatId,
+      role,
+      content,
+      intent:      meta?.intent ?? null,
+      confidence:  meta?.confidence ?? null,
+      actions:     meta?.actions ?? [],
+      project_snap: meta?.projectSnap ?? null,
+    };
+
+    const { data, error } = await supabase
+      .from('veronica_chat_messages')
+      .upsert(row, { onConflict: 'id' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('upsertVeronicaMessage:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('upsertVeronicaMessage:', err);
+    return null;
+  }
+}
+
+/**
  * Append a message to a Veronica chat.
  * The DB trigger auto-updates message_count and last_message_at on the parent chat.
  */
@@ -476,30 +516,8 @@ export async function saveVeronicaMessage(
   content: string,
   meta?: { intent?: string; confidence?: number; actions?: unknown[]; projectSnap?: unknown },
 ): Promise<Record<string, unknown> | null> {
-  try {
-    const { data, error } = await supabase
-      .from('veronica_chat_messages')
-      .insert({
-        chat_id:     chatId,
-        role,
-        content,
-        intent:      meta?.intent ?? null,
-        confidence:  meta?.confidence ?? null,
-        actions:     meta?.actions ?? [],
-        project_snap: meta?.projectSnap ?? null,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('saveVeronicaMessage:', error);
-      return null;
-    }
-    return data;
-  } catch (err) {
-    console.error('saveVeronicaMessage:', err);
-    return null;
-  }
+  // We can just proxy to upsert with a new UUID or use .insert
+  return upsertVeronicaMessage(crypto.randomUUID(), chatId, role, content, meta);
 }
 
 /**
@@ -526,6 +544,33 @@ export async function getVeronicaChats(): Promise<Record<string, unknown>[]> {
   } catch (err) {
     console.error('getVeronicaChats:', err);
     return [];
+  }
+}
+
+/**
+ * Permanently delete a Veronica chat and all its messages.
+ */
+export async function deleteVeronicaChat(chatId: string): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    // Supabase cascade delete will handle messages if configured, 
+    // otherwise we just delete the parent chat record.
+    const { error } = await supabase
+      .from('veronica_project_chats')
+      .delete()
+      .eq('id', chatId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('deleteVeronicaChat:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('deleteVeronicaChat:', err);
+    return false;
   }
 }
 

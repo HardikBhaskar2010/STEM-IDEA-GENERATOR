@@ -20,6 +20,7 @@ export interface VeronicaAIAction {
 
 export interface VeronicaAIChatRequest {
   message: string;
+  project_id?: string;
   session_id?: string;
   context?: Record<string, any>;
 }
@@ -58,10 +59,25 @@ export async function sendVeronicaMessage(payload: VeronicaAIChatRequest): Promi
   });
 }
 
+// Keep in sync with AgentEventType in AgentTerminal.tsx
+export type AgentEventType =
+  | 'plan' | 'plan_ready'
+  | 'file_start' | 'file_done'
+  | 'fix' | 'error'
+  | 'sandbox_ready'
+  | 'scaffold_start' | 'scaffold_done' | 'scaffold_ready'
+  | 'debug_start' | 'debug_iteration' | 'debug_done'
+  | 'healing_start' | 'healing_success' | 'healing_failed'
+  | 'done' | 'done_failed';
+
 export type AgentEvent = {
-  event: 'plan' | 'file_start' | 'file_done' | 'fix' | 'error' | 'done';
+  event: AgentEventType;
   data?: string;
   path?: string;
+  lines?: number;
+  progress?: number;
+  sandbox_id?: string;
+  viewer_url?: string;
   timestamp: string;
 };
 
@@ -104,8 +120,17 @@ export async function sendVeronicaMessageStream(
           const data = JSON.parse(dataStr);
           if (data.event === 'done') {
              result = data.result;
+             // Also surface the done event in the terminal
+             onEvent({ ...data, timestamp: data.timestamp ?? new Date().toISOString() } as AgentEvent);
+          } else if (data.event === 'error' && data.result) {
+             result = data.result;
+             onEvent({ ...data, timestamp: data.timestamp ?? new Date().toISOString() } as AgentEvent);
           } else {
-             onEvent(data as AgentEvent);
+             // Forward every event (including healing, qa, plan-guard badges)
+             onEvent({
+               ...data,
+               timestamp: data.timestamp ?? new Date().toISOString(),
+             } as AgentEvent);
           }
         } catch (e) {
           console.error('Failed to parse SSE line', line, e);
@@ -114,6 +139,7 @@ export async function sendVeronicaMessageStream(
     }
   }
 
+  // Graceful fallback for partial build data from agent builders
   if (!result) throw new Error("Stream finished without a valid 'done' event.");
   return result;
 }
