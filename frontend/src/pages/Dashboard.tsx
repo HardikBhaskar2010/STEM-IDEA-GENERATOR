@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Zap, BookOpen, TrendingUp, Plus, Eye, Trash2, BarChart3, 
@@ -70,9 +70,20 @@ const Dashboard: React.FC = () => {
   const [projects, setProjects] = useState<SavedProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
-  const [stats, setStats] = useState({ total: 0, completed: 0, inProgress: 0, planning: 0 });
+  // Split stats into separate state vars — prevents full re-render when only one changes
+  const [totalProjects, setTotalProjects] = useState(0);
+  const [completedProjects, setCompletedProjects] = useState(0);
+  const [inProgressProjects, setInProgressProjects] = useState(0);
+  const [planningProjects, setPlanningProjects] = useState(0);
   const [selectedDate, setSelectedDate] = useState<string>();
   const isDebug = useDebugMode();
+  // Stable stats object for consumers that need the full shape (memoized)
+  const stats = useMemo(() => ({
+    total: totalProjects,
+    completed: completedProjects,
+    inProgress: inProgressProjects,
+    planning: planningProjects,
+  }), [totalProjects, completedProjects, inProgressProjects, planningProjects]);
   
   // Mock event data
   const [recentEvents] = useState(generateMockEvents(10));
@@ -145,12 +156,15 @@ const Dashboard: React.FC = () => {
 
     const projectStats = await projectService.getProjectStats();
     if (projectStats) {
-      setStats(projectStats);
+      setTotalProjects(projectStats.total);
+      setCompletedProjects(projectStats.completed);
+      setInProgressProjects(projectStats.inProgress);
+      setPlanningProjects(projectStats.planning);
     }
     setIsLoading(false);
   };
 
-  const handleDeleteProject = async (id: string) => {
+  const handleDeleteProject = useCallback(async (id: string) => {
     const success = await projectService.deleteProject(id);
     if (success) {
       toast({
@@ -165,9 +179,9 @@ const Dashboard: React.FC = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, []);
 
-  const handleReviveProject = async (id: string, e: React.MouseEvent) => {
+  const handleReviveProject = useCallback(async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const updated = await projectService.reviveProject(id);
     if (updated) {
@@ -183,7 +197,7 @@ const Dashboard: React.FC = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, []);
 
   const filteredProjects = projects.filter(project => {
     if (activeTab === 'all') return true;

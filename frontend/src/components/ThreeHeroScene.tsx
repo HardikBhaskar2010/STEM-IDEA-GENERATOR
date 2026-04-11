@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
@@ -49,6 +49,11 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
   const neuralPathRef = useRef<THREE.Mesh>(null);
   const [hoveredMesh, setHoveredMesh] = useState<THREE.Mesh | null>(null);
   const focusedNodeRef = useRef<string | null>(null);
+
+  // Pool GPU-heavy objects outside useFrame to avoid per-frame GC pressure
+  const _tempVec3 = useRef(new THREE.Vector3());
+  const _camSpaceVec = useRef(new THREE.Vector3());
+  const _tempQuat = useRef(new THREE.Quaternion());
 
   // Detect mobile for responsive object count
   const isMobile = viewport.width < 768;
@@ -299,18 +304,15 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
 
     orbitGroup.children.forEach((child) => {
       if (child instanceof THREE.Mesh && child.userData.isInteractive) {
-        const worldPos = new THREE.Vector3();
-        child.getWorldPosition(worldPos);
+        // Reuse pooled Vector3 — avoids per-frame GC pressure
+        child.getWorldPosition(_tempVec3.current);
+        _camSpaceVec.current.copy(_tempVec3.current).sub(camera.position);
+        camera.getWorldQuaternion(_tempQuat.current);
+        _camSpaceVec.current.applyQuaternion(_tempQuat.current.invert());
 
-        // Transform to camera space
-        const cameraSpacePos = worldPos.clone().sub(camera.position);
-        cameraSpacePos.applyQuaternion(camera.quaternion.clone().invert());
-
-        // Check if centered (abs(x) < threshold)
-        if (Math.abs(cameraSpacePos.x) < focusThreshold) {
-          // Among centered candidates, pick closest Z
-          if (cameraSpacePos.z < closestZ) {
-            closestZ = cameraSpacePos.z;
+        if (Math.abs(_camSpaceVec.current.x) < focusThreshold) {
+          if (_camSpaceVec.current.z < closestZ) {
+            closestZ = _camSpaceVec.current.z;
             newFocusedNode = child.userData.nodeId;
           }
         }

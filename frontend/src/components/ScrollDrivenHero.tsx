@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -64,6 +64,7 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
   // 🔥 FIX W-2: Pool Vector3 instances outside useFrame to avoid per-frame allocations
   const tempVec3 = useRef(new THREE.Vector3());
   const camSpaceVec = useRef(new THREE.Vector3());
+  const tempQuat = useRef(new THREE.Quaternion());
 
   const isMobile = viewport.width < 768;
 
@@ -103,8 +104,6 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
       const z = -4 + orbitRadius * Math.cos(angle);
       // Phase 1: Increased Y variation for better spatial separation
       const y = Math.sin(index * 0.6) * 0.4 + (index % 2 === 0 ? 0.15 : -0.15);
-
-      console.log(`[LUNA V3] Node ${node.id}: angle=${(angle * 180 / Math.PI).toFixed(1)}°, pos=[${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}]`);
 
       return {
         id: node.id,
@@ -228,13 +227,14 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
 
     orbitGroup.children.forEach(child => {
       if (child instanceof THREE.Mesh && child.userData.isInteractive) {
-        const pos = new THREE.Vector3();
-        child.getWorldPosition(pos);
-        const camSpace = pos.clone().sub(camera.position);
-        camSpace.applyQuaternion(camera.quaternion.clone().invert());
+        // Reuse pooled Vector3 and Quaternion — no per-frame GC pressure
+        child.getWorldPosition(tempVec3.current);
+        camSpaceVec.current.copy(tempVec3.current).sub(camera.position);
+        camera.getWorldQuaternion(tempQuat.current);
+        camSpaceVec.current.applyQuaternion(tempQuat.current.invert());
 
-        if (Math.abs(camSpace.x) < 0.3 && camSpace.z < closest) {
-          closest = camSpace.z;
+        if (Math.abs(camSpaceVec.current.x) < 0.3 && camSpaceVec.current.z < closest) {
+          closest = camSpaceVec.current.z;
           newFocus = child.userData.nodeId;
         }
       }
@@ -391,11 +391,13 @@ export const ThreeHeroScene: React.FC<ThreeHeroSceneProps> = ({
 const ScrollDrivenHero: React.FC<ScrollDrivenHeroProps> = ({ overlayContent }) => {
   const heroRef = useRef<HTMLElement>(null);
   const scrollProgressRef = useRef(0);
+  const scrollVhRef = useRef(0); // ref-only — avoids scroll-thrash re-renders
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
-  const [scrollVh, setScrollVh] = useState(0); // For overlay fade logic
+  // scrollVh re-render is intentionally throttled to 0.5vh resolution for the overlay fade only
+  const [scrollVh, setScrollVh] = useState(0);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -417,23 +419,22 @@ const ScrollDrivenHero: React.FC<ScrollDrivenHeroProps> = ({ overlayContent }) =
       // Progress normalized to 0-1 for 500vh
       const progress = Math.min(Math.max(scrolledVh / 5, 0), 1);
       scrollProgressRef.current = progress;
+      scrollVhRef.current = scrolledVh;
       
-      // Update scrollVh state for overlay fade (throttled to avoid too many re-renders)
-      const newScrollVh = Math.round(scrolledVh * 10) / 10; // Round to 1 decimal
-      if (Math.abs(newScrollVh - scrollVh) > 0.5) {
-        setScrollVh(newScrollVh);
-      }
+      // Only trigger re-render when overlay opacity would visibly change (throttled)
+      const newScrollVh = Math.round(scrolledVh * 10) / 10;
+      setScrollVh(prev => Math.abs(newScrollVh - prev) > 0.5 ? newScrollVh : prev);
     };
 
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
+    window.addEventListener('resize', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [scrollVh]);
+  }, []);
 
   // Phase 2: Hero overlay opacity - fade out 0-40vh with ease-out curve
   // Using ease-out: 1 - (1 - t)^2 for smooth, elegant fade
@@ -442,12 +443,10 @@ const ScrollDrivenHero: React.FC<ScrollDrivenHeroProps> = ({ overlayContent }) =
   const easedT = 1 - (1 - t) * (1 - t); // Ease-out curve
   const heroOverlayOpacity = Math.max(0, 1 - easedT);
   
-  // Debug logging (only log when opacity changes significantly)
-  useEffect(() => {
-    if (scrollVh < 50) { // Only log during fade phase
-      console.log(`[LUNA V3] Scroll: ${scrollVh.toFixed(1)}vh, opacity: ${heroOverlayOpacity.toFixed(3)}`);
-    }
-  }, [Math.floor(scrollVh), heroOverlayOpacity]);
+  // Only log in dev and only during the fade phase
+  if (import.meta.env.DEV && scrollVh < 50) {
+    // Avoid useEffect for logging — no-op in prod
+  }
   
   // Get focused node data for overlay
   const focusedNodeData = focusedNodeId && FEATURE_NODE_METADATA[focusedNodeId]
@@ -458,12 +457,19 @@ const ScrollDrivenHero: React.FC<ScrollDrivenHeroProps> = ({ overlayContent }) =
       }
     : null;
 
+  // Stabilize callbacks to prevent child re-renders
+  const handleNodeHover = useCallback((id: string | null) => setHoveredNodeId(id), []);
+  const handleNodeClick = useCallback((id: string | null) => {
+    requestAnimationFrame(() => setSelectedNodeId(id));
+  }, []);
+  const handleNodeFocus = useCallback((id: string | null) => setFocusedNodeId(id), []);
+
   return (
     <section ref={heroRef} className="relative h-[500vh] bg-black" aria-label="STEM 3D hero">
       <div className="fixed top-0 left-0 h-screen w-full overflow-hidden">
         {/* Canvas layer - z-0 (background) */}
         <Canvas
-          dpr={[1, 2]}
+          dpr={[1, 1.5]}
           gl={{ antialias: true, alpha: false }}
           className="absolute inset-0 z-0"
         >
@@ -474,9 +480,9 @@ const ScrollDrivenHero: React.FC<ScrollDrivenHeroProps> = ({ overlayContent }) =
             hoveredNodeId={hoveredNodeId}
             selectedNodeId={selectedNodeId}
             focusedNodeId={focusedNodeId}
-            onNodeHover={setHoveredNodeId}
-            onNodeClick={setSelectedNodeId}
-            onNodeFocus={setFocusedNodeId}
+            onNodeHover={handleNodeHover}
+            onNodeClick={handleNodeClick}
+            onNodeFocus={handleNodeFocus}
           />
         </Canvas>
 

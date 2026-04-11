@@ -14,7 +14,7 @@ services:
       - key: OPENROUTER_API_KEY
         value: REDACTED_SECRET
       - key: SUPABASE_URL
-        value: https://satbswbgkcgaddbesgns.supabase.co
+        value: https://cikcicjfecctzsueaaki.supabase.co
       - key: SUPABASE_KEY
         value: REDACTED_SECRET
       # CORS: Set this to your Vercel frontend URL (e.g. https://your-app.vercel.app)
