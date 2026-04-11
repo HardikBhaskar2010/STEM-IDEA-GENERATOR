@@ -19,6 +19,8 @@ import React, {
   useRef,
   useState,
   useEffect,
+  useMemo,
+  useCallback,
   lazy,
   Suspense,
   RefObject,
@@ -183,16 +185,18 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
 
   const { displayed, currentLine } = useTypedConsole(CONSOLE_LINES);
 
-  const handlePortalComplete = () => {
-    navigate(isAuthenticated ? '/dashboard' : '/veronica-ai');
-  };
+  const show3D = !isLowEnd && !isMobileScreen && !prefersReducedMotion;
 
-  // 96 WebP frames from public/frames/ — scrubbed via scroll progress
-  const DEMO_FRAMES = Array.from({ length: 96 }, (_, i) =>
-    `/frames/frame_${String(i + 1).padStart(4, '0')}.webp`
+  // 96 WebP frames — memoized so array isn't recreated on every render
+  const DEMO_FRAMES = useMemo(
+    () => Array.from({ length: 96 }, (_, i) => `/frames/frame_${String(i + 1).padStart(4, '0')}.webp`),
+    []
   );
 
-  const show3D = !isLowEnd && !isMobileScreen && !prefersReducedMotion;
+  // Stabilize callback to prevent FinalCTASection re-renders
+  const handlePortalComplete = useCallback(() => {
+    navigate(isAuthenticated ? '/dashboard' : '/veronica-ai');
+  }, [isAuthenticated, navigate]);
 
   return (
     <div
@@ -512,7 +516,7 @@ const FEATURE_CARDS = [
   },
 ];
 
-const FeatureSection: React.FC = () => (
+const FeatureSection: React.FC = React.memo(() => (
   <section className="relative py-24 px-6 overflow-hidden">
     {/* Ambient blobs */}
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
@@ -585,18 +589,19 @@ const FeatureSection: React.FC = () => (
       </div>
     </div>
   </section>
-);
+));
+FeatureSection.displayName = 'FeatureSection';
 
 // ─── Final CTA section ────────────────────────────────────────────────────────
 const FinalCTASection: React.FC<{
   isAuthenticated: boolean;
   isLoading: boolean;
-}> = ({ isAuthenticated, isLoading }) => {
+}> = React.memo(({ isAuthenticated, isLoading }) => {
   const navigate = useNavigate();
 
-  const handlePortalComplete = () => {
+  const handlePortalComplete = useCallback(() => {
     navigate(isAuthenticated ? '/dashboard' : '/veronica-ai');
-  };
+  }, [isAuthenticated, navigate]);
 
   return (
     <section
@@ -654,6 +659,7 @@ const FinalCTASection: React.FC<{
       </div>
     </section>
   );
-};
+});
+FinalCTASection.displayName = 'FinalCTASection';
 
-export default HeroLanding;
+export default React.memo(HeroLanding);

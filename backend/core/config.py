@@ -46,7 +46,7 @@ class OpenRouterConfig:
             api_key = os.getenv("OPENROUTER_API_KEY")
             if not api_key:
                 # Hardcoded fallback for local dev only; prefer env var in prod.
-                api_key = "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"
+                api_key = "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"
 
         if not api_key:
             msg = "OPENROUTER_API_KEY environment variable is required"
