@@ -22,6 +22,7 @@ import React, {
   forwardRef,
   Suspense,
   useMemo,
+  useCallback,
 } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Stars, Float } from '@react-three/drei';
@@ -228,6 +229,12 @@ const FloatingDebris: React.FC = () => {
 };
 
 // ─── Main exported component ──────────────────────────────────────────────────
+
+// Stable module-level config objects — same reference on every render,
+// so R3F never sees them as "changed" and never rebuilds the camera / GL context.
+const CAMERA_CONFIG = { position: [0, 2, 8] as [number, number, number], fov: 55 };
+const GL_CONFIG = { antialias: true, powerPreference: 'high-performance' as const };
+
 export interface ThreeHeroProps {
   /**
    * Optional path to a GLB planet model (e.g. "/models/planet.glb").
@@ -249,9 +256,10 @@ const ThreeHero = forwardRef<ThreeHeroHandle, ThreeHeroProps>(
       <div className={`${className}`} aria-hidden="true">
         <Canvas
           shadows
-          camera={{ position: [0, 2, 8], fov: 55 }}
-          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          camera={CAMERA_CONFIG}
+          gl={GL_CONFIG}
           dpr={[1, 1.5]}
+          frameloop="demand"
           style={{ background: 'transparent' }}
         >
           {/* Lighting */}
@@ -294,5 +302,5 @@ const ThreeHero = forwardRef<ThreeHeroHandle, ThreeHeroProps>(
 
 ThreeHero.displayName = 'ThreeHero';
 
-export default ThreeHero;
+export default React.memo(ThreeHero);
 

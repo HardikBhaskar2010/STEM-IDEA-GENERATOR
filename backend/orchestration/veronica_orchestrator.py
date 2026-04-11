@@ -51,13 +51,13 @@ _PHASE_WEIGHTS: Dict[str, tuple[float, float]] = {
 # Tiered Free Models (OpenRouter Free Tier) — Brain Upgrade v2
 # ---------------------------------------------------------------------------
 # High-strategy model for Architecture, plan strategy
-_PLANNING_MODEL = "nvidia/nemotron-3-super:free"
+_PLANNING_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
 # Builder model for component generation, hooks, modules
-_BUILDER_MODEL = "google/gemma-2-9b-it:free"
+_BUILDER_MODEL = "openai/gpt-oss-120b:free"
 # Fast model for boilerplate config files, styles, JSON output
-_FAST_MODEL = "mistralai/mistral-7b-instruct:free"
+_FAST_MODEL = "minimax/minimax-m2.5:free"
 # Debug model for error log analysis and patch generation (self-healing)
-_DEBUG_MODEL = "nvidia/nemotron-4-mini-instruct:free"
+_DEBUG_MODEL = "arcee-ai/trinity-large-preview:free"
 # Keep alias for _SMART_MODEL (used in _analyze_and_fix_errors)
 _SMART_MODEL = _PLANNING_MODEL
 
