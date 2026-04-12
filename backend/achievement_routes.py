@@ -2,6 +2,7 @@
 # This module handles achievement tracking, unlocking, and progress
 
 import os
+import time
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException
@@ -19,6 +20,13 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Create router
 achievement_router = APIRouter(prefix="/api/achievements", tags=["Achievements"])
+
+# =====================================================
+# COOLDOWN — per-user anti-spam for check-and-unlock
+# =====================================================
+# Dict[user_id -> last_called_timestamp]
+_check_cooldown: Dict[str, float] = {}
+COOLDOWN_SECONDS = 5  # reject duplicate calls within this window
 
 # =====================================================
 # PYDANTIC MODELS
@@ -62,6 +70,94 @@ class AchievementProgressUpdate(BaseModel):
     achievement_code: str
     current_value: int
 
+
+# =====================================================
+# PRE-FETCHED STATS (for batch processing)
+# =====================================================
+
+class UserStats:
+    """Holds all user data fetched once upfront — no more per-achievement DB calls."""
+    __slots__ = (
+        "projects_count",
+        "submissions_count",
+        "votes_given",
+        "votes_received",
+        "profile",
+        "level_data",
+        "in_team",
+        "unlocked_codes",
+    )
+
+    def __init__(self):
+        self.projects_count: int = 0
+        self.submissions_count: int = 0
+        self.votes_given: int = 0
+        self.votes_received: int = 0
+        self.profile: Dict = {}
+        self.level_data: Dict = {}
+        self.in_team: bool = False
+        self.unlocked_codes: set = set()
+
+
+async def _prefetch_user_stats(user_id: str) -> UserStats:
+    """
+    Fetch ALL user data needed for achievement calculations in ONE pass.
+    This is the fix for the O(n × queries) explosion. Every condition type
+    reads from this pre-populated object — zero additional DB calls.
+    """
+    stats = UserStats()
+    try:
+        # --- Projects count (used by project_generated + project_saved) ---
+        r = supabase.table("projects").select("id", count="exact").eq("user_id", user_id).execute()
+        stats.projects_count = r.count or 0
+
+        # --- Submissions count ---
+        r = supabase.table("idea_submissions").select("id").eq("user_id", user_id).execute()
+        stats.submissions_count = len(r.data) if r.data else 0
+
+        # --- Votes given ---
+        r = supabase.table("idea_votes").select("id", count="exact").eq("voter_id", user_id).execute()
+        stats.votes_given = r.count or 0
+
+        # --- Votes received (aggregate across all user's submissions) ---
+        if r.data is not None:
+            sub_ids = [s["id"] for s in supabase.table("idea_submissions")
+                       .select("id").eq("user_id", user_id).execute().data or []]
+            total_votes = 0
+            if sub_ids:
+                votes_r = supabase.table("idea_votes").select("id", count="exact")\
+                    .in_("submission_id", sub_ids).execute()
+                total_votes = votes_r.count or 0
+            stats.votes_received = total_votes
+
+        # --- Profile ---
+        r = supabase.table("profiles").select("username, bio, interests, avatar_url")\
+            .eq("user_id", user_id).execute()
+        stats.profile = r.data[0] if r.data else {}
+
+        # --- Level / streak ---
+        try:
+            r = supabase.table("user_levels").select("level_number, streak_days")\
+                .eq("user_id", user_id).single().execute()
+            stats.level_data = r.data or {}
+        except Exception:
+            stats.level_data = {}
+
+        # --- Team membership ---
+        r = supabase.table("team_members").select("team_id").eq("user_id", user_id).execute()
+        stats.in_team = len(r.data) > 0
+
+        # --- Already-unlocked codes ---
+        r = supabase.table("user_achievements_detailed").select("code")\
+            .eq("user_id", user_id).execute()
+        stats.unlocked_codes = {row["code"] for row in (r.data or [])}
+
+    except Exception as e:
+        print(f"[achievement_routes] Error prefetching stats for {user_id}: {e}")
+
+    return stats
+
+
 # =====================================================
 # HELPER FUNCTIONS
 # =====================================================
@@ -70,67 +166,137 @@ async def check_prerequisite(user_id: str, prerequisite_code: Optional[str]) -> 
     """Check if user has unlocked prerequisite achievement"""
     if not prerequisite_code:
         return True
-    
     try:
-        result = supabase.table("user_achievements_detailed").select("code").eq("user_id", user_id).eq("code", prerequisite_code).execute()
+        result = supabase.table("user_achievements_detailed").select("code")\
+            .eq("user_id", user_id).eq("code", prerequisite_code).execute()
         return len(result.data) > 0
     except Exception as e:
         print(f"Error checking prerequisite: {e}")
         return False
+
+
+async def check_prerequisite_from_stats(
+    prerequisite_code: Optional[str], stats: UserStats
+) -> bool:
+    """Fast prerequisite check using pre-fetched unlocked set — no DB call."""
+    if not prerequisite_code:
+        return True
+    return prerequisite_code in stats.unlocked_codes
+
 
 async def get_user_team_status(user_id: str) -> bool:
     """Check if user is in a team"""
     try:
         result = supabase.table("team_members").select("team_id").eq("user_id", user_id).execute()
         return len(result.data) > 0
-    except:
+    except Exception:
         return False
 
-async def calculate_achievement_progress(user_id: str, achievement: Dict) -> Optional[Dict[str, Any]]:
-    """Calculate progress towards achievement based on condition"""
+
+def calculate_achievement_progress_from_stats(
+    achievement: Dict, stats: UserStats
+) -> Optional[Dict[str, Any]]:
+    """
+    Pure-logic progress calculation — reads only from pre-fetched UserStats.
+    NO database calls inside. This is the key fix for the N² explosion.
+    """
     try:
         condition = achievement.get("unlock_condition", {})
         condition_type = condition.get("type")
         target_value = condition.get("value", 0)
-        
         current_value = 0
-        
+
+        if condition_type in ("project_generated", "project_saved"):
+            current_value = stats.projects_count
+
+        elif condition_type == "submission_count":
+            current_value = stats.submissions_count
+
+        elif condition_type == "upvote_received":
+            current_value = stats.votes_received
+
+        elif condition_type == "upvotes_given":
+            current_value = stats.votes_given
+
+        elif condition_type == "level_reached":
+            current_value = stats.level_data.get("level_number", 0)
+
+        elif condition_type == "streak_days":
+            current_value = stats.level_data.get("streak_days", 0)
+
+        elif condition_type == "profile_complete":
+            p = stats.profile
+            if p.get("username") and p.get("bio") and len(p.get("interests", [])) > 0:
+                current_value = 1
+            target_value = 1
+
+        elif condition_type == "profile_advanced":
+            p = stats.profile
+            if (p.get("username") and p.get("bio") and
+                    len(p.get("interests", [])) >= 5 and p.get("avatar_url")):
+                current_value = 1
+            target_value = 1
+
+        if target_value > 0:
+            return {
+                "current": current_value,
+                "target": target_value,
+                "percentage": min(100, int((current_value / target_value) * 100))
+            }
+        return None
+
+    except Exception as e:
+        print(f"Error calculating progress (stats-based): {e}")
+        return None
+
+
+async def calculate_achievement_progress(user_id: str, achievement: Dict) -> Optional[Dict[str, Any]]:
+    """
+    Legacy per-achievement progress calculation (used by GET /user/{id} endpoint).
+    Still does individual DB calls — acceptable since it's paginated per-request,
+    not looped inside check-and-unlock anymore.
+    """
+    try:
+        condition = achievement.get("unlock_condition", {})
+        condition_type = condition.get("type")
+        target_value = condition.get("value", 0)
+
+        current_value = 0
+
         if condition_type == "project_generated":
-            # Count generated projects (from user_activities or another tracking table)
             result = supabase.table("projects").select("id", count="exact").eq("user_id", user_id).execute()
             current_value = result.count or 0
-        
+
         elif condition_type == "project_saved":
             result = supabase.table("projects").select("id", count="exact").eq("user_id", user_id).execute()
             current_value = result.count or 0
-        
+
         elif condition_type == "submission_count":
             result = supabase.table("idea_submissions").select("id", count="exact").eq("user_id", user_id).execute()
             current_value = result.count or 0
-        
+
         elif condition_type == "upvote_received":
-            # Get all submissions and count votes
             submissions = supabase.table("idea_submissions").select("id").eq("user_id", user_id).execute()
             total_votes = 0
             for sub in submissions.data:
                 votes = supabase.table("idea_votes").select("id", count="exact").eq("submission_id", sub["id"]).execute()
                 total_votes += votes.count or 0
             current_value = total_votes
-        
+
         elif condition_type == "upvotes_given":
             result = supabase.table("idea_votes").select("id", count="exact").eq("voter_id", user_id).execute()
             current_value = result.count or 0
-        
+
         elif condition_type == "level_reached":
             result = supabase.table("user_levels").select("level_number").eq("user_id", user_id).single().execute()
             if result.data:
                 current_value = result.data.get("level_number", 0)
-        
+
         elif condition_type == "streak_days":
             result = supabase.table("user_levels").select("streak_days").eq("user_id", user_id).single().execute()
             if result.data:
                 current_value = result.data.get("streak_days", 0)
-        
+
         elif condition_type == "profile_complete":
             result = supabase.table("profiles").select("username, bio, interests").eq("user_id", user_id).single().execute()
             if result.data:
@@ -138,28 +304,29 @@ async def calculate_achievement_progress(user_id: str, achievement: Dict) -> Opt
                 if profile.get("username") and profile.get("bio") and len(profile.get("interests", [])) > 0:
                     current_value = 1
                     target_value = 1
-        
+
         elif condition_type == "profile_advanced":
             result = supabase.table("profiles").select("username, bio, interests, avatar_url").eq("user_id", user_id).single().execute()
             if result.data:
                 profile = result.data
-                if (profile.get("username") and profile.get("bio") and 
-                    len(profile.get("interests", [])) >= 5 and profile.get("avatar_url")):
+                if (profile.get("username") and profile.get("bio") and
+                        len(profile.get("interests", [])) >= 5 and profile.get("avatar_url")):
                     current_value = 1
                     target_value = 1
-        
+
         if target_value > 0:
             return {
                 "current": current_value,
                 "target": target_value,
                 "percentage": min(100, int((current_value / target_value) * 100))
             }
-        
+
         return None
-    
+
     except Exception as e:
         print(f"Error calculating progress: {e}")
         return None
+
 
 # =====================================================
 # ACHIEVEMENT ENDPOINTS
@@ -180,39 +347,39 @@ async def get_user_achievements(user_id: str):
     try:
         # Get all achievements
         all_achievements = supabase.table("achievements").select("*").eq("is_active", True).order("display_order").execute()
-        
+
         # Get user's unlocked achievements
         unlocked = supabase.table("user_achievements_detailed").select("*").eq("user_id", user_id).execute()
         unlocked_codes = {ach["code"]: ach for ach in unlocked.data}
-        
+
         # Check if user is in a team
         in_team = await get_user_team_status(user_id)
-        
+
         # Build response with unlock status and progress
         achievements_with_status = []
         for ach in all_achievements.data:
             code = ach["code"]
             is_unlocked = code in unlocked_codes
-            
+
             # Check if achievement is accessible
             requires_team = ach.get("requires_team", False)
             prerequisite = ach.get("prerequisite_achievement_code")
-            
+
             is_locked = False
             lock_reason = None
-            
+
             if requires_team and not in_team:
                 is_locked = True
                 lock_reason = "Requires team membership"
             elif prerequisite and not await check_prerequisite(user_id, prerequisite):
                 is_locked = True
                 lock_reason = f"Requires unlocking: {prerequisite}"
-            
+
             # Calculate progress if not unlocked
             progress = None
             if not is_unlocked and not is_locked:
                 progress = await calculate_achievement_progress(user_id, ach)
-            
+
             achievement_data = {
                 **ach,
                 "is_unlocked": is_unlocked,
@@ -221,11 +388,11 @@ async def get_user_achievements(user_id: str):
                 "lock_reason": lock_reason,
                 "progress": progress
             }
-            
+
             achievements_with_status.append(achievement_data)
-        
+
         return {"success": True, "achievements": achievements_with_status}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get user achievements: {str(e)}")
 
@@ -235,13 +402,13 @@ async def get_user_achievement_stats(user_id: str):
     try:
         # Use the database function
         result = supabase.rpc("get_user_achievement_stats", {"p_user_id": user_id}).execute()
-        
+
         if result.data and len(result.data) > 0:
             stats = result.data[0]
             total = stats.get("total_achievements", 1)
             unlocked = stats.get("unlocked_achievements", 0)
             completion = (unlocked / total * 100) if total > 0 else 0
-            
+
             return {
                 "success": True,
                 "stats": {
@@ -249,7 +416,7 @@ async def get_user_achievement_stats(user_id: str):
                     "completion_percentage": round(completion, 1)
                 }
             }
-        
+
         return {
             "success": True,
             "stats": {
@@ -264,7 +431,7 @@ async def get_user_achievement_stats(user_id: str):
                 "completion_percentage": 0
             }
         }
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
 
@@ -277,7 +444,7 @@ async def unlock_achievement(request: AchievementUnlockRequest):
             "p_user_id": request.user_id,
             "p_achievement_code": request.achievement_code
         }).execute()
-        
+
         if result.data:
             return {
                 "success": True,
@@ -290,52 +457,68 @@ async def unlock_achievement(request: AchievementUnlockRequest):
                 "unlocked": False,
                 "message": "Achievement already unlocked or not found"
             }
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to unlock achievement: {str(e)}")
 
 @achievement_router.post("/check-and-unlock/{user_id}")
 async def check_and_unlock_achievements(user_id: str):
-    """Check all achievements and auto-unlock eligible ones"""
+    """
+    Check all achievements and auto-unlock eligible ones.
+
+    Performance fix (O(n×queries) → O(1) batch):
+    - Pre-fetches ALL user stats once before the achievement loop
+    - Uses calculate_achievement_progress_from_stats() — pure logic, zero DB calls inside loop
+    - Per-user 5-second cooldown prevents duplicate concurrent calls (React Strict Mode, double mounts, etc.)
+    """
+    # --- Cooldown guard: reject if same user called this within COOLDOWN_SECONDS ---
+    now = time.monotonic()
+    last_called = _check_cooldown.get(user_id, 0.0)
+    if now - last_called < COOLDOWN_SECONDS:
+        # Return the cached "nothing new" response instead of re-running
+        return {
+            "success": True,
+            "unlocked_count": 0,
+            "newly_unlocked": [],
+            "cached": True,
+        }
+    _check_cooldown[user_id] = now
+
     try:
-        unlocked_count = 0
-        newly_unlocked = []
-        
+        # ── BATCH: fetch everything once ──────────────────────────────────────
+        stats = await _prefetch_user_stats(user_id)
+
         # Get all achievements
         all_achievements = supabase.table("achievements").select("*").eq("is_active", True).execute()
-        
-        # Get already unlocked
-        unlocked = supabase.table("user_achievements_detailed").select("code").eq("user_id", user_id).execute()
-        unlocked_codes = {ach["code"] for ach in unlocked.data}
-        
-        # Check if user is in team
-        in_team = await get_user_team_status(user_id)
-        
+
+        unlocked_count = 0
+        newly_unlocked = []
+
         for ach in all_achievements.data:
             code = ach["code"]
-            
-            # Skip if already unlocked
-            if code in unlocked_codes:
+
+            # Skip if already unlocked (uses pre-fetched set — no DB call)
+            if code in stats.unlocked_codes:
                 continue
-            
+
             # Skip if requires team and user not in team
-            if ach.get("requires_team") and not in_team:
+            if ach.get("requires_team") and not stats.in_team:
                 continue
-            
-            # Check prerequisite
-            if ach.get("prerequisite_achievement_code"):
-                if not await check_prerequisite(user_id, ach["prerequisite_achievement_code"]):
-                    continue
-            
-            # Check condition
-            progress = await calculate_achievement_progress(user_id, ach)
+
+            # Check prerequisite (uses pre-fetched set — no DB call)
+            prereq = ach.get("prerequisite_achievement_code")
+            if prereq and not await check_prerequisite_from_stats(prereq, stats):
+                continue
+
+            # ── Pure logic — no DB calls ─────────────────────────────────────
+            progress = calculate_achievement_progress_from_stats(ach, stats)
             if progress and progress["current"] >= progress["target"]:
                 # Unlock achievement
                 result = supabase.rpc("check_and_award_achievement", {
                     "p_user_id": user_id,
                     "p_achievement_code": code
                 }).execute()
-                
+
                 if result.data:
                     unlocked_count += 1
                     newly_unlocked.append({
@@ -345,13 +528,15 @@ async def check_and_unlock_achievements(user_id: str):
                         "xp_reward": ach["xp_reward"],
                         "points_reward": ach["points_reward"]
                     })
-        
+                    # Update local set so subsequent loop iterations see the new unlock
+                    stats.unlocked_codes.add(code)
+
         return {
             "success": True,
             "unlocked_count": unlocked_count,
-            "newly_unlocked": newly_unlocked
+            "newly_unlocked": newly_unlocked,
         }
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to check achievements: {str(e)}")
 
@@ -360,12 +545,12 @@ async def get_recent_unlocks(user_id: str, limit: int = 10):
     """Get recently unlocked achievements for a user"""
     try:
         result = supabase.table("user_achievements_detailed").select("*").eq("user_id", user_id).order("unlocked_at", desc=True).limit(limit).execute()
-        
+
         return {
             "success": True,
             "recent_unlocks": result.data
         }
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get recent unlocks: {str(e)}")
 
@@ -375,27 +560,27 @@ async def get_achievement_leaderboard(limit: int = 50):
     try:
         # Get users with most achievements
         result = supabase.table("user_achievements").select("user_id").execute()
-        
+
         # Count achievements per user
         user_counts = {}
         for record in result.data:
             user_id = record["user_id"]
             user_counts[user_id] = user_counts.get(user_id, 0) + 1
-        
+
         # Sort by count
         sorted_users = sorted(user_counts.items(), key=lambda x: x[1], reverse=True)[:limit]
-        
+
         # Build leaderboard with user info
         leaderboard = []
         for rank, (user_id, count) in enumerate(sorted_users, 1):
             # Get user profile
             profile_result = supabase.table("profiles").select("username, avatar_url").eq("user_id", user_id).execute()
             profile = profile_result.data[0] if profile_result.data else {}
-            
+
             # Get achievement stats
             stats_result = supabase.rpc("get_user_achievement_stats", {"p_user_id": user_id}).execute()
             stats = stats_result.data[0] if stats_result.data else {}
-            
+
             leaderboard.append({
                 "rank": rank,
                 "user_id": user_id,
@@ -407,11 +592,11 @@ async def get_achievement_leaderboard(limit: int = 50):
                 "gold_count": stats.get("gold_count", 0),
                 "platinum_count": stats.get("platinum_count", 0)
             })
-        
+
         return {
             "success": True,
             "leaderboard": leaderboard
         }
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get leaderboard: {str(e)}")
