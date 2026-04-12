@@ -88,6 +88,20 @@ const makeDefaultTab = (mode: VeronicaMode = 'idea'): { tab: ChatTab; messages: 
   };
 };
 
+// ─── Debouncing Helpers ─────────────────────────────────────────────────────────
+
+const pendingSaves = new Map<string, NodeJS.Timeout>();
+function debouncedSave(key: string, runSave: () => void) {
+  if (pendingSaves.has(key)) clearTimeout(pendingSaves.get(key));
+  pendingSaves.set(
+    key,
+    setTimeout(() => {
+      runSave();
+      pendingSaves.delete(key);
+    }, 1200)
+  );
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const VeronicaAI: React.FC = () => {
@@ -381,11 +395,13 @@ const VeronicaAI: React.FC = () => {
               updateActiveMessage(streamMsgId, (m) => {
                 const nextEvents = [...(m.agentEvents || []), ev];
                 
-                // Real-time sync to Supabase (throttle or async)
-                upsertVeronicaMessage(streamMsgId, activeTabId, 'assistant', m.content, {
-                    intent: m.intent,
-                    confidence: m.confidence,
-                    actions: nextEvents // Store events in 'actions' column
+                // Real-time sync to Supabase (debounced to avoid spam/401 flood)
+                debouncedSave(streamMsgId, () => {
+                  upsertVeronicaMessage(streamMsgId, activeTabId, 'assistant', m.content, {
+                      intent: m.intent,
+                      confidence: m.confidence,
+                      actions: nextEvents // Store events in 'actions' column
+                  });
                 });
 
                 return {

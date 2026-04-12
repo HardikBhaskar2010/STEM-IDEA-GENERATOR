@@ -490,6 +490,18 @@ CREATE POLICY "Users access msgs in own chats"
         )
     );
 
+DROP POLICY IF EXISTS "Anon can insert veronica_chat_messages" ON public.veronica_chat_messages;
+CREATE POLICY "Anon can insert veronica_chat_messages"
+    ON public.veronica_chat_messages FOR INSERT
+    TO anon
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Anon can read veronica_chat_messages" ON public.veronica_chat_messages;
+CREATE POLICY "Anon can read veronica_chat_messages"
+    ON public.veronica_chat_messages FOR SELECT
+    TO anon
+    USING (true);
+
 GRANT ALL ON public.veronica_chat_messages TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.veronica_chat_messages TO anon;
 

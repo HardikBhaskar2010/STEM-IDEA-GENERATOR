@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback, startTransition } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -460,7 +460,9 @@ const ScrollDrivenHero: React.FC<ScrollDrivenHeroProps> = ({ overlayContent }) =
   // Stabilize callbacks to prevent child re-renders
   const handleNodeHover = useCallback((id: string | null) => setHoveredNodeId(id), []);
   const handleNodeClick = useCallback((id: string | null) => {
-    requestAnimationFrame(() => setSelectedNodeId(id));
+    startTransition(() => {
+      setSelectedNodeId(id);
+    });
   }, []);
   const handleNodeFocus = useCallback((id: string | null) => setFocusedNodeId(id), []);
 
