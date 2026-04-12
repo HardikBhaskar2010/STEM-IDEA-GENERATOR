@@ -365,7 +365,14 @@ class VeronicaOrchestrator:
             if not existing_spec_str:
                 yield self._emit("plan_ready", data="[contextual-intel] Inferring implicit requirements...")
                 try:
-                    enriched_context = await self._enrich_prompt(message)
+                    # Run enrich in task with 15s pings to prevent Render proxy timeout
+                    enrich_task = asyncio.create_task(self._enrich_prompt(message))
+                    while not enrich_task.done():
+                        done, pending = await asyncio.wait([enrich_task], timeout=15.0)
+                        if pending:
+                            yield self._emit("ping", data="keep-alive")
+                    enriched_context = enrich_task.result()
+                    
                     if enriched_context:
                         logger.info("[contextual-intel] Enriched prompt (%d chars)", len(enriched_context))
                 except Exception as enrich_exc:
@@ -378,10 +385,16 @@ class VeronicaOrchestrator:
             )
 
             try:
-                plan = await self._generate_plan(
+                # Run plan generation in task with 15s pings to prevent Render proxy timeout
+                plan_task = asyncio.create_task(self._generate_plan(
                     message, sandbox_id, existing_spec_str,
                     enriched_context=enriched_context,
-                )
+                ))
+                while not plan_task.done():
+                    done, pending = await asyncio.wait([plan_task], timeout=15.0)
+                    if pending:
+                        yield self._emit("ping", data="keep-alive")
+                plan = plan_task.result()
             except Exception as exc:
                 logger.error("[AGENTIC] Plan generation failed: %s", exc)
                 yield self._emit("error", data=f"Planning failed: {exc}")
@@ -1200,7 +1213,13 @@ class VeronicaOrchestrator:
             success = False
             for attempt in range(max_retries):
                 try:
-                    content = await self._generate_file_content(context, file_spec)
+                    # Run file generation in task with 15s pings
+                    gen_task = asyncio.create_task(self._generate_file_content(context, file_spec))
+                    while not gen_task.done():
+                        done, pending = await asyncio.wait([gen_task], timeout=15.0)
+                        if pending:
+                            yield self._emit("ping", data="keep-alive")
+                    content = gen_task.result()
 
                     # Ensure parent directory exists before writing (directory race prevention)
                     parent_dir = os.path.dirname(file_spec.path)

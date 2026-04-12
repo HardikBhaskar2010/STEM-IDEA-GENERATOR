@@ -642,13 +642,25 @@ const VeronicaAI: React.FC = () => {
 
                             {/* Progress bar area */}
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between text-[13px] text-gray-400 font-medium">
-                                <span>{m.isStreamingBuild ? 'Building...' : m.agentEvents?.some(e => e.event === 'error') ? 'Build failed' : 'Build complete'}</span>
-                                <span className="text-indigo-400 font-mono font-bold">{m.isStreamingBuild ? '72%' : '100%'}</span>
-                              </div>
-                              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: m.isStreamingBuild ? '72%' : '100%' }} />
-                              </div>
+                              {(() => {
+                                const p = (() => {
+                                  if (!m.isStreamingBuild) return '100%';
+                                  if (!m.agentEvents) return '0%';
+                                  const ev = [...m.agentEvents].reverse().find(e => typeof e.progress === 'number');
+                                  return ev && ev.progress ? `${Math.floor(ev.progress * 100)}%` : '0%';
+                                })();
+                                return (
+                                  <>
+                                    <div className="flex items-center justify-between text-[13px] text-gray-400 font-medium">
+                                      <span>{m.isStreamingBuild ? 'Building...' : m.agentEvents?.some(e => e.event === 'error') ? 'Build failed' : 'Build complete'}</span>
+                                      <span className="text-indigo-400 font-mono font-bold">{p}</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mt-3">
+                                      <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: p }} />
+                                    </div>
+                                  </>
+                                );
+                              })()}
                               
                               {/* Pipeline stages */}
                               <div className="flex flex-wrap items-center gap-3 pt-2">
