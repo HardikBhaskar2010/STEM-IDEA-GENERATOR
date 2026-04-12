@@ -5,7 +5,7 @@ export interface Component {
   name: string;
   description: string;
   category: string;
-  price: string;
+  price: number;
   stock: 'In Stock' | 'Out of Stock' | 'Limited';
   tags: string[];
   specifications?: Record<string, string>;
@@ -25,7 +25,7 @@ export class ComponentService {
           name: component.name,
           description: component.description,
           category: component.category,
-          price: component.price,
+          price: Number(component.price),
           stock: component.stock,
           tags: component.tags,
           specifications: component.specifications || {},
@@ -99,7 +99,11 @@ export class ComponentService {
       if (updates.name) updateData.name = updates.name;
       if (updates.description) updateData.description = updates.description;
       if (updates.category) updateData.category = updates.category;
-      if (updates.price) updateData.price = updates.price;
+      if (updates.price !== undefined) {
+        updateData.price = typeof updates.price === 'string' 
+          ? parseFloat(updates.price.replace(/[^0-9.]/g, '')) 
+          : updates.price;
+      }
       if (updates.stock) updateData.stock = updates.stock;
       if (updates.tags) updateData.tags = updates.tags;
       if (updates.specifications) updateData.specifications = updates.specifications;
