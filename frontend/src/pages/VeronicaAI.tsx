@@ -27,7 +27,7 @@ import { AgentTerminal, type AgentEvent } from '@/components/veronica/AgentTermi
 import { useDebugMode } from '@/hooks/useDebugMode';
 import { DebugBar } from '@/components/debug/DebugPanel';
 import ErrorBoundary from '@/components/ui/error-boundary';
-import { upsertVeronicaChat, saveVeronicaMessage, getVeronicaChats, deleteVeronicaChat, upsertVeronicaMessage } from '@/lib/supabase';
+import { supabase, upsertVeronicaChat, saveVeronicaMessage, getVeronicaChats, deleteVeronicaChat, upsertVeronicaMessage } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
