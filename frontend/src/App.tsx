@@ -58,7 +58,21 @@ const AdminLogs = React.lazy(() => import("./pages/AdminLogs"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const STEMWorkshop = React.lazy(() => import("./pages/STEMWorkshop"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Data stays "fresh" for 60 s — no duplicate network request if the
+      // same query key is mounted by multiple components within that window.
+      staleTime: 60_000,
+      // Keep unused data in cache for 10 min before GC.
+      gcTime: 10 * 60 * 1000,
+      // Don't hammer the server when user tabs back in.
+      refetchOnWindowFocus: false,
+      // Max 1 retry on failure — avoids cascading retry storms.
+      retry: 1,
+    },
+  },
+});
 
 // Preload animations on app initialization
 if (typeof window !== "undefined") {
