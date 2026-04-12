@@ -167,6 +167,70 @@ const VeronicaAI: React.FC = () => {
     initChats();
   }, [user, initialTab]);
 
+  // ── Realtime subscription for external updates (e.g. from backend) ──
+  useEffect(() => {
+    if (!activeTabId) return;
+
+    const channel = supabase
+      .channel(`veronica-chat-realtime-${activeTabId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'veronica_chat_messages',
+          filter: `chat_id=eq.${activeTabId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const m = payload.new;
+            const newMsg: ChatMessage = {
+              id: m.id,
+              role: m.role as 'user' | 'assistant',
+              content: m.content,
+              timestamp: new Date(m.created_at),
+              intent: m.intent,
+              confidence: m.confidence,
+              actions: m.actions,
+              agentEvents: (Array.isArray(m.actions) && m.actions.length > 0 && (m.actions[0] as any).event)
+                ? (m.actions as any[])
+                : undefined,
+            };
+
+            setChatHistory((prev) => {
+              const current = prev[activeTabId] || [];
+              if (current.some(msg => msg.id === newMsg.id)) return prev;
+              return { ...prev, [activeTabId]: [...current, newMsg] };
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const m = payload.new;
+            setChatHistory((prev) => {
+              const active = prev[activeTabId] ?? [];
+              return {
+                ...prev,
+                [activeTabId]: active.map(old => old.id === m.id ? {
+                  ...old,
+                  content: m.content,
+                  intent: m.intent,
+                  confidence: m.confidence,
+                  actions: m.actions,
+                  agentEvents: (Array.isArray(m.actions) && m.actions.length > 0 && (m.actions[0] as any).event)
+                    ? (m.actions as any[])
+                    : undefined,
+                  project: m.project_snap || old.project,
+                } : old)
+              };
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel).catch(() => {});
+    };
+  }, [activeTabId]);
+
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
