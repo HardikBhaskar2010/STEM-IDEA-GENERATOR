@@ -149,10 +149,6 @@ export type Database = {
           project_snap: any;
           created_at: string;
         };
-          message_type: string;
-          metadata: any;
-          created_at: string;
-        };
         Insert: {
           id?: string;
           chat_id: string;
