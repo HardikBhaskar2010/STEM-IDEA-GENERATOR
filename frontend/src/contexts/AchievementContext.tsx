@@ -47,7 +47,6 @@ interface AchievementProviderProps {
 
 export const AchievementProvider: React.FC<AchievementProviderProps> = ({ children }) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [recentUnlocks, setRecentUnlocks] = useState<RecentUnlock[]>([]);
 
   // ── Concurrency guards ────────────────────────────────────────────────────
