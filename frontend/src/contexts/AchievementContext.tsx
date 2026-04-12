@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -8,8 +9,17 @@ import {
   getUserAchievementStats,
   checkAndUnlockAchievements,
   unlockAchievement,
+  invalidateAchievementCache,
   RecentUnlock
 } from '@/services/achievementService';
+
+// ─────────────────────────────────────────────────────────────
+// How often the background "check for new achievements" runs.
+// Was 30 s (way too aggressive) → now 5 min as a safety net.
+// The primary trigger is event-driven: call checkForNewAchievements()
+// explicitly after user actions (project generated, idea submitted, etc.)
+// ─────────────────────────────────────────────────────────────
+const CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 interface AchievementContextType {
   achievements: Achievement[];
@@ -37,43 +47,64 @@ interface AchievementProviderProps {
 
 export const AchievementProvider: React.FC<AchievementProviderProps> = ({ children }) => {
   const { user } = useAuth();
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [stats, setStats] = useState<AchievementStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [recentUnlocks, setRecentUnlocks] = useState<RecentUnlock[]>([]);
 
-  const fetchAchievements = async () => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
+  // ── Concurrency guards ────────────────────────────────────────────────────
+  // Prevents React Strict Mode / multiple provider mounts from firing
+  // check-and-unlock simultaneously (the "double call" pattern in the logs).
+  const isCheckingRef = useRef(false);
 
-    try {
-      setIsLoading(true);
-      const [achievementsData, statsData] = await Promise.all([
-        getUserAchievements(),
-        getUserAchievementStats(),
-      ]);
+  const userId = user && !('isGuest' in user && user.isGuest) ? user.id : null;
 
-      setAchievements(achievementsData);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Error fetching achievements:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // ── TanStack Query: achievements list ─────────────────────────────────────
+  // staleTime: 60 s  →  any component reading this query within 60 s after
+  // the last fetch gets cached data immediately — zero extra HTTP requests.
+  const {
+    data: achievements = [],
+    isLoading: achievementsLoading,
+    refetch: refetchAchievements,
+  } = useQuery<Achievement[]>({
+    queryKey: ['achievements', userId],
+    queryFn: () => getUserAchievements(true),   // forceRefresh bypasses service-layer TTL
+    enabled: !!userId,
+    staleTime: 60_000,
+    retry: 1,
+  });
 
+  // ── TanStack Query: achievement stats ─────────────────────────────────────
+  const {
+    data: stats = null,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = useQuery<AchievementStats | null>({
+    queryKey: ['achievement-stats', userId],
+    queryFn: () => getUserAchievementStats(true),
+    enabled: !!userId,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const isLoading = achievementsLoading || statsLoading;
+
+  // ── refreshAchievements: invalidate + refetch ─────────────────────────────
   const refreshAchievements = async () => {
-    await fetchAchievements();
+    invalidateAchievementCache();
+    await Promise.all([refetchAchievements(), refetchStats()]);
   };
 
+  // ── checkForNewAchievements ───────────────────────────────────────────────
+  // Guarded with isCheckingRef so concurrent calls (React Strict Mode double
+  // effect, multiple components, polling + action trigger at same time) are
+  // collapsed into a single in-flight request.
   const checkForNewAchievements = async () => {
-    if (!user) return;
+    if (!userId) return;
+    if (isCheckingRef.current) return; // already running — skip duplicate
 
+    isCheckingRef.current = true;
     try {
       const result = await checkAndUnlockAchievements();
-      
+
       if (result.unlocked_count > 0) {
         // Show toast notifications for newly unlocked achievements
         result.newly_unlocked.forEach((achievement: any) => {
@@ -81,7 +112,12 @@ export const AchievementProvider: React.FC<AchievementProviderProps> = ({ childr
             title: `🎉 Achievement Unlocked!`,
             description: (
               <div className="flex items-start gap-3">
-                <div className="text-2xl">{achievement.tier === 'platinum' ? '💎' : achievement.tier === 'gold' ? '🏆' : achievement.tier === 'silver' ? '🥈' : '🥉'}</div>
+                <div className="text-2xl">
+                  {achievement.tier === 'platinum' ? '💎'
+                    : achievement.tier === 'gold' ? '🏆'
+                    : achievement.tier === 'silver' ? '🥈'
+                    : '🥉'}
+                </div>
                 <div>
                   <div className="font-bold">{achievement.title}</div>
                   <div className="text-sm text-muted-foreground">
@@ -94,25 +130,26 @@ export const AchievementProvider: React.FC<AchievementProviderProps> = ({ childr
           });
         });
 
-        // Store recent unlocks
         setRecentUnlocks(result.newly_unlocked);
 
-        // Refresh achievements after unlocking
+        // Only refresh achievement data when something actually changed
         await refreshAchievements();
       }
     } catch (error) {
       console.error('Error checking for new achievements:', error);
+    } finally {
+      isCheckingRef.current = false;
     }
   };
 
+  // ── unlockSpecificAchievement ─────────────────────────────────────────────
   const unlockSpecificAchievement = async (code: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!userId) return false;
 
     try {
       const unlocked = await unlockAchievement(code);
-      
+
       if (unlocked) {
-        // Find the achievement details
         const achievement = achievements.find(a => a.code === code);
         if (achievement) {
           toast({
@@ -142,21 +179,19 @@ export const AchievementProvider: React.FC<AchievementProviderProps> = ({ childr
     }
   };
 
-  // Fetch achievements when user changes
+  // ── Background polling: every 5 min (safety net only) ────────────────────
+  // Primary trigger should be event-driven (call checkForNewAchievements()
+  // inside your project-generation / idea-submission success handlers).
   useEffect(() => {
-    fetchAchievements();
-  }, [user]);
-
-  // Check for new achievements periodically (every 30 seconds)
-  useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     const interval = setInterval(() => {
       checkForNewAchievements();
-    }, 30000);
+    }, CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const value: AchievementContextType = {
     achievements,
