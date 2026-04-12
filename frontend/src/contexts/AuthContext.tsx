@@ -3,6 +3,8 @@ import { authService, type AuthProvider } from '@/services/authService';
 import { User } from '@supabase/supabase-js';
 import { GuestUser } from '@/services/guestService';
 import { userProfileService, type UserRow } from '@/services/userProfileService';
+import { migrateGuestData } from '@/lib/supabase';
+import { UserIdManager } from '@/utils/userIdManager';
 
 // Owner email for admin access
 const OWNER_EMAIL = 'hardik.bhaskar2010@gmail.com';
@@ -76,6 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (currentUser && !authService.isGuestUser(currentUser)) {
           authUserIdRef.current = currentUser.id;
+          
+          // Migrate guest data if applicable
+          if (UserIdManager.hasGuestId()) {
+            await migrateGuestData(UserIdManager.getGuestId(), currentUser.id);
+          }
+
           // syncOnLogin fetches existing row first, then upserts — safe for
           // users who were already logged in before these changes shipped.
           const row = await userProfileService.syncOnLogin(currentUser as User);
@@ -109,6 +117,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (!authService.isGuestUser(newUser)) {
           authUserIdRef.current = newUser.id;
+
+          // Migrate guest data on active login transition
+          if (UserIdManager.hasGuestId()) {
+            await migrateGuestData(UserIdManager.getGuestId(), newUser.id);
+          }
+
           const row = await userProfileService.syncOnLogin(newUser as User);
           setUserRow(row);
         }

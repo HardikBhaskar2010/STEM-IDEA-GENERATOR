@@ -138,25 +138,58 @@ export type Database = {
       chat_messages: {
         Row: {
           id: string;
-          project_id: string;
-          user_id: string;
-          session_id: string;
+          chat_id: string;
+          user_id: string | null;
+          guest_id: string | null;
           role: string;
           content: string;
+          intent: string | null;
+          confidence: number | null;
+          actions: any;
+          project_snap: any;
+          created_at: string;
+        };
           message_type: string;
           metadata: any;
           created_at: string;
         };
         Insert: {
           id?: string;
-          project_id: string;
-          user_id: string;
-          session_id: string;
+          chat_id: string;
+          user_id?: string | null;
+          guest_id?: string | null;
           role: string;
           content: string;
-          message_type?: string;
-          metadata?: any;
+          intent?: string | null;
+          confidence?: number | null;
+          actions?: any;
+          project_snap?: any;
           created_at?: string;
+        };
+      };
+
+      veronica_project_chats: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          guest_id: string | null;
+          title: string;
+          mode: string;
+          project_id: string | null;
+          message_count: number;
+          last_message_at: string | null;
+          is_archived: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          guest_id?: string | null;
+          title?: string;
+          mode?: string;
+          project_id?: string | null;
+          is_archived?: boolean;
         };
       };
 
@@ -441,11 +474,14 @@ export async function upsertVeronicaChat(chat: {
 }): Promise<Record<string, unknown> | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    const guest_id = user ? null : UserIdManager.getGuestId();
+
+    if (!user && !guest_id) return null;
 
     const row = {
       ...(chat.id ? { id: chat.id } : {}),
-      user_id:    user.id,
+      user_id:    user ? user.id : null,
+      guest_id:   user ? null : guest_id,
       title:      chat.title ?? 'New Chat',
       mode:       chat.mode ?? 'idea',
       project_id: chat.project_id ?? null,
@@ -481,9 +517,16 @@ export async function upsertVeronicaMessage(
   meta?: { intent?: string; confidence?: number; actions?: unknown[]; projectSnap?: unknown },
 ): Promise<Record<string, unknown> | null> {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const guest_id = user ? null : UserIdManager.getGuestId();
+
+    if (!user && !guest_id) return null;
+
     const row = {
       id:          msgId,
       chat_id:     chatId,
+      user_id:     user ? user.id : null,
+      guest_id:    user ? null : guest_id,
       role,
       content,
       intent:      meta?.intent ?? null,
@@ -530,14 +573,23 @@ export async function saveVeronicaMessage(
 export async function getVeronicaChats(): Promise<Record<string, unknown>[]> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const guest_id = user ? null : UserIdManager.getGuestId();
 
-    const { data, error } = await supabase
+    if (!user && !guest_id) return [];
+
+    let query = supabase
       .from('veronica_project_chats')
       .select('*, veronica_chat_messages(id, role, content, intent, confidence, actions, created_at)')
-      .eq('user_id', user.id)
       .eq('is_archived', false)
       .order('last_message_at', { ascending: false });
+
+    if (user) {
+      query = query.eq('user_id', user.id);
+    } else {
+      query = query.eq('guest_id', guest_id!);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('getVeronicaChats:', error);
@@ -556,15 +608,22 @@ export async function getVeronicaChats(): Promise<Record<string, unknown>[]> {
 export async function deleteVeronicaChat(chatId: string): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    const guest_id = user ? null : UserIdManager.getGuestId();
 
-    // Supabase cascade delete will handle messages if configured, 
-    // otherwise we just delete the parent chat record.
-    const { error } = await supabase
+    if (!user && !guest_id) return false;
+
+    let query = supabase
       .from('veronica_project_chats')
       .delete()
-      .eq('id', chatId)
-      .eq('user_id', user.id);
+      .eq('id', chatId);
+
+    if (user) {
+      query = query.eq('user_id', user.id);
+    } else {
+      query = query.eq('guest_id', guest_id!);
+    }
+
+    const { error } = await query;
 
     if (error) {
       console.error('deleteVeronicaChat:', error);
@@ -574,6 +633,30 @@ export async function deleteVeronicaChat(chatId: string): Promise<boolean> {
   } catch (err) {
     console.error('deleteVeronicaChat:', err);
     return false;
+  }
+}
+
+/**
+ * Migrate all guest data to an authenticated user account.
+ * This is called automatically upon user login.
+ */
+export async function migrateGuestData(guestId: string, userId: string): Promise<void> {
+  try {
+    // 1. Migrate chats
+    await supabase.from('veronica_project_chats')
+      .update({ user_id: userId, guest_id: null })
+      .eq('guest_id', guestId);
+      
+    // 2. Migrate messages
+    await supabase.from('veronica_chat_messages')
+      .update({ user_id: userId, guest_id: null })
+      .eq('guest_id', guestId);
+      
+    // 3. Clear guest ID since it's fully migrated
+    UserIdManager.clearGuestId();
+    console.log(`✅ Guest data (${guestId}) beautifully migrated to user account (${userId}).`);
+  } catch (error) {
+    console.error('Failed to migrate guest data:', error);
   }
 }
 

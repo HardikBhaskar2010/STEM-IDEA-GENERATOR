@@ -420,6 +420,7 @@ GRANT SELECT, INSERT ON public.generation_history TO authenticated;
 CREATE TABLE IF NOT EXISTS public.veronica_project_chats (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    guest_id        TEXT,
     title           VARCHAR(255) NOT NULL DEFAULT 'New Chat',
     mode            VARCHAR(20)  NOT NULL DEFAULT 'idea'
                     CHECK (mode IN ('idea', 'full_build', 'debug')),
@@ -428,7 +429,11 @@ CREATE TABLE IF NOT EXISTS public.veronica_project_chats (
     last_message_at TIMESTAMPTZ,
     is_archived     BOOLEAN NOT NULL DEFAULT false,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT veronica_project_chats_owner_check CHECK (
+        (user_id IS NOT NULL AND guest_id IS NULL) OR 
+        (user_id IS NULL AND guest_id IS NOT NULL)
+    )
 );
 
 CREATE INDEX IF NOT EXISTS idx_veronica_chats_user      ON public.veronica_project_chats(user_id);
@@ -444,14 +449,29 @@ ALTER TABLE public.veronica_project_chats ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users manage own Veronica chats" ON public.veronica_project_chats;
 CREATE POLICY "Users manage own Veronica chats"
     ON public.veronica_project_chats FOR ALL
-    USING  (auth.uid() = user_id OR user_id IS NULL)
-    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+    TO authenticated
+    USING  (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Guests (unauthenticated) can create and read anonymous chats
 DROP POLICY IF EXISTS "Anon can insert Veronica chats" ON public.veronica_project_chats;
-CREATE POLICY "Anon can insert Veronica chats"
+CREATE POLICY "Guests can insert Veronica chats"
     ON public.veronica_project_chats FOR INSERT
-    WITH CHECK (user_id IS NULL);
+    TO anon
+    WITH CHECK (guest_id IS NOT NULL);
+
+DROP POLICY IF EXISTS "Anon can select Veronica chats" ON public.veronica_project_chats;
+CREATE POLICY "Guests can select Veronica chats"
+    ON public.veronica_project_chats FOR SELECT
+    TO anon
+    USING (guest_id IS NOT NULL);
+
+DROP POLICY IF EXISTS "Users can claim guest chats" ON public.veronica_project_chats;
+CREATE POLICY "Users can claim guest chats"
+    ON public.veronica_project_chats FOR UPDATE
+    TO authenticated
+    USING (guest_id IS NOT NULL AND user_id IS NULL)
+    WITH CHECK (auth.uid() = user_id AND guest_id IS NULL);
 
 GRANT ALL ON public.veronica_project_chats TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.veronica_project_chats TO anon;
@@ -461,13 +481,19 @@ GRANT SELECT, INSERT, UPDATE ON public.veronica_project_chats TO anon;
 CREATE TABLE IF NOT EXISTS public.veronica_chat_messages (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     chat_id      UUID NOT NULL REFERENCES public.veronica_project_chats(id) ON DELETE CASCADE,
+    user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    guest_id     TEXT,
     role         VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
     content      TEXT NOT NULL,
     intent       VARCHAR(100),
     confidence   NUMERIC(4,3),
     actions      JSONB DEFAULT '[]',
     project_snap JSONB,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT veronica_chat_messages_owner_check CHECK (
+        (user_id IS NOT NULL AND guest_id IS NULL) OR 
+        (user_id IS NULL AND guest_id IS NOT NULL)
+    )
 );
 
 CREATE INDEX IF NOT EXISTS idx_veronica_msgs_chat ON public.veronica_chat_messages(chat_id, created_at ASC);
@@ -475,32 +501,30 @@ CREATE INDEX IF NOT EXISTS idx_veronica_msgs_chat ON public.veronica_chat_messag
 ALTER TABLE public.veronica_chat_messages ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users access msgs in own chats" ON public.veronica_chat_messages;
-CREATE POLICY "Users access msgs in own chats"
+CREATE POLICY "Users can access their messages"
     ON public.veronica_chat_messages FOR ALL
-    USING (
-        chat_id IN (
-            SELECT id FROM public.veronica_project_chats
-            WHERE user_id = auth.uid() OR user_id IS NULL
-        )
-    )
-    WITH CHECK (
-        chat_id IN (
-            SELECT id FROM public.veronica_project_chats
-            WHERE user_id = auth.uid() OR user_id IS NULL
-        )
-    );
+    TO authenticated
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Anon can insert veronica_chat_messages" ON public.veronica_chat_messages;
-CREATE POLICY "Anon can insert veronica_chat_messages"
+CREATE POLICY "Guests can insert"
     ON public.veronica_chat_messages FOR INSERT
     TO anon
-    WITH CHECK (true);
+    WITH CHECK (guest_id IS NOT NULL);
 
 DROP POLICY IF EXISTS "Anon can read veronica_chat_messages" ON public.veronica_chat_messages;
-CREATE POLICY "Anon can read veronica_chat_messages"
+CREATE POLICY "Guests can read"
     ON public.veronica_chat_messages FOR SELECT
     TO anon
-    USING (true);
+    USING (guest_id IS NOT NULL);
+
+DROP POLICY IF EXISTS "Users can claim guest messages" ON public.veronica_chat_messages;
+CREATE POLICY "Users can claim guest messages"
+    ON public.veronica_chat_messages FOR UPDATE
+    TO authenticated
+    USING (guest_id IS NOT NULL AND user_id IS NULL)
+    WITH CHECK (auth.uid() = user_id AND guest_id IS NULL);
 
 GRANT ALL ON public.veronica_chat_messages TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.veronica_chat_messages TO anon;
