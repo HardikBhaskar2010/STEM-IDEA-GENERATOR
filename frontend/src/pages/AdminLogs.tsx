@@ -202,6 +202,16 @@ const AdminLogs: React.FC = () => {
 
             {/* Status + actions */}
             <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-white/10 bg-white/5 hover:bg-white/10 text-white mr-2"
+                onClick={() => navigate("/admin")}
+                id="admin-logs-back-btn"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
 
               {/* Connection badge */}
               <Badge
