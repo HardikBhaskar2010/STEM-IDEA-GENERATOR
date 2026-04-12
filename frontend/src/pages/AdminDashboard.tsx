@@ -190,7 +190,7 @@ const AdminDashboard: React.FC = () => {
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>Manage your component inventory</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex gap-4">
               <Button
                 onClick={() => setIsAddFormOpen(true)}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold"
@@ -198,6 +198,16 @@ const AdminDashboard: React.FC = () => {
               >
                 <Plus className="mr-2 h-5 w-5" />
                 Add New Component
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate('/admin/logs')}
+                className="border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold"
+                data-testid="admin-view-logs-button"
+              >
+                <Terminal className="mr-2 h-5 w-5" />
+                View System Logs
               </Button>
             </CardContent>
           </Card>
