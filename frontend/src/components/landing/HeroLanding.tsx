@@ -62,6 +62,15 @@ const FixedPlanetOverlay: React.FC<{ show3D: boolean }> = ({ show3D }) => {
     [1,  1,      0,      0,      1,       1,          1,              0]
   );
 
+  // LCP optimization: delay raw 3D WebGL mount. Paint CSS fallback instantly.
+  const [mounted3D, setMounted3D] = useState(false);
+  useEffect(() => {
+    if (show3D && typeof window !== 'undefined') {
+      const t = setTimeout(() => setMounted3D(true), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [show3D]);
+
   if (prefersReducedMotion || isLowEnd || isMobileScreen) return null;
 
   return (
@@ -70,8 +79,8 @@ const FixedPlanetOverlay: React.FC<{ show3D: boolean }> = ({ show3D }) => {
       className="pointer-events-none fixed inset-y-0 left-0 w-1/2"
       style={{ opacity, zIndex: 2 }}
     >
-      {show3D ? (
-        <Suspense fallback={null}>
+      {show3D && mounted3D ? (
+        <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><CSS3DPlanetFallback /></div>}>
           <ThreeHero glbPath="/planet.glb" className="w-full h-full" />
         </Suspense>
       ) : (
