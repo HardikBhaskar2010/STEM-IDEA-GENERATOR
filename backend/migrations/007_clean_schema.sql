@@ -454,7 +454,7 @@ CREATE POLICY "Anon can insert Veronica chats"
     WITH CHECK (user_id IS NULL);
 
 GRANT ALL ON public.veronica_project_chats TO authenticated;
-GRANT SELECT, INSERT ON public.veronica_project_chats TO anon;
+GRANT SELECT, INSERT, UPDATE ON public.veronica_project_chats TO anon;
 
 -- ---------------------------------------------------------------------------
 
@@ -491,7 +491,7 @@ CREATE POLICY "Users access msgs in own chats"
     );
 
 GRANT ALL ON public.veronica_chat_messages TO authenticated;
-GRANT SELECT, INSERT ON public.veronica_chat_messages TO anon;
+GRANT SELECT, INSERT, UPDATE ON public.veronica_chat_messages TO anon;
 
 -- Trigger: keep parent chat stats in sync
 CREATE OR REPLACE FUNCTION sync_veronica_chat_stats()
@@ -699,7 +699,7 @@ CREATE POLICY "Users manage own chat sessions"
     WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
 GRANT ALL ON public.universal_chat_sessions TO authenticated;
-GRANT SELECT, INSERT ON public.universal_chat_sessions TO anon;
+GRANT SELECT, INSERT, UPDATE ON public.universal_chat_sessions TO anon;
 
 -- ---------------------------------------------------------------------------
 
@@ -734,7 +734,7 @@ CREATE POLICY "Users manage own universal msgs"
     WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
 GRANT ALL ON public.universal_chat_messages TO authenticated;
-GRANT SELECT, INSERT ON public.universal_chat_messages TO anon;
+GRANT SELECT, INSERT, UPDATE ON public.universal_chat_messages TO anon;
 
 -- ============================================================================
 -- 12. Teams, team members, ideas, votes
