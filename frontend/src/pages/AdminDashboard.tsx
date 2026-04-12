@@ -249,7 +249,9 @@ const AdminDashboard: React.FC = () => {
                           {component.description}
                         </p>
                         <div className="flex items-center gap-4 mt-2">
-                          <span className="text-sm font-bold text-primary">{component.price}</span>
+                          <span className="text-sm font-bold text-primary">
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(component.price)}
+                          </span>
                           {component.tags && component.tags.length > 0 && (
                             <div className="flex gap-1">
                               {component.tags.slice(0, 3).map((tag) => (
