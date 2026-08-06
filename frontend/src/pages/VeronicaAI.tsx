@@ -731,8 +731,8 @@ const VeronicaAI: React.FC = () => {
                   {activeMessages.map((m) => (
                     <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
                       <div className={cn('max-w-[80%] space-y-2', m.role === 'user' ? 'text-right' : 'text-left')}>
-                        {/* Special Render for Assistant Builds */}
-                        {m.role === 'assistant' && activeTab?.mode === 'full_build' && (m.isStreamingBuild || (m.agentEvents && m.agentEvents.length > 0)) ? (
+                        {/* Special Render for Assistant Builds — show whenever message has agent events/streaming, regardless of tab mode */}
+                        {m.role === 'assistant' && (m.isStreamingBuild || (m.agentEvents && m.agentEvents.length > 0)) ? (
                           <div className="w-full text-left space-y-5 px-1 py-2">
                             {/* Header row */}
                             <div className="space-y-1">
@@ -745,9 +745,9 @@ const VeronicaAI: React.FC = () => {
                               {(() => {
                                 const p = (() => {
                                   if (!m.isStreamingBuild) {return '100%';}
-                                  if (!m.agentEvents) {return '0%';}
+                                  if (!m.agentEvents) {return '5%';}
                                   const ev = [...m.agentEvents].reverse().find(e => typeof e.progress === 'number');
-                                  return ev && ev.progress ? `${Math.floor(ev.progress * 100)}%` : '0%';
+                                  return ev && ev.progress ? `${Math.floor(ev.progress * 100)}%` : '5%';
                                 })();
                                 return (
                                   <>
@@ -756,7 +756,13 @@ const VeronicaAI: React.FC = () => {
                                       <span className="text-indigo-400 font-mono font-bold">{p}</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mt-3">
-                                      <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: p }} />
+                                      <div
+                                        className={cn(
+                                          "h-full bg-indigo-500 rounded-full transition-all duration-700",
+                                          m.isStreamingBuild && "animate-pulse"
+                                        )}
+                                        style={{ width: p }}
+                                      />
                                     </div>
                                   </>
                                 );
@@ -764,29 +770,36 @@ const VeronicaAI: React.FC = () => {
                               
                               {/* Pipeline stages */}
                               <div className="flex flex-wrap items-center gap-3 pt-2">
-                                {[
-                                  { id: 'plan', label: 'Plan', done: true, current: false },
-                                  { id: 'scaffold', label: 'Scaffold', done: true, current: false },
-                                  { id: 'install', label: 'Install', done: false, current: m.isStreamingBuild },
-                                  { id: 'build', label: 'Build', done: false, current: false },
-                                  { id: 'qa', label: 'QA', done: false, current: false },
-                                  { id: 'preview', label: 'Preview', done: !m.isStreamingBuild, current: false }
-                                ].map((stage) => (
-                                  <div key={stage.id} className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border",
-                                    stage.done ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" :
-                                    stage.current ? "border-indigo-500/30 text-indigo-400 bg-indigo-500/10 shadow-[0_0_10px_rgba(99,102,241,0.2)]" :
-                                    "border-white/5 text-gray-600 bg-white/[0.02]"
-                                  )}>
-                                    <div className={cn(
-                                      "w-1.5 h-1.5 rounded-full",
-                                      stage.done ? "bg-emerald-400" :
-                                      stage.current ? "bg-indigo-400" :
-                                      "bg-gray-600"
-                                    )} />
-                                    {stage.label}
-                                  </div>
-                                ))}
+                                {(() => {
+                                  const events = m.agentEvents || [];
+                                  const hasPlan = events.some(e => e.event === 'plan' || e.event === 'plan_ready');
+                                  const hasScaffold = events.some(e => e.event === 'scaffold_start' || e.event === 'scaffold_done' || e.event === 'scaffold_ready');
+                                  const hasFiles = events.some(e => e.event === 'file_start' || e.event === 'file_done');
+                                  const hasDone = events.some(e => e.event === 'done');
+                                  const hasFailed = events.some(e => e.event === 'done_failed' || e.event === 'error');
+                                  return [
+                                    { id: 'plan', label: 'Plan', done: hasPlan, current: m.isStreamingBuild && !hasPlan },
+                                    { id: 'scaffold', label: 'Scaffold', done: hasScaffold, current: m.isStreamingBuild && hasPlan && !hasScaffold },
+                                    { id: 'generate', label: 'Generate', done: hasFiles, current: m.isStreamingBuild && hasScaffold && !hasFiles },
+                                    { id: 'build', label: 'Build', done: hasDone && !hasFailed, current: m.isStreamingBuild && hasFiles && !hasDone },
+                                    { id: 'preview', label: 'Preview', done: hasDone && !hasFailed, current: false },
+                                  ].map((stage) => (
+                                    <div key={stage.id} className={cn(
+                                      "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border",
+                                      stage.done ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" :
+                                      stage.current ? "border-indigo-500/30 text-indigo-400 bg-indigo-500/10 shadow-[0_0_10px_rgba(99,102,241,0.2)]" :
+                                      "border-white/10 text-gray-500 bg-white/[0.03]"
+                                    )}>
+                                      <div className={cn(
+                                        "w-1.5 h-1.5 rounded-full",
+                                        stage.done ? "bg-emerald-400" :
+                                        stage.current ? "bg-indigo-400 animate-pulse" :
+                                        "bg-gray-600"
+                                      )} />
+                                      {stage.label}
+                                    </div>
+                                  ));
+                                })()}
                               </div>
                             </div>
                           </div>

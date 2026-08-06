@@ -83,6 +83,19 @@ class SandboxService:
                 upstream_status=503,
             ) from exc
 
+    async def keep_alive(self, sandbox_id: str) -> bool:
+        """Renew sandbox lease to prevent expiry during long builds.
+
+        Should be called every ~2 minutes during active file generation.
+        Returns True if the sandbox is still alive, False if it's gone.
+        """
+        try:
+            runner = self._get_runner()
+            return await runner.keep_sandbox_alive(sandbox_id, extra_seconds=3600)
+        except Exception as exc:
+            logger.warning(f"keep_alive failed for {sandbox_id}: {exc}")
+            return False
+
     def _generate_viewer_url(self, sandbox_id: str) -> str:
         """Generate E2B file viewer URL.
 

@@ -438,7 +438,7 @@ Focus on learning and practical steps. Avoid jargon unless necessary."""
                 max_tokens=2000,
                 temperature=0.7,
                 top_p=0.9,
-                model="stepfun/step-3.5-flash:free"  # Specialized for idea generation and guidance
+                model="meta-llama/llama-3.3-70b-instruct"
             )
             
             # Extract response content

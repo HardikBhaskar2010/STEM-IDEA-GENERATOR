@@ -179,11 +179,11 @@ class VeronicaAIService(BaseService):
         
         # Multi-model configuration for different tasks
         self.models = {
-            "code_generation": "arcee-ai/trinity-large-preview:free",  # Best for code generation
-            "idea_generation": "stepfun/step-3.5-flash:free",             # Best for ideas and planning
-            "project_analysis": "stepfun/step-3.5-flash:free",            # Good for understanding requirements
-            "documentation": "stepfun/step-3.5-flash:free",               # Good for writing docs
-            "debugging": "arcee-ai/trinity-large-preview:free",        # Technical problem solving
+            "code_generation": "qwen/qwen-2.5-coder-32b-instruct",
+            "idea_generation": "meta-llama/llama-3.3-70b-instruct",
+            "project_analysis": "meta-llama/llama-3.3-70b-instruct",
+            "documentation": "meta-llama/llama-3.3-70b-instruct",
+            "debugging": "meta-llama/llama-3.3-70b-instruct",
         }
         
         # Generation configuration
@@ -915,7 +915,7 @@ class VeronicaAIService(BaseService):
                     "platform": params.platform.value,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "metadata": {
-                        "model": self.models.get("code_generation", "arcee-ai/trinity-large-preview:free"),
+                        "model": self.models.get("code_generation", "qwen/qwen-2.5-coder-32b-instruct"),
                         "max_tokens": self.max_tokens,
                         "temperature": self.temperature
                     }

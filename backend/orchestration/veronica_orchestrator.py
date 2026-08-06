@@ -48,16 +48,16 @@ _PHASE_WEIGHTS: Dict[str, tuple[float, float]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Tiered Free Models (OpenRouter Free Tier) — Brain Upgrade v2
+# Tiered Models (OpenRouter API) — Active Models
 # ---------------------------------------------------------------------------
 # High-strategy model for Architecture, plan strategy
-_PLANNING_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
+_PLANNING_MODEL = "meta-llama/llama-3.3-70b-instruct"
 # Builder model for component generation, hooks, modules
-_BUILDER_MODEL = "openai/gpt-oss-120b:free"
+_BUILDER_MODEL = "meta-llama/llama-3.3-70b-instruct"
 # Fast model for boilerplate config files, styles, JSON output
-_FAST_MODEL = "minimax/minimax-m2.5:free"
+_FAST_MODEL = "qwen/qwen-2.5-coder-32b-instruct"
 # Debug model for error log analysis and patch generation (self-healing)
-_DEBUG_MODEL = "arcee-ai/trinity-large-preview:free"
+_DEBUG_MODEL = "meta-llama/llama-3.3-70b-instruct"
 # Keep alias for _SMART_MODEL (used in _analyze_and_fix_errors)
 _SMART_MODEL = _PLANNING_MODEL
 
@@ -1290,6 +1290,19 @@ class VeronicaOrchestrator:
                 logger.info("[AGENTIC] Skipping already-created file: %s", file_spec.path)
                 continue
 
+            # Renew sandbox lease every 5 files (~3 minutes) to prevent expiry
+            # Each file takes ~36s; 5 files = ~3 minutes, well within the renewal window
+            if i % 5 == 1 and i > 1:
+                try:
+                    alive = await self._get_sandbox_service().keep_alive(sandbox_id)
+                    if not alive:
+                        logger.error("[AGENTIC] Sandbox %s is dead at file %d/%d — aborting", sandbox_id, i, total)
+                        yield self._emit("error", data=f"Sandbox expired during file generation ({i}/{total} files done). Please retry.")
+                        return
+                    logger.info("[AGENTIC] Sandbox lease renewed at file %d/%d", i, total)
+                except Exception as ka_exc:
+                    logger.warning("[AGENTIC] keepalive failed (non-fatal): %s", ka_exc)
+
             progress = self._calculate_progress("files", i - 1, total)
             yield self._emit(
                 "file_start",
@@ -1347,16 +1360,16 @@ class VeronicaOrchestrator:
                     break
 
                 except UpstreamError as exc:
-                    # Rate limit — exponential backoff (Req 9.1–9.3)
-                    if exc.upstream_status == 429 and attempt < max_retries - 1:
+                    # Retry on rate limits and transient upstream errors (429, 503)
+                    if exc.upstream_status in (429, 503) and attempt < max_retries - 1:
                         wait_time = 2 ** attempt  # 1s, 2s, 4s
                         logger.warning(
-                            "[AGENTIC] Rate limit for %s, waiting %ds (attempt %d/%d)",
-                            file_spec.path, wait_time, attempt + 1, max_retries,
+                            "[AGENTIC] Upstream error %d for %s, waiting %ds (attempt %d/%d)",
+                            exc.upstream_status, file_spec.path, wait_time, attempt + 1, max_retries,
                         )
                         yield self._emit(
                             "error",
-                            data=f"Rate limit hit — waiting {wait_time}s before retry...",
+                            data=f"API error ({exc.upstream_status}) — retrying in {wait_time}s...",
                         )
                         await asyncio.sleep(wait_time)
                     else:
@@ -1366,18 +1379,22 @@ class VeronicaOrchestrator:
                             state.save(self._get_store())
                         except Exception:
                             pass
+                        # Surface the real error reason, not the sandbox wrapper
+                        real_reason = str(exc)
+                        if hasattr(exc, "__cause__") and exc.__cause__:
+                            real_reason = str(exc.__cause__)
                         logger.error("[AGENTIC] File generation failed for %s: %s", file_spec.path, exc)
                         yield self._emit(
                             "error",
-                            data=f"Failed to generate {file_spec.path}: {exc}",
+                            data=f"Failed to generate {file_spec.path}: {real_reason}",
                         )
                         break
 
                 except Exception as exc:
-                    logger.error("[AGENTIC] Unexpected error generating %s: %s", file_spec.path, exc)
+                    logger.error("[AGENTIC] Unexpected error generating %s: %s", file_spec.path, exc, exc_info=True)
                     yield self._emit(
                         "error",
-                        data=f"Error creating {file_spec.path}: {exc}",
+                        data=f"Failed to generate {file_spec.path}: {exc}",
                     )
                     break
 

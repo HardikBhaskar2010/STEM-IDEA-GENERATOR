@@ -723,7 +723,7 @@ class AIService(BaseService):
                         max_tokens=2000,
                         temperature=0.7,
                         top_p=0.9,
-                        model="stepfun/step-3.5-flash:free"
+                        model="meta-llama/llama-3.3-70b-instruct"
                     )
                     
                     ai_content = response.get("choices", [{}])[0].get("message", {}).get("content", "")

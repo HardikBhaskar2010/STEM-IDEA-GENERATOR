@@ -67,7 +67,8 @@ class E2BRunner:
         from e2b import AsyncSandbox  # noqa: PLC0415
         
         try:
-            sandbox = await AsyncSandbox.create(api_key=self._api_key, timeout=300)
+            # 1-hour timeout — long builds with many files can take 10+ minutes
+            sandbox = await AsyncSandbox.create(api_key=self._api_key, timeout=3600)
             _active_sandboxes[sandbox.sandbox_id] = sandbox
             logger.info("E2B empty sandbox created: %s", sandbox.sandbox_id)
             return sandbox
@@ -94,8 +95,8 @@ class E2BRunner:
         logs: list[str] = []
 
         try:
-            # Create sandbox (takes ~200ms)
-            sandbox = await AsyncSandbox.create(api_key=self._api_key, timeout=300)
+            # Create sandbox with 1-hour timeout — long builds can take 10+ minutes
+            sandbox = await AsyncSandbox.create(api_key=self._api_key, timeout=3600)
             run_id = sandbox.sandbox_id
             _active_sandboxes[run_id] = sandbox
 
@@ -206,6 +207,28 @@ class E2BRunner:
     def get_sandbox(self, run_id: str):
         """Retrieve an active sandbox object by run_id."""
         return _active_sandboxes.get(run_id)
+
+    async def keep_sandbox_alive(self, sandbox_id: str, extra_seconds: int = 3600) -> bool:
+        """
+        Extend the sandbox lifetime by extra_seconds.
+
+        Call this periodically during long builds to prevent the sandbox from
+        timing out. The E2B default is 5 minutes; a build with 15 files at
+        ~36 s/file takes 9 minutes — so we must renew the lease.
+
+        Returns True if successful, False if the sandbox is gone.
+        """
+        sandbox = _active_sandboxes.get(sandbox_id)
+        if sandbox is None:
+            logger.warning("[keepalive] Sandbox %s not in registry — already dead?", sandbox_id)
+            return False
+        try:
+            await sandbox.set_timeout(extra_seconds)
+            logger.debug("[keepalive] Extended sandbox %s by %ds", sandbox_id, extra_seconds)
+            return True
+        except Exception as exc:
+            logger.warning("[keepalive] Could not extend sandbox %s: %s", sandbox_id, exc)
+            return False
 
     # ------------------------------------------------------------------
     # Internal helpers
