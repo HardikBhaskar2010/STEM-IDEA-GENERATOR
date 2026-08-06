@@ -29,6 +29,7 @@ import { DebugBar } from '@/components/debug/DebugPanel';
 import ErrorBoundary from '@/components/ui/error-boundary';
 import { supabase, upsertVeronicaChat, saveVeronicaMessage, getVeronicaChats, deleteVeronicaChat, upsertVeronicaMessage } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { trackEvent } from '@/lib/posthog';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -422,6 +423,7 @@ const VeronicaAI: React.FC = () => {
     if (!text || isLoading) {return;}
 
     appendToActive({ role: 'user', content: text, projectTypeHint: inferProjectTypeHint(text) });
+    trackEvent('veronica_message_sent', { mode });
     setInputValue('');
     setIsLoading(true);
 
@@ -498,6 +500,14 @@ const VeronicaAI: React.FC = () => {
             return finalMsg;
           });
 
+          if (res.project?.project_id) {
+            trackEvent('veronica_project_generated', {
+              mode,
+              project_type: inferProjectTypeHint(text),
+              generation_type: 'full_build',
+            });
+          }
+
           // Update sidebar metadata
           setTabs((prev) => prev.map((t) => (t.id === activeTabId ? {
             ...t,
@@ -514,6 +524,13 @@ const VeronicaAI: React.FC = () => {
       } else {
         // idea / debug mode — simple send
         const res = await sendVeronicaMessage({ message: text });
+        if (res.project?.project_id) {
+          trackEvent('veronica_project_generated', {
+            mode,
+            project_type: inferProjectTypeHint(text),
+            generation_type: 'idea',
+          });
+        }
         appendToActive({
           role: 'assistant',
           content: res.assistant_text,
