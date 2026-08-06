@@ -1,0 +1,50 @@
+name: Backend Keep-Alive Healthcheck
+
+on:
+  schedule:
+    # Runs every 5 minutes to keep backend active & prevent cold starts / sleeping
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      backend_url:
+        description: 'Target Backend Health URL (Optional Override)'
+        required: false
+        default: ''
+
+jobs:
+  ping-backend:
+    name: Ping Backend GET /health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Keep-Alive HTTP GET Request
+        env:
+          BACKEND_URL_SECRET: ${{ secrets.BACKEND_HEALTH_URL }}
+          OVERRIDE_URL: ${{ github.event.inputs.backend_url }}
+        run: |
+          # Determine backend health target URL
+          TARGET_URL="${OVERRIDE_URL}"
+          if [ -z "$TARGET_URL" ]; then
+            TARGET_URL="${BACKEND_URL_SECRET}"
+          fi
+          if [ -z "$TARGET_URL" ]; then
+            # Production Render URL fallback
+            TARGET_URL="https://perfection-v2.onrender.com/api/health"
+          fi
+
+          echo "Targeting Backend Health URL: ${TARGET_URL}"
+          
+          # Execute HTTP GET request
+          HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" --max-time 20 "${TARGET_URL}")
+          
+          echo "Timestamp (UTC): $(date -u)"
+          echo "HTTP Status Code: ${HTTP_STATUS}"
+          echo "Response Body:"
+          cat /tmp/response.json || true
+          echo ""
+
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "::error ::Backend health check failed with status ${HTTP_STATUS}"
+            exit 1
+          else
+            echo "✅ Backend is online, healthy, and active!"
+          fi

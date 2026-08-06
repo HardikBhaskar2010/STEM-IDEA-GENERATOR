@@ -186,6 +186,13 @@ if _competition_available:
 # ── Inline health aliases expected by frontend debug panel ──────────────────
 from fastapi import Request as _Request  # noqa: E402
 
+@app.get("/", tags=["health"])
+@app.get("/health", tags=["health"])
+async def root_health():
+    """Root and /health keepalive endpoint."""
+    return {"status": "ok", "service": "stem-backend"}
+
+
 @app.get("/api/veronica-ai/health", tags=["veronica"])
 async def veronica_ai_health(_req: _Request):
     """Health check shim for Veronica AI."""
