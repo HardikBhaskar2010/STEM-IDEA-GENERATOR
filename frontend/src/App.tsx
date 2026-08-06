@@ -80,7 +80,6 @@ if (typeof window !== "undefined") {
   preloadAnimations();
 }
 
-import { initPostHog } from "@/lib/posthog";
 import { usePostHogPageViews } from "@/hooks/usePostHogPageViews";
 
 // Component inside BrowserRouter to trigger PostHog pageviews
@@ -93,7 +92,6 @@ const App = () => {
   useEffect(() => {
     polyfillRAF();
     debugApiCalls();
-    initPostHog();
     console.log("🔍 Environment Variables:", {
       VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
       NODE_ENV: import.meta.env.NODE_ENV,

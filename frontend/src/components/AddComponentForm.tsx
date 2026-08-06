@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Plus, Loader2 } from 'lucide-react';
 import { componentService } from '@/services/componentService';
 import { toast } from '@/hooks/use-toast';
+import { trackEvent } from '@/lib/posthog';
 
 interface AddComponentFormProps {
   isOpen: boolean;
@@ -73,6 +74,11 @@ const AddComponentForm: React.FC<AddComponentFormProps> = ({
         specifications: formData.specifications,
       });
 
+      trackEvent('component_added', {
+        category: formData.category,
+        stock_status: formData.stock,
+        tag_count: formData.tags.length,
+      });
       toast({
         title: "Component Added Successfully!",
         description: `${formData.name} has been added to Supabase and will appear in real-time.`,

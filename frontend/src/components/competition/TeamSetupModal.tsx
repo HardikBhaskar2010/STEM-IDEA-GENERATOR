@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAchievements } from '@/contexts/AchievementContext';
+import { trackEvent } from '@/lib/posthog';
 
 interface TeamSetupModalProps {
   open: boolean;
@@ -69,6 +70,7 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
     try {
       setLoading(true);
       await joinTeam(teamCode.trim());
+      trackEvent('competition_team_joined');
       toast({
         title: '🎉 Joined Team!',
         description: `You are now part of ${codeValidation?.teamName || 'the team'}`,
@@ -100,6 +102,9 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
       setLoading(true);
       const result = await createTeam(teamName, schoolName || undefined);
       setCreatedCode(result.team_code);
+      trackEvent('competition_team_created', {
+        has_school_name: Boolean(schoolName.trim()),
+      });
       toast({
         title: '✅ Team Created!',
         description: `Team code: ${result.team_code}`,

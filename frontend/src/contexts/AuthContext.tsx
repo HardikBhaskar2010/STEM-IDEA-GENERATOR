@@ -43,6 +43,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // never capture a stale closure value.
   const authUserIdRef = React.useRef<string | null>(null);
 
+  const identifyAuthenticatedUser = (authenticatedUser: User) => {
+    if (authUserIdRef.current === authenticatedUser.id) return;
+
+    if (authUserIdRef.current) {
+      resetUser();
+    }
+
+    authUserIdRef.current = authenticatedUser.id;
+    identifyUser(authenticatedUser.id, { email: authenticatedUser.email });
+  };
+
   const refreshUser = async () => {
     try {
       const currentUser = await authService.getCurrentUser();
@@ -79,9 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(currentUser);
 
         if (currentUser && !authService.isGuestUser(currentUser)) {
-          authUserIdRef.current = currentUser.id;
-          identifyUser(currentUser.id, { email: (currentUser as User).email });
-          
+          identifyAuthenticatedUser(currentUser);
+
           // Migrate guest data if applicable
           if (UserIdManager.hasGuestId()) {
             await migrateGuestData(UserIdManager.getGuestId(), currentUser.id);
@@ -120,8 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProvider(newProvider || null);
 
         if (!authService.isGuestUser(newUser)) {
-          authUserIdRef.current = newUser.id;
-          identifyUser(newUser.id, { email: (newUser as User).email });
+          identifyAuthenticatedUser(newUser);
 
           // Migrate guest data on active login transition
           if (UserIdManager.hasGuestId()) {
