@@ -274,29 +274,30 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
               const isMenuOpen = menuOpenId === tab.id;
 
               return (
-                <div key={tab.id} className="group relative flex items-center w-full min-w-0">
-                  {/* Status dot — left edge */}
+                <div key={tab.id} className="group relative flex items-center w-full min-w-0 px-0.5">
+                  {/* Status dot — left edge inside button */}
                   <span
                     className={cn(
-                      'absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full shrink-0 ml-1',
+                      'absolute left-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full shrink-0 z-10 pointer-events-none',
                       STATUS_DOT[status]
                     )}
                   />
 
                   <button
                     onClick={() => onSelectTab(tab.id)}
+                    data-no-cursor="true"
                     className={cn(
-                      'w-full min-w-0 text-left rounded-xl p-3 pl-5 transition-colors duration-200 border border-transparent flex flex-col gap-2 relative overflow-hidden',
+                      'w-full min-w-0 text-left rounded-xl py-2.5 pl-6 pr-7 transition-all duration-200 border flex flex-col gap-1.5 relative overflow-hidden box-border',
                       isActive
-                        ? 'bg-[#151722] border-indigo-500/20'
-                        : 'hover:bg-white/[0.03]'
+                        ? 'bg-[#151722] border-indigo-500/30 shadow-md ring-1 ring-indigo-500/20'
+                        : 'border-transparent hover:bg-white/[0.04]'
                     )}
                   >
                     {isActive && (
-                      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-indigo-500 rounded-none opacity-100" />
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-xl opacity-100" />
                     )}
                     <span className={cn(
-                      'text-[13px] font-medium truncate w-full block pr-6',
+                      'text-[13px] font-medium truncate w-full block pr-2',
                       isActive ? 'text-gray-100' : 'text-gray-300'
                     )}>
                       {tab.title}
@@ -305,20 +306,20 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
                       <Badge
                         variant="outline"
                         className={cn(
-                          'h-5 px-2 text-[10px] font-medium border rounded-full font-sans tracking-wide',
+                          'h-4.5 px-2 text-[9px] font-medium border rounded-full font-sans tracking-wide',
                           meta.pillColor
                         )}
                       >
                         {meta.label}
                       </Badge>
-                      <span className="text-[11px] text-gray-500">
+                      <span className="text-[10px] text-gray-500">
                         {formatRelative(tab.createdAt)}
                       </span>
                     </div>
                   </button>
 
                   {/* "..." Context menu button */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10">
                     <button
                       ref={isMenuOpen ? menuBtnRef : undefined}
                       onClick={(e) => { e.stopPropagation(); setMenuOpenId(isMenuOpen ? null : tab.id); }}

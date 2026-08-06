@@ -585,7 +585,7 @@ const VeronicaAI: React.FC = () => {
         </div>
 
         {/* ───────── Panel – fills remaining viewport height ───────── */}
-        <div className="relative z-10 flex-1 min-h-0 container mx-auto px-4 pb-20 max-w-7xl">
+        <div className="relative z-10 flex-1 min-h-0 container mx-auto px-4 pb-2 max-w-7xl">
           <div className="h-full flex gap-0 rounded-2xl overflow-hidden border border-primary/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] bg-background/40 backdrop-blur-2xl">
 
             {/* Sidebar */}
@@ -907,7 +907,7 @@ const VeronicaAI: React.FC = () => {
               </div>{/* end flex split */}
 
               {/* Input area */}
-              <div className="border-t border-white/[0.08] px-6 py-5 bg-[#0A0A0F] shrink-0">
+              <div className="border-t border-white/[0.08] px-6 pt-4 pb-20 md:pb-24 bg-[#0A0A0F] shrink-0">
                 {/* Quick prompts — hide when empty state is shown to avoid duplication */}
                 {activeMessages.length > 1 && (
                   <div className="flex flex-wrap gap-2 mb-4">

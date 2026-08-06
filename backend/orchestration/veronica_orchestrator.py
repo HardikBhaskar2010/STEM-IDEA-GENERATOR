@@ -170,12 +170,17 @@ class VeronicaOrchestrator:
         from backend.services.veronica_project_generator import generate_project_spec  # noqa: PLC0415
         from backend.services.veronica_project_store import VeronicaProjectStore  # noqa: PLC0415
 
-        message = (
-            request_data.get("message")
-            or request_data.get("prompt")
-            or request_data.get("description")
-            or ""
-        ).strip()
+        if isinstance(request_data, str):
+            message = request_data.strip()
+        elif isinstance(request_data, dict):
+            message = (
+                request_data.get("message")
+                or request_data.get("prompt")
+                or request_data.get("description")
+                or ""
+            ).strip()
+        else:
+            message = ""
 
         if not message:
             return {

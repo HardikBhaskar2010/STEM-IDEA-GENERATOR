@@ -50,14 +50,22 @@ export const SciFiCursor: React.FC = () => {
       );
 
       if (interactiveEl && isInteractive(interactiveEl)) {
-        const rect = interactiveEl.getBoundingClientRect();
-        const w = Math.max(18, Math.round(rect.width));
-        const h = Math.max(18, Math.round(rect.height));
-        setHoverRect({ w, h });
-        setSize({ w, h });
-        // Wrapper snaps to element center — dot compensates via offset below
-        setPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-        return;
+        const noSnap = interactiveEl.closest('[data-no-cursor="true"],[data-cursor="default"]');
+        if (!noSnap) {
+          const rect = interactiveEl.getBoundingClientRect();
+          const w = Math.max(18, Math.round(rect.width));
+          const h = Math.max(18, Math.round(rect.height));
+          const isExplicitPointer = Boolean(interactiveEl.closest('[data-cursor="pointer"]'));
+
+          // Only snap box crosshair to compact interactive targets (e.g. icons, small buttons)
+          // Avoid snapping giant 300px brackets over wide sidebar cards or inputs
+          if ((w <= 200 && h <= 80) || isExplicitPointer) {
+            setHoverRect({ w, h });
+            setSize({ w, h });
+            setPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+            return;
+          }
+        }
       }
 
       setHoverRect(null);

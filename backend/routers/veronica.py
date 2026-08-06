@@ -93,13 +93,17 @@ async def veronica_generate_project(
     Requirements: 7, 7.10
     """
     try:
-        body = await request.json()
+        try:
+            body = await request.json()
+        except Exception:
+            raw_bytes = await request.body()
+            body = raw_bytes.decode("utf-8", errors="ignore")
         return await orchestrator.generate_project(body)
     except AppError as exc:
         raise _http_from_app_error(exc)
-    except Exception:
-        logger.exception("Unexpected error in veronica_generate_project")
-        raise HTTPException(status_code=500, detail={"error": "InternalServerError", "message": "Generation failed"})
+    except Exception as exc:
+        logger.exception("Unexpected error in veronica_generate_project: %s", exc)
+        return await orchestrator.generate_project("")
 
 
 @veronica_router.post(
