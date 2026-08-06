@@ -844,8 +844,8 @@ const VeronicaAI: React.FC = () => {
                           );
                         })()}
 
-                        {/* Fallback ProjectCard for idea-only (no files) */}
-                        {m.role === 'assistant' && m.project && Array.isArray(m.actions) && !(Array.isArray((m.project as any).files) && (m.project as any).files.length > 0) && (
+                        {/* ProjectCard: show for idea/debug mode messages that have a project */}
+                        {m.role === 'assistant' && m.project && Array.isArray(m.actions) && activeTab?.mode !== 'full_build' && (
                           <ProjectCard
                             project={m.project as any}
                             actions={m.actions}
