@@ -200,7 +200,9 @@ const VeronicaAI: React.FC = () => {
 
             setChatHistory((prev) => {
               const current = prev[activeTabId] || [];
-              if (current.some(msg => msg.id === newMsg.id)) {return prev;}
+              if (current.some(msg => msg.id === newMsg.id || (msg.role === newMsg.role && msg.content.trim() === newMsg.content.trim()))) {
+                return prev;
+              }
               return { ...prev, [activeTabId]: [...current, newMsg] };
             });
           } else if (payload.eventType === 'UPDATE') {
@@ -338,6 +340,7 @@ const VeronicaAI: React.FC = () => {
     // Save to DB
     if (msg.role === 'user' || msg.id !== 'welcome') {
       saveVeronicaMessage(activeTabId, fullMsg.role, fullMsg.content, { 
+        id: fullMsg.id,
         intent: fullMsg.intent, 
         confidence: fullMsg.confidence, 
         actions: fullMsg.actions,

@@ -556,10 +556,10 @@ export async function saveVeronicaMessage(
   chatId: string,
   role: 'user' | 'assistant',
   content: string,
-  meta?: { intent?: string; confidence?: number; actions?: unknown[]; projectSnap?: unknown },
+  meta?: { id?: string; intent?: string; confidence?: number; actions?: unknown[]; projectSnap?: unknown },
 ): Promise<Record<string, unknown> | null> {
-  // We can just proxy to upsert with a new UUID or use .insert
-  return upsertVeronicaMessage(crypto.randomUUID(), chatId, role, content, meta);
+  const msgId = meta?.id || crypto.randomUUID();
+  return upsertVeronicaMessage(msgId, chatId, role, content, meta);
 }
 
 /**
