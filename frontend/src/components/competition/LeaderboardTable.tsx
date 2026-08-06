@@ -26,17 +26,17 @@ interface LeaderboardTableProps {
 }
 
 const getRankIcon = (rank: number) => {
-  if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
-  if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
-  if (rank === 3) return <Award className="h-5 w-5 text-amber-600" />;
+  if (rank === 1) {return <Trophy className="h-5 w-5 text-yellow-500" />;}
+  if (rank === 2) {return <Medal className="h-5 w-5 text-gray-400" />;}
+  if (rank === 3) {return <Award className="h-5 w-5 text-amber-600" />;}
   return null;
 };
 
 const getRankBadge = (rank: number) => {
   const baseClass = 'font-bold text-sm px-2 py-1 rounded-md';
-  if (rank === 1) return `${baseClass} bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400`;
-  if (rank === 2) return `${baseClass} bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300`;
-  if (rank === 3) return `${baseClass} bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400`;
+  if (rank === 1) {return `${baseClass} bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400`;}
+  if (rank === 2) {return `${baseClass} bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300`;}
+  if (rank === 3) {return `${baseClass} bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400`;}
   return `${baseClass} bg-muted text-muted-foreground`;
 };
 

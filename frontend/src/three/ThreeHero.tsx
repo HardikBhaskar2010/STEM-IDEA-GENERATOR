@@ -22,7 +22,6 @@ import React, {
   forwardRef,
   Suspense,
   useMemo,
-  useCallback,
 } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Stars, Float } from '@react-three/drei';
@@ -30,7 +29,7 @@ import * as THREE from 'three';
 
 // ─── Device capability guard ──────────────────────────────────────────────────
 function deviceSupports3D(): boolean {
-  if (typeof navigator === 'undefined') return false;
+  if (typeof navigator === 'undefined') {return false;}
   const cores = navigator.hardwareConcurrency ?? 2;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const memory = (navigator as any).deviceMemory ?? 4;
@@ -167,7 +166,7 @@ const Planet: React.FC<{ glbPath?: string }> = ({ glbPath }) => {
 
   // If no GLB path provided, always show procedural planet.
   // TODO: set glbPath="/models/planet.glb" once you drop the file in public/models/.
-  if (!glbPath) return procedural;
+  if (!glbPath) {return procedural;}
 
   return (
     <PlanetErrorBoundary fallback={procedural}>

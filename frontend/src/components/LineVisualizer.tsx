@@ -60,11 +60,11 @@ export const LineVisualizer: React.FC<LineVisualizerProps> = ({
   // Animation loop
   useEffect(() => {
     const animate = () => {
-      if (!canvasRef.current || !analyserRef.current || !dataArrayRef.current) return;
+      if (!canvasRef.current || !analyserRef.current || !dataArrayRef.current) {return;}
       
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {return;}
 
       const analyser = analyserRef.current;
       const dataArray = dataArrayRef.current;

@@ -40,7 +40,7 @@ const PrivacySettingsDialog: React.FC<PrivacySettingsDialogProps> = ({ open, onO
   }, [open, user]);
 
   const loadSettings = async () => {
-    if (!user || isGuest) return;
+    if (!user || isGuest) {return;}
 
     const data = await userPreferencesService.getPrivacySettings(user.id);
     if (data) {
@@ -60,7 +60,7 @@ const PrivacySettingsDialog: React.FC<PrivacySettingsDialogProps> = ({ open, onO
       return;
     }
 
-    if (!user) return;
+    if (!user) {return;}
 
     setIsSaving(true);
     const success = await userPreferencesService.updatePrivacySettings(user.id, settings);

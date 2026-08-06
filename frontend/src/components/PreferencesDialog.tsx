@@ -48,7 +48,7 @@ const PreferencesDialog: React.FC<PreferencesDialogProps> = ({ open, onOpenChang
   }, [open, user]);
 
   const loadPreferences = async () => {
-    if (!user || isGuest) return;
+    if (!user || isGuest) {return;}
 
     const data = await userPreferencesService.getUserPreferences(user.id);
     if (data) {
@@ -72,7 +72,7 @@ const PreferencesDialog: React.FC<PreferencesDialogProps> = ({ open, onOpenChang
       return;
     }
 
-    if (!user) return;
+    if (!user) {return;}
 
     setIsSaving(true);
     const success = await userPreferencesService.updateUserPreferences(user.id, preferences);

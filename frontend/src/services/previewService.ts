@@ -1,4 +1,4 @@
-import { CodeFile } from './codeGenerationService';
+import type { CodeFile } from './codeGenerationService';
 
 // Types
 export interface PreviewOptions {
@@ -96,7 +96,7 @@ class PreviewService {
     const jsxFiles = files.filter(f => f.file_type === 'jsx' || f.file_name.endsWith('.jsx'));
     const tsxFiles = files.filter(f => f.file_type === 'tsx' || f.file_name.endsWith('.tsx'));
 
-    let previewContent: PreviewContent = {
+    const previewContent: PreviewContent = {
       html: '',
       css: '',
       javascript: '',

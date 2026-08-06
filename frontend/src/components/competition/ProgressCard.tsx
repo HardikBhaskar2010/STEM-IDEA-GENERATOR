@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { UserProgress, getLevelProgress, LEVELS } from '@/services/competitionService';
+import type { UserProgress} from '@/services/competitionService';
+import { getLevelProgress, LEVELS } from '@/services/competitionService';
 import { LevelBadge } from './LevelBadge';
 import { Trophy, Flame, Star, TrendingUp } from 'lucide-react';
 
@@ -20,7 +21,7 @@ const useCountUp = (end: number, duration: number = 1000) => {
     let animationFrame: number;
 
     const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
+      if (!startTime) {startTime = currentTime;}
       const progress = Math.min((currentTime - startTime) / duration, 1);
       
       setCount(Math.floor(progress * end));

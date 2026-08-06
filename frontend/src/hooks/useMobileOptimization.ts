@@ -54,7 +54,7 @@ export function useTouchEvents<T extends HTMLElement>(
   const [ref, setRef] = useState<T | null>(null);
 
   useEffect(() => {
-    if (!ref || !isTouchDevice()) return;
+    if (!ref || !isTouchDevice()) {return;}
 
     const handleTouchStart = (e: TouchEvent) => onTouchStart?.(e);
     const handleTouchMove = (e: TouchEvent) => onTouchMove?.(e);
@@ -71,9 +71,9 @@ export function useTouchEvents<T extends HTMLElement>(
     }
 
     return () => {
-      if (onTouchStart) ref.removeEventListener('touchstart', handleTouchStart);
-      if (onTouchMove) ref.removeEventListener('touchmove', handleTouchMove);
-      if (onTouchEnd) ref.removeEventListener('touchend', handleTouchEnd);
+      if (onTouchStart) {ref.removeEventListener('touchstart', handleTouchStart);}
+      if (onTouchMove) {ref.removeEventListener('touchmove', handleTouchMove);}
+      if (onTouchEnd) {ref.removeEventListener('touchend', handleTouchEnd);}
     };
   }, [ref, onTouchStart, onTouchMove, onTouchEnd]);
 
@@ -102,7 +102,7 @@ export function useMobileSettings<T extends Record<string, any>>(
 export function useAdaptiveParticleCount(desktopCount: number): number {
   const { isMobile: mobile, isLowEndDevice } = useMobileOptimization();
 
-  if (isLowEndDevice) return Math.min(20, desktopCount);
-  if (mobile) return Math.min(50, desktopCount);
+  if (isLowEndDevice) {return Math.min(20, desktopCount);}
+  if (mobile) {return Math.min(50, desktopCount);}
   return desktopCount;
 }

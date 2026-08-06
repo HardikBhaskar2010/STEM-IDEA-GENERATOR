@@ -347,7 +347,7 @@ export async function loadUserPreferences(
         .from('user_preferences')
         .select('category, key, value')
         .eq('user_id', user.id);
-      if (category) query = query.eq('category', category);
+      if (category) {query = query.eq('category', category);}
 
       const { data, error } = await query;
       if (error) {
@@ -366,7 +366,7 @@ export async function loadUserPreferences(
 
     // Fallback: localStorage
     const raw = localStorage.getItem(PREFS_LOCAL_KEY);
-    if (!raw) return {};
+    if (!raw) {return {};}
     const all = JSON.parse(raw) as Record<string, Record<string, unknown>>;
     return category ? (all[category] ?? {}) : all;
   } catch (err) {
@@ -388,7 +388,7 @@ export async function upsertProject(
 ): Promise<Record<string, unknown> | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!user) {return null;}
 
     const row = {
       ...(project.id ? { id: project.id } : {}),
@@ -434,7 +434,7 @@ export async function upsertProject(
 export async function getUserProjects(): Promise<Record<string, unknown>[]> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    if (!user) {return [];}
 
     const { data, error } = await supabase
       .from('projects')
@@ -472,7 +472,7 @@ export async function upsertVeronicaChat(chat: {
     const { data: { user } } = await supabase.auth.getUser();
     const guest_id = user ? null : UserIdManager.getGuestId();
 
-    if (!user && !guest_id) return null;
+    if (!user && !guest_id) {return null;}
 
     const row = {
       ...(chat.id ? { id: chat.id } : {}),
@@ -516,7 +516,7 @@ export async function upsertVeronicaMessage(
     const { data: { user } } = await supabase.auth.getUser();
     const guest_id = user ? null : UserIdManager.getGuestId();
 
-    if (!user && !guest_id) return null;
+    if (!user && !guest_id) {return null;}
 
     const row = {
       id:          msgId,
@@ -571,7 +571,7 @@ export async function getVeronicaChats(): Promise<Record<string, unknown>[]> {
     const { data: { user } } = await supabase.auth.getUser();
     const guest_id = user ? null : UserIdManager.getGuestId();
 
-    if (!user && !guest_id) return [];
+    if (!user && !guest_id) {return [];}
 
     let query = supabase
       .from('veronica_project_chats')
@@ -606,7 +606,7 @@ export async function deleteVeronicaChat(chatId: string): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
     const guest_id = user ? null : UserIdManager.getGuestId();
 
-    if (!user && !guest_id) return false;
+    if (!user && !guest_id) {return false;}
 
     let query = supabase
       .from('veronica_project_chats')

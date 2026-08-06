@@ -43,7 +43,7 @@ const EmailPreferencesDialog: React.FC<EmailPreferencesDialogProps> = ({ open, o
   }, [open, user]);
 
   const loadPreferences = async () => {
-    if (!user || isGuest) return;
+    if (!user || isGuest) {return;}
 
     const data = await userPreferencesService.getEmailPreferences(user.id);
     if (data) {
@@ -61,7 +61,7 @@ const EmailPreferencesDialog: React.FC<EmailPreferencesDialogProps> = ({ open, o
       return;
     }
 
-    if (!user) return;
+    if (!user) {return;}
 
     setIsSaving(true);
     const success = await userPreferencesService.updateEmailPreferences(user.id, preferences);

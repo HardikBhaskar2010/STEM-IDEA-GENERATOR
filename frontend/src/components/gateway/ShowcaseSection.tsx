@@ -26,7 +26,7 @@ const ShowcaseSection = () => {
   const bgGlowY = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
 
   useEffect(() => {
-    if (!inView || hasAnimated.current) return;
+    if (!inView || hasAnimated.current) {return;}
     hasAnimated.current = true;
 
     // Idea cards slide in with stagger

@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GlobePin } from './globePins';
+import type { GlobePin } from './globePins';
 
 interface PinInfoCardProps {
   pin: GlobePin | null;

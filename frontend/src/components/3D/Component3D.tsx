@@ -2,7 +2,8 @@ import React, { useRef, useState, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Html, useGLTF, TransformControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { useCircuitStore, ComponentType, PlacedComponent } from '@/store/useCircuitStore';
+import type { PlacedComponent } from '@/store/useCircuitStore';
+import { useCircuitStore, ComponentType } from '@/store/useCircuitStore';
 
 // ─── Color palette ────────────────────────────────────────────────────────────
 const NEON_CYAN = '#00e5ff';

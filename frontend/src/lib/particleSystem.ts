@@ -163,7 +163,7 @@ export class ParticleManager {
     let lastTime = performance.now();
 
     const loop = (currentTime: number) => {
-      if (!this.isRunning) return;
+      if (!this.isRunning) {return;}
 
       const deltaTime = currentTime - lastTime;
       lastTime = currentTime;

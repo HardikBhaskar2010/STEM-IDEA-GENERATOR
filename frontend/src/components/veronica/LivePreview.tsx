@@ -32,7 +32,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
   // Switch to preview tab when URL becomes available
   useEffect(() => {
-    if (previewUrl) setActiveTab('preview');
+    if (previewUrl) {setActiveTab('preview');}
   }, [previewUrl]);
 
   // Auto-scroll terminal
@@ -42,7 +42,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
   // SSE log stream when running
   useEffect(() => {
-    if (status !== 'running' || !runId) return;
+    if (status !== 'running' || !runId) {return;}
 
     const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://perfection-v2.onrender.com/api';
     const url = `${API_BASE}/veronica-projects/${projectId}/runs/${runId}/logs/stream`;

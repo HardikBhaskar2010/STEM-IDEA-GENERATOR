@@ -177,7 +177,7 @@ class UserProfileService {
         .eq('auth_user_id', userId)
         .single();
 
-      if (error || !data) return null;
+      if (error || !data) {return null;}
       return data as UserRow;
     } catch {
       return null;
@@ -201,11 +201,11 @@ class UserProfileService {
 
       // Mirror display_name / avatar_url / username into public.profiles
       const profileUpdates: Record<string, unknown> = {};
-      if (updates.display_name !== undefined) profileUpdates.display_name = updates.display_name;
-      if (updates.avatar_url !== undefined)   profileUpdates.avatar_url   = updates.avatar_url;
-      if (updates.username !== undefined)     profileUpdates.username      = updates.username;
-      if (updates.bio !== undefined)          profileUpdates.bio           = updates.bio;
-      if (updates.preferences !== undefined)  profileUpdates.preferences   = updates.preferences;
+      if (updates.display_name !== undefined) {profileUpdates.display_name = updates.display_name;}
+      if (updates.avatar_url !== undefined)   {profileUpdates.avatar_url   = updates.avatar_url;}
+      if (updates.username !== undefined)     {profileUpdates.username      = updates.username;}
+      if (updates.bio !== undefined)          {profileUpdates.bio           = updates.bio;}
+      if (updates.preferences !== undefined)  {profileUpdates.preferences   = updates.preferences;}
 
       let profilesError: { message: string } | null = null;
       if (Object.keys(profileUpdates).length > 0) {
@@ -232,13 +232,14 @@ class UserProfileService {
   /**
    * Update last_active timestamp (call on meaningful interactions).
    */
-  async touchLastActive(userId: string): Promise<void> {
+  async touchLastActive(_userId: string): Promise<void> {
     try {
       await supabase
         .from('users')
         .update({ last_active: new Date().toISOString() })
-        .eq('auth_user_id', userId);
-    } catch {}
+    } catch {
+      // Ignore background active timestamp update failure
+    }
   }
 }
 

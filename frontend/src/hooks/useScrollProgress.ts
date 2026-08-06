@@ -30,7 +30,7 @@ export const useScrollProgress = (): UseScrollProgressReturn => {
     // Scroll handler - updates ref only, NO setState
     const handleScroll = () => {
       const container = containerRef.current;
-      if (!container) return;
+      if (!container) {return;}
 
       const rect = container.getBoundingClientRect();
       const containerHeight = container.offsetHeight;

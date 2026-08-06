@@ -48,7 +48,7 @@ export const GridLines: React.FC<GridLinesProps> = ({
 
       const geo = new THREE.BufferGeometry().setFromPoints(pts);
       segments.push(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         <primitive key={`lat-${i}`} object={new THREE.Line(geo, mat)} />
       );
     }
@@ -73,7 +73,7 @@ export const GridLines: React.FC<GridLinesProps> = ({
 
       const geo = new THREE.BufferGeometry().setFromPoints(pts);
       segments.push(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         <primitive key={`lng-${j}`} object={new THREE.Line(geo, mat)} />
       );
     }

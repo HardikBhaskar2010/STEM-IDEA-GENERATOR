@@ -22,12 +22,12 @@ let _idCounter = 0;
 const nextId = () => ++_idCounter;
 
 function parseLevel(line: string): LogEntry["level"] {
-  if (/\bCRITICAL\b/.test(line)) return "CRITICAL";
-  if (/\bERROR\b|Traceback|Exception/.test(line)) return "ERROR";
-  if (/\bWARNING\b|\bWARN\b/.test(line)) return "WARNING";
-  if (/\bDEBUG\b/.test(line)) return "DEBUG";
-  if (/\bINFO\b/.test(line)) return "INFO";
-  if (/\d{3} [A-Z]{3,7} \//.test(line)) return "ACCESS"; // HTTP access log
+  if (/\bCRITICAL\b/.test(line)) {return "CRITICAL";}
+  if (/\bERROR\b|Traceback|Exception/.test(line)) {return "ERROR";}
+  if (/\bWARNING\b|\bWARN\b/.test(line)) {return "WARNING";}
+  if (/\bDEBUG\b/.test(line)) {return "DEBUG";}
+  if (/\bINFO\b/.test(line)) {return "INFO";}
+  if (/\d{3} [A-Z]{3,7} \//.test(line)) {return "ACCESS";} // HTTP access log
   return "UNKNOWN";
 }
 
@@ -99,7 +99,7 @@ const AdminLogs: React.FC = () => {
 
     es.onmessage = (e) => {
       const raw: string = e.data ?? "";
-      if (!raw.trim()) return;
+      if (!raw.trim()) {return;}
 
       const entry: LogEntry = {
         id: nextId(),
@@ -124,7 +124,7 @@ const AdminLogs: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && isAdmin) connect();
+    if (!authLoading && isAdmin) {connect();}
     return () => {
       esRef.current?.close();
     };
@@ -139,7 +139,7 @@ const AdminLogs: React.FC = () => {
 
   const handleScroll = () => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el) {return;}
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
     setAutoScroll(nearBottom);
   };

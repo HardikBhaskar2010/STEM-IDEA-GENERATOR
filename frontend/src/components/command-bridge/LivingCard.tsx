@@ -4,7 +4,8 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Card, CardProps } from '@/components/ui/card';
+import type { CardProps } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { floatingAnimation, glowPulse } from '@/lib/commandAnimations';
 import { usePerf } from '@/contexts/PerfContext';
 import { cn } from '@/lib/utils';
@@ -42,7 +43,7 @@ export const LivingCard = React.forwardRef<HTMLDivElement, LivingCardProps>(
     const shouldGlow = !lowPerf && enableGlowPulse;
 
     useEffect(() => {
-      if (!cardRef.current || !shouldAnimate) return;
+      if (!cardRef.current || !shouldAnimate) {return;}
 
       const animation = floatingAnimation(
         cardRef.current,

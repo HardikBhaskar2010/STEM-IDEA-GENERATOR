@@ -1,4 +1,4 @@
-import { ExperimentDef } from '@/store/useCircuitStore';
+import type { ExperimentDef } from '@/store/useCircuitStore';
 
 // ─── Helper to generate unique component IDs ───────────────────────────────
 

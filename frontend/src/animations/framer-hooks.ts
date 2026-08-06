@@ -8,18 +8,20 @@
  *  • useReducedMotion   — prefers-reduced-motion gate
  */
 
+import type {
+  MotionValue} from 'framer-motion';
 import {
   useScroll,
   useTransform,
   useMotionValue,
-  useSpring,
-  MotionValue,
+  useSpring
 } from 'framer-motion';
-import { RefObject, useEffect } from 'react';
+import type { RefObject} from 'react';
+import { useEffect } from 'react';
 
 // ─── Reduced-motion guard ────────────────────────────────────────────────────
 export function useReducedMotion(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
@@ -85,7 +87,7 @@ export function useCursorSpring(springConfig = { stiffness: 60, damping: 18 }) {
       (navigator.maxTouchPoints > 0 || !window.matchMedia('(hover: hover)').matches);
 
     // On touch devices keep values at 0 — let the static fallback handle it.
-    if (isTouchDevice) return;
+    if (isTouchDevice) {return;}
 
     const onMove = (e: MouseEvent) => {
       const nx = e.clientX / window.innerWidth - 0.5;   // −0.5 → 0.5

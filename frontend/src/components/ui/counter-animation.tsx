@@ -19,7 +19,7 @@ export const CounterAnimation: React.FC<CounterAnimationProps> = ({
     const endValue = end;
 
     const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
+      if (!startTime) {startTime = currentTime;}
       const progress = Math.min((currentTime - startTime) / duration, 1);
       
       // Easing function for smooth animation

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, type AuthProvider } from '@/services/authService';
-import { User } from '@supabase/supabase-js';
-import { GuestUser } from '@/services/guestService';
+import type { User } from '@supabase/supabase-js';
+import type { GuestUser } from '@/services/guestService';
 import { userProfileService, type UserRow } from '@/services/userProfileService';
 import { migrateGuestData } from '@/lib/supabase';
 import { UserIdManager } from '@/utils/userIdManager';
@@ -60,9 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUserRow = async () => {
     const uid = authUserIdRef.current;
-    if (!uid) return;
+    if (!uid) {return;}
     const row = await userProfileService.getProfile(uid);
-    if (row) setUserRow(row);
+    if (row) {setUserRow(row);}
   };
 
   // ── Initialize auth state + auth listener ────────────────────────────────
@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const tick = async () => {
       const uid = authUserIdRef.current;
-      if (!uid) return;
+      if (!uid) {return;}
       const row = await userProfileService.getProfile(uid);
       if (row) {
         setUserRow(row);
@@ -170,9 +170,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Catches profile changes made in another tab or device.
   useEffect(() => {
     const onVisible = async () => {
-      if (document.visibilityState !== 'visible') return;
+      if (document.visibilityState !== 'visible') {return;}
       const uid = authUserIdRef.current;
-      if (!uid) return;
+      if (!uid) {return;}
       const row = await userProfileService.getProfile(uid);
       if (row) {
         setUserRow(row);

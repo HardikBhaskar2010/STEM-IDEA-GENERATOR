@@ -9,7 +9,8 @@ import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { latLngToVec3 } from './GlobePoints';
-import { GLOBE_PINS, GlobePin } from './globePins';
+import type { GlobePin } from './globePins';
+import { GLOBE_PINS } from './globePins';
 
 interface ArcProps {
   from: THREE.Vector3;
@@ -80,11 +81,11 @@ export const Arcs: React.FC<ArcsProps> = ({
     pins.forEach((pin) => {
       (pin.connectsTo ?? []).forEach((targetId) => {
         const pairKey = [pin.id, targetId].sort().join('--');
-        if (rendered.has(pairKey)) return;
+        if (rendered.has(pairKey)) {return;}
         rendered.add(pairKey);
 
         const target = pinMap.get(targetId);
-        if (!target) return;
+        if (!target) {return;}
 
         result.push({
           key: pairKey,

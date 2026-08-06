@@ -27,7 +27,7 @@ export const AnimatedHeroOverlay: React.FC<AnimatedHeroOverlayProps> = ({
   const opacity = Math.max(0, 1 - scrollProgress * 2);
   const shouldShow = opacity > 0.05;
 
-  if (!shouldShow) return null;
+  if (!shouldShow) {return null;}
 
   return (
     <div

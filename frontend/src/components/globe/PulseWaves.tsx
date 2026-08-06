@@ -7,7 +7,8 @@ import React, { useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { latLngToVec3 } from './GlobePoints';
-import { GLOBE_PINS, GlobePin } from './globePins';
+import type { GlobePin } from './globePins';
+import { GLOBE_PINS } from './globePins';
 
 interface WaveRingProps {
   position: THREE.Vector3;
@@ -21,7 +22,7 @@ const WaveRing: React.FC<WaveRingProps> = ({ position, color, phaseOffset }) => 
   const { camera } = useThree();
 
   useFrame((state) => {
-    if (!meshRef.current) return;
+    if (!meshRef.current) {return;}
     const t = (state.clock.elapsedTime * 0.5 + phaseOffset) % 1;
     const scale = 1 + t * 4;
     const opacity = (1 - t) * 0.8;

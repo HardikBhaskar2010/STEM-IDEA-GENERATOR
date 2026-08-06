@@ -95,7 +95,7 @@ const Components: React.FC = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!componentToDelete) return;
+    if (!componentToDelete) {return;}
 
     try {
       await componentService.deleteComponent(componentToDelete.id);

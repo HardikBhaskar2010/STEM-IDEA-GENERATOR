@@ -8,11 +8,13 @@
  */
 
 import React, { useRef, useState, useMemo } from 'react';
-import { useFrame, useThree, ThreeEvent } from '@react-three/fiber';
+import type { ThreeEvent } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { latLngToVec3 } from './GlobePoints';
-import { GLOBE_PINS, GlobePin } from './globePins';
+import type { GlobePin } from './globePins';
+import { GLOBE_PINS } from './globePins';
 
 interface PinsProps {
   radius?: number;
@@ -44,7 +46,7 @@ const PinMesh: React.FC<{
   );
 
   useFrame(() => {
-    if (!coreRef.current || !haloRef.current) return;
+    if (!coreRef.current || !haloRef.current) {return;}
     const mat = coreRef.current.material as THREE.MeshStandardMaterial;
     mat.emissiveIntensity = THREE.MathUtils.lerp(
       mat.emissiveIntensity,

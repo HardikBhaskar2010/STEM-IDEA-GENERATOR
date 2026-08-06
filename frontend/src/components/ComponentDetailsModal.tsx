@@ -78,15 +78,15 @@ const ComponentDetailsModal: React.FC<ComponentDetailsModalProps> = ({
   component,
   isLoading = false
 }) => {
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const getCategoryIcon = (category: string) => {
     const categoryLower = category.toLowerCase();
-    if (categoryLower.includes('microcontroller')) return Cpu;
-    if (categoryLower.includes('sensor')) return Activity;
-    if (categoryLower.includes('communication') || categoryLower.includes('wifi')) return Wifi;
-    if (categoryLower.includes('power') || categoryLower.includes('battery')) return Battery;
-    if (categoryLower.includes('motor')) return Zap;
+    if (categoryLower.includes('microcontroller')) {return Cpu;}
+    if (categoryLower.includes('sensor')) {return Activity;}
+    if (categoryLower.includes('communication') || categoryLower.includes('wifi')) {return Wifi;}
+    if (categoryLower.includes('power') || categoryLower.includes('battery')) {return Battery;}
+    if (categoryLower.includes('motor')) {return Zap;}
     return CircuitBoard;
   };
 

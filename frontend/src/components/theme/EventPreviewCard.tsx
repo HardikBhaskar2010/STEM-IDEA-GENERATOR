@@ -1,8 +1,9 @@
 import React from 'react';
-import { LucideIcon, MoreVertical } from 'lucide-react';
+import type { LucideIcon} from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SoftCard } from './SoftCard';
-import { EventType } from './EventCard';
+import type { EventType } from './EventCard';
 import { Button } from '@/components/ui/button';
 
 interface EventPreviewCardProps {

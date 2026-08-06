@@ -1,6 +1,8 @@
 // Competition Context - Manage competition mode state
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { TeamInfo, UserProgress, getMyTeam, getUserProgress } from '@/services/competitionService';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { TeamInfo, UserProgress} from '@/services/competitionService';
+import { getMyTeam, getUserProgress } from '@/services/competitionService';
 
 interface CompetitionContextType {
   isCompetitionMode: boolean;

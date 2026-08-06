@@ -60,7 +60,7 @@ export class PerformanceTracker {
    * Get metrics by category
    */
   getMetrics(category?: PerformanceMetric['category']): PerformanceMetric[] {
-    if (!category) return [...this.metrics];
+    if (!category) {return [...this.metrics];}
     return this.metrics.filter((m) => m.category === category);
   }
 
@@ -73,7 +73,7 @@ export class PerformanceTracker {
       (m) => m.name === name && now - m.timestamp <= timeWindowMs
     );
 
-    if (relevantMetrics.length === 0) return 0;
+    if (relevantMetrics.length === 0) {return 0;}
 
     const sum = relevantMetrics.reduce((acc, m) => acc + m.value, 0);
     return sum / relevantMetrics.length;
@@ -193,7 +193,7 @@ export class FPSMonitor {
    * Get current FPS
    */
   getCurrentFPS(): number {
-    if (this.frames.length === 0) return 0;
+    if (this.frames.length === 0) {return 0;}
     return this.frames[this.frames.length - 1];
   }
 
@@ -201,7 +201,7 @@ export class FPSMonitor {
    * Get average FPS
    */
   getAverageFPS(): number {
-    if (this.frames.length === 0) return 0;
+    if (this.frames.length === 0) {return 0;}
     const sum = this.frames.reduce((a, b) => a + b, 0);
     return Math.round(sum / this.frames.length);
   }
@@ -224,7 +224,7 @@ export const performanceTracker = new PerformanceTracker();
  * Record Web Vitals
  */
 export function recordWebVitals(): void {
-  if (typeof window === 'undefined' || !performance) return;
+  if (typeof window === 'undefined' || !performance) {return;}
 
   // First Contentful Paint
   const fcp = performance.getEntriesByName('first-contentful-paint')[0];

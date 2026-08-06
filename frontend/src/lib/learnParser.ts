@@ -15,7 +15,7 @@ export function parseLearnContent(text: string): Chapter[] {
   const lines = text.split('\n');
   const chapters: Chapter[] = [];
   let currentChapter: Chapter | null = null;
-  let currentBlock: ContentBlock | null = null;
+  const currentBlock: ContentBlock | null = null;
   let inCodeBlock = false;
   let codeContent: string[] = [];
   let codeLanguage = 'cpp';

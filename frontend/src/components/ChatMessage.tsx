@@ -5,7 +5,7 @@ import React from 'react';
 import { Bot, User, Clock, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ChatMessage } from '@/types/aiGuidance';
+import type { ChatMessage } from '@/types/aiGuidance';
 import { cn } from '@/lib/utils';
 
 interface ChatMessageProps {

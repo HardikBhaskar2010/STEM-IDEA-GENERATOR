@@ -26,7 +26,7 @@ export interface DeviceCapabilities {
  * Detect if device is mobile
  */
 export function isMobile(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
@@ -35,7 +35,7 @@ export function isMobile(): boolean {
  * Detect if device is tablet
  */
 export function isTablet(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   const userAgent = navigator.userAgent.toLowerCase();
   const isTabletUA = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(userAgent);
@@ -47,7 +47,7 @@ export function isTablet(): boolean {
  * Detect if device has touch support
  */
 export function isTouchDevice(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   return (
     'ontouchstart' in window ||
@@ -60,7 +60,7 @@ export function isTouchDevice(): boolean {
  * Get device memory in GB
  */
 export function getDeviceMemory(): number {
-  if (typeof window === 'undefined') return 4;
+  if (typeof window === 'undefined') {return 4;}
   
   return (navigator as any).deviceMemory || 4;
 }
@@ -69,7 +69,7 @@ export function getDeviceMemory(): number {
  * Get hardware concurrency (CPU cores)
  */
 export function getHardwareConcurrency(): number {
-  if (typeof window === 'undefined') return 4;
+  if (typeof window === 'undefined') {return 4;}
   
   return navigator.hardwareConcurrency || 4;
 }
@@ -78,7 +78,7 @@ export function getHardwareConcurrency(): number {
  * Get network connection info
  */
 export function getConnectionInfo(): { type: string; effectiveType: string; downlink?: number } {
-  if (typeof window === 'undefined') return { type: '4g', effectiveType: '4g' };
+  if (typeof window === 'undefined') {return { type: '4g', effectiveType: '4g' };}
   
   const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
   
@@ -116,7 +116,7 @@ export function isLowEndDevice(): boolean {
  * Check WebGL support
  */
 export function supportsWebGL(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   try {
     const canvas = document.createElement('canvas');
@@ -133,7 +133,7 @@ export function supportsWebGL(): boolean {
  * Check WebGL2 support
  */
 export function supportsWebGL2(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   try {
     const canvas = document.createElement('canvas');
@@ -147,7 +147,7 @@ export function supportsWebGL2(): boolean {
  * Get pixel ratio
  */
 export function getPixelRatio(): number {
-  if (typeof window === 'undefined') return 1;
+  if (typeof window === 'undefined') {return 1;}
   
   return window.devicePixelRatio || 1;
 }
@@ -156,7 +156,7 @@ export function getPixelRatio(): number {
  * Get screen size
  */
 export function getScreenSize(): { width: number; height: number } {
-  if (typeof window === 'undefined') return { width: 1920, height: 1080 };
+  if (typeof window === 'undefined') {return { width: 1920, height: 1080 };}
   
   return {
     width: window.innerWidth,
@@ -168,7 +168,7 @@ export function getScreenSize(): { width: number; height: number } {
  * Get screen orientation
  */
 export function getOrientation(): 'portrait' | 'landscape' {
-  if (typeof window === 'undefined') return 'landscape';
+  if (typeof window === 'undefined') {return 'landscape';}
   
   return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
 }
@@ -230,7 +230,7 @@ export async function getBatteryStatus(): Promise<{
  */
 export async function isLowPowerMode(): Promise<boolean> {
   const battery = await getBatteryStatus();
-  if (!battery) return false;
+  if (!battery) {return false;}
   
   // Consider low power if battery is low and not charging
   return battery.level < 0.2 && !battery.charging;

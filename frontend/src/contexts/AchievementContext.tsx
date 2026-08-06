@@ -1,16 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { toast } from '@/hooks/use-toast';
-import {
+import type {
   Achievement,
   AchievementStats,
+  RecentUnlock
+} from '@/services/achievementService';
+import {
   getUserAchievements,
   getUserAchievementStats,
   checkAndUnlockAchievements,
   unlockAchievement,
-  invalidateAchievementCache,
-  RecentUnlock
+  invalidateAchievementCache
 } from '@/services/achievementService';
 
 // ─────────────────────────────────────────────────────────────
@@ -97,8 +100,8 @@ export const AchievementProvider: React.FC<AchievementProviderProps> = ({ childr
   // effect, multiple components, polling + action trigger at same time) are
   // collapsed into a single in-flight request.
   const checkForNewAchievements = async () => {
-    if (!userId) return;
-    if (isCheckingRef.current) return; // already running — skip duplicate
+    if (!userId) {return;}
+    if (isCheckingRef.current) {return;} // already running — skip duplicate
 
     isCheckingRef.current = true;
     try {
@@ -143,7 +146,7 @@ export const AchievementProvider: React.FC<AchievementProviderProps> = ({ childr
 
   // ── unlockSpecificAchievement ─────────────────────────────────────────────
   const unlockSpecificAchievement = async (code: string): Promise<boolean> => {
-    if (!userId) return false;
+    if (!userId) {return false;}
 
     try {
       const unlocked = await unlockAchievement(code);
@@ -182,7 +185,7 @@ export const AchievementProvider: React.FC<AchievementProviderProps> = ({ childr
   // Primary trigger should be event-driven (call checkForNewAchievements()
   // inside your project-generation / idea-submission success handlers).
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {return;}
 
     const interval = setInterval(() => {
       checkForNewAchievements();

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import Editor, { Monaco } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
+import type { Monaco } from '@monaco-editor/react';
+import Editor from '@monaco-editor/react';
+import type * as monaco from 'monaco-editor';
 import { 
   Copy, 
   Download, 
@@ -138,7 +139,7 @@ const EnhancedCodeEditor: React.FC<EnhancedCodeEditorProps> = ({
 
   // Handle save
   const handleSave = async () => {
-    if (!file || !isModified || readOnly) return;
+    if (!file || !isModified || readOnly) {return;}
 
     setSaveStatus('saving');
     try {
@@ -155,7 +156,7 @@ const EnhancedCodeEditor: React.FC<EnhancedCodeEditorProps> = ({
 
   // Handle copy to clipboard
   const handleCopy = async () => {
-    if (!content) return;
+    if (!content) {return;}
     
     try {
       await navigator.clipboard.writeText(content);
@@ -167,7 +168,7 @@ const EnhancedCodeEditor: React.FC<EnhancedCodeEditorProps> = ({
 
   // Handle download
   const handleDownload = () => {
-    if (!file || !content) return;
+    if (!file || !content) {return;}
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);

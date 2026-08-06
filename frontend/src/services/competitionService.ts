@@ -111,7 +111,7 @@ export const LEVELS = [
 export const createTeam = async (name: string, schoolName?: string): Promise<{ team_id: string; team_code: string }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    if (!user) {throw new Error('Not authenticated');}
 
     const response = await fetch(`${API_BASE_URL}/competition/teams/create`, {
       method: 'POST',
@@ -139,7 +139,7 @@ export const createTeam = async (name: string, schoolName?: string): Promise<{ t
 export const joinTeam = async (teamCode: string): Promise<TeamInfo> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    if (!user) {throw new Error('Not authenticated');}
 
     const response = await fetch(`${API_BASE_URL}/competition/teams/join`, {
       method: 'POST',
@@ -170,7 +170,7 @@ export const joinTeam = async (teamCode: string): Promise<TeamInfo> => {
 export const getMyTeam = async (): Promise<TeamInfo | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!user) {return null;}
 
     const response = await fetch(`${API_BASE_URL}/competition/teams/my-team/${user.id}`);
     
@@ -192,7 +192,7 @@ export const getMyTeam = async (): Promise<TeamInfo | null> => {
 export const leaveTeam = async (): Promise<void> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    if (!user) {throw new Error('Not authenticated');}
 
     const response = await fetch(`${API_BASE_URL}/competition/teams/leave`, {
       method: 'POST',
@@ -234,7 +234,7 @@ export const createSubmission = async (
 ): Promise<{ submission_id: string; points_awarded: number; new_level?: string }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    if (!user) {throw new Error('Not authenticated');}
 
     const response = await fetch(`${API_BASE_URL}/competition/submissions/create`, {
       method: 'POST',
@@ -265,11 +265,11 @@ export const createSubmission = async (
 export const getMySubmissions = async (): Promise<Submission[]> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    if (!user) {return [];}
 
     const response = await fetch(`${API_BASE_URL}/competition/submissions/my-submissions/${user.id}`);
     
-    if (!response.ok) return [];
+    if (!response.ok) {return [];}
 
     const result = await response.json();
     return result.submissions || [];
@@ -282,7 +282,7 @@ export const getMySubmissions = async (): Promise<Submission[]> => {
 export const upvoteSubmission = async (submissionId: string): Promise<void> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    if (!user) {throw new Error('Not authenticated');}
 
     const response = await fetch(`${API_BASE_URL}/competition/submissions/upvote`, {
       method: 'POST',
@@ -310,11 +310,11 @@ export const upvoteSubmission = async (submissionId: string): Promise<void> => {
 export const getUserProgress = async (): Promise<UserProgress | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!user) {return null;}
 
     const response = await fetch(`${API_BASE_URL}/competition/users/progress/${user.id}`);
     
-    if (!response.ok) return null;
+    if (!response.ok) {return null;}
 
     return await response.json();
   } catch (error) {
@@ -329,7 +329,7 @@ export const getLevelInfo = (xp: number) => {
 
 export const getLevelProgress = (xp: number) => {
   const level = getLevelInfo(xp);
-  if (level.number === 5) return 100; // Max level
+  if (level.number === 5) {return 100;} // Max level
   
   const currentLevelXP = xp - level.minXP;
   const totalLevelXP = level.maxXP - level.minXP + 1;
@@ -343,11 +343,11 @@ export const getLevelProgress = (xp: number) => {
 export const getTopScorersLeaderboard = async (limit: number = 20, teamId?: string): Promise<LeaderboardEntry[]> => {
   try {
     const params = new URLSearchParams({ limit: limit.toString() });
-    if (teamId) params.append('team_id', teamId);
+    if (teamId) {params.append('team_id', teamId);}
 
     const response = await fetch(`${API_BASE_URL}/competition/leaderboards/top-scorers?${params}`);
     
-    if (!response.ok) return [];
+    if (!response.ok) {return [];}
 
     const result = await response.json();
     return result.leaderboard || [];
@@ -361,7 +361,7 @@ export const getConsistencyLeaderboard = async (limit: number = 20): Promise<Con
   try {
     const response = await fetch(`${API_BASE_URL}/competition/leaderboards/consistency?limit=${limit}`);
     
-    if (!response.ok) return [];
+    if (!response.ok) {return [];}
 
     const result = await response.json();
     return result.leaderboard || [];
@@ -375,7 +375,7 @@ export const getTeamLeaderboard = async (limit: number = 20): Promise<TeamLeader
   try {
     const response = await fetch(`${API_BASE_URL}/competition/leaderboards/teams?limit=${limit}`);
     
-    if (!response.ok) return [];
+    if (!response.ok) {return [];}
 
     const result = await response.json();
     return result.leaderboard || [];

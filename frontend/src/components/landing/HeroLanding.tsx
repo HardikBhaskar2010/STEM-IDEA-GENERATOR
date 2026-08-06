@@ -15,6 +15,8 @@
  *   scrollTargetRef  — optional external ref to override the hero ref
  */
 
+import type {
+  RefObject} from 'react';
 import React, {
   useRef,
   useState,
@@ -22,8 +24,7 @@ import React, {
   useMemo,
   useCallback,
   lazy,
-  Suspense,
-  RefObject,
+  Suspense
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -71,7 +72,7 @@ const FixedPlanetOverlay: React.FC<{ show3D: boolean }> = ({ show3D }) => {
     }
   }, [show3D]);
 
-  if (prefersReducedMotion || isLowEnd || isMobileScreen) return null;
+  if (prefersReducedMotion || isLowEnd || isMobileScreen) {return null;}
 
   return (
     <motion.div

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CardContent } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { LivingCard } from '@/components/command-bridge/LivingCard';
 import { NumberCounter } from '@/components/animations/NumberCounter';
 

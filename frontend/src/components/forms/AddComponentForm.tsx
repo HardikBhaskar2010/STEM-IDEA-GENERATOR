@@ -7,7 +7,7 @@ interface AddComponentFormProps {
 }
 
 const AddComponentForm: React.FC<AddComponentFormProps> = ({ isOpen, onClose, onSuccess }) => {
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center">

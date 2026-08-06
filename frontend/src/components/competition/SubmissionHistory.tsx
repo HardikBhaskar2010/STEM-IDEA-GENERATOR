@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Submission } from '@/services/competitionService';
+import type { Submission } from '@/services/competitionService';
 import { Calendar, ThumbsUp, Award } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 

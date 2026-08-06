@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { GuidanceButtonProps } from '@/types/aiGuidance';
+import type { GuidanceButtonProps } from '@/types/aiGuidance';
 import { aiGuidanceService } from '@/services/aiGuidanceService';
 
 /**
@@ -28,7 +28,7 @@ const GuidanceButton: React.FC<GuidanceButtonProps> = ({
    * Requirements: 1.2, 1.4
    */
   const handleClick = async () => {
-    if (disabled || isLoading) return;
+    if (disabled || isLoading) {return;}
 
     setIsLoading(true);
     setHasError(false);
@@ -106,9 +106,9 @@ const GuidanceButton: React.FC<GuidanceButtonProps> = ({
    * Get button variant based on props and state
    */
   const getButtonVariant = () => {
-    if (hasError) return 'destructive';
-    if (variant === 'secondary') return 'secondary';
-    if (variant === 'outline') return 'outline';
+    if (hasError) {return 'destructive';}
+    if (variant === 'secondary') {return 'secondary';}
+    if (variant === 'outline') {return 'outline';}
     return 'default'; // primary
   };
 
@@ -129,8 +129,8 @@ const GuidanceButton: React.FC<GuidanceButtonProps> = ({
    * Get button text based on state
    */
   const getButtonText = () => {
-    if (isLoading) return 'Opening Guidance...';
-    if (hasError) return 'Try Again';
+    if (isLoading) {return 'Opening Guidance...';}
+    if (hasError) {return 'Try Again';}
     return 'Guidance For Steps';
   };
 

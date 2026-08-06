@@ -96,18 +96,18 @@ export class ComponentService {
         updated_at: new Date().toISOString(),
       };
 
-      if (updates.name) updateData.name = updates.name;
-      if (updates.description) updateData.description = updates.description;
-      if (updates.category) updateData.category = updates.category;
+      if (updates.name) {updateData.name = updates.name;}
+      if (updates.description) {updateData.description = updates.description;}
+      if (updates.category) {updateData.category = updates.category;}
       if (updates.price !== undefined) {
         updateData.price = typeof updates.price === 'string' 
           ? parseFloat(updates.price.replace(/[^0-9.]/g, '')) 
           : updates.price;
       }
-      if (updates.stock) updateData.stock = updates.stock;
-      if (updates.tags) updateData.tags = updates.tags;
-      if (updates.specifications) updateData.specifications = updates.specifications;
-      if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
+      if (updates.stock) {updateData.stock = updates.stock;}
+      if (updates.tags) {updateData.tags = updates.tags;}
+      if (updates.specifications) {updateData.specifications = updates.specifications;}
+      if (updates.imageUrl !== undefined) {updateData.image_url = updates.imageUrl;}
 
       const { error } = await supabase
         .from('components')

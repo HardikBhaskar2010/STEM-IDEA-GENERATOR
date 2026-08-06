@@ -105,7 +105,7 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
 
   // Auto-refresh when files change
   useEffect(() => {
-    if (!autoRefresh || platform !== 'web') return;
+    if (!autoRefresh || platform !== 'web') {return;}
 
     const newHash = generateFilesHash(files);
     if (newHash !== filesHash && filesHash !== '') {
@@ -159,7 +159,7 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
 
   // Build dev server HTML
   const buildDevServerHTML = useMemo(() => {
-    if (platform !== 'web') return null;
+    if (platform !== 'web') {return null;}
 
     setDevServerStatus({ status: 'building', message: 'Building project...' });
     addConsoleMessage('info', 'Starting dev server build...');
@@ -511,7 +511,7 @@ const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
     };
 
     const info = platformInfo[platform as keyof typeof platformInfo];
-    if (!info) return null;
+    if (!info) {return null;}
 
     const Icon = info.icon;
 

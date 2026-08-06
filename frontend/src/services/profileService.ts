@@ -100,7 +100,7 @@ class ProfileService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       return data as UserProfile;
     } catch (error) {
@@ -127,7 +127,7 @@ class ProfileService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       return data as UserProfile;
     } catch (error) {
@@ -157,7 +157,7 @@ class ProfileService {
           upsert: true,
         });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Get public URL
       const { data: urlData } = supabase.storage

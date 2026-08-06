@@ -141,7 +141,7 @@ export class MemoryManager {
  * Canvas cleanup utility
  */
 export function cleanupCanvas(canvas: HTMLCanvasElement | null): void {
-  if (!canvas) return;
+  if (!canvas) {return;}
 
   const ctx = canvas.getContext('2d');
   if (ctx) {
@@ -157,7 +157,7 @@ export function cleanupCanvas(canvas: HTMLCanvasElement | null): void {
  * WebGL context cleanup
  */
 export function cleanupWebGL(canvas: HTMLCanvasElement | null): void {
-  if (!canvas) return;
+  if (!canvas) {return;}
 
   const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
   if (gl) {
@@ -172,7 +172,7 @@ export function cleanupWebGL(canvas: HTMLCanvasElement | null): void {
  * Three.js cleanup utility
  */
 export function cleanupThreeJS(scene: any): void {
-  if (!scene) return;
+  if (!scene) {return;}
 
   scene.traverse((object: any) => {
     if (object.geometry) {
@@ -214,7 +214,7 @@ export function getMemoryUsage(): { used: number; total: number; percentage: num
  */
 export function detectMemoryLeak(threshold: number = 80): boolean {
   const usage = getMemoryUsage();
-  if (!usage) return false;
+  if (!usage) {return false;}
 
   return usage.percentage > threshold;
 }

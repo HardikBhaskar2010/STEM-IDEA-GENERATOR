@@ -184,7 +184,7 @@ export const CommandPalette: React.FC = () => {
 
   // Filter commands based on search
   const filteredCommands = useMemo(() => {
-    if (!search) return commands;
+    if (!search) {return commands;}
     
     const searchLower = search.toLowerCase();
     return commands.filter(cmd => 

@@ -98,7 +98,7 @@ export async function sendVeronicaMessageStream(
   }
 
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('ReadableStream not supported');
+  if (!reader) {throw new Error('ReadableStream not supported');}
 
   const decoder = new TextDecoder();
   let result: VeronicaAIChatResponse | null = null;
@@ -106,7 +106,7 @@ export async function sendVeronicaMessageStream(
 
   while (true) {
     const { done, value } = await reader.read();
-    if (done) break;
+    if (done) {break;}
     buffer += decoder.decode(value, { stream: true });
     
     const lines = buffer.split('\n\n');
@@ -115,7 +115,7 @@ export async function sendVeronicaMessageStream(
     for (const line of lines) {
       if (line.trim().startsWith('data: ')) {
         const dataStr = line.trim().slice(6);
-        if (dataStr === '[DONE]') continue;
+        if (dataStr === '[DONE]') {continue;}
         try {
           const data = JSON.parse(dataStr);
           if (data.event === 'done') {
@@ -140,7 +140,7 @@ export async function sendVeronicaMessageStream(
   }
 
   // Graceful fallback for partial build data from agent builders
-  if (!result) throw new Error("Stream finished without a valid 'done' event.");
+  if (!result) {throw new Error("Stream finished without a valid 'done' event.");}
   return result;
 }
 

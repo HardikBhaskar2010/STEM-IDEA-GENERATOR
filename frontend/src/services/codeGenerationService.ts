@@ -1,10 +1,11 @@
 // Real API service for code generation
 // Connected to backend API endpoints
 
+import type { 
+  ErrorContext} from '@/utils/errorHandler';
 import { 
   withRetry, 
   ServiceError, 
-  ErrorContext, 
   errorLogger,
   circuitBreaker,
   enhancedFetch,
@@ -711,7 +712,7 @@ class CodeGenerationService {
    * Format file size for display
    */
   formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {return '0 B';}
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

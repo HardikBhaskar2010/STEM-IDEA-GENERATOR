@@ -1,4 +1,4 @@
-import { CodeGenerationParams, StreamingEvent } from './codeGenerationService';
+import type { CodeGenerationParams, StreamingEvent } from './codeGenerationService';
 
 // Types
 export interface StreamingConnection {

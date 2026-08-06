@@ -85,7 +85,7 @@ async function checkVeronica(): Promise<Check> {
       return { label, status: 'ok', detail: `Online${model ? ` · ${model}` : ''}` };
     }
     // fallback — any 2xx from base means server is up even if no dedicated endpoint
-    if (res.status === 404) return { label, status: 'ok', detail: 'Server up (no /health)' };
+    if (res.status === 404) {return { label, status: 'ok', detail: 'Server up (no /health)' };}
     return { label, status: 'warn', detail: `${res.status} ${res.statusText}` };
   } catch (e: any) {
     return { label, status: 'error', detail: 'Unreachable' };
@@ -102,7 +102,7 @@ async function checkSupabase(): Promise<Check> {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
       signal: AbortSignal.timeout(5000),
     });
-    if (res.ok) return { label, status: 'ok', detail: 'Connected · components accessible' };
+    if (res.ok) {return { label, status: 'ok', detail: 'Connected · components accessible' };}
     return { label, status: 'warn', detail: `${res.status} ${res.statusText}` };
   } catch (e: any) {
     return { label, status: 'error', detail: 'Unreachable' };

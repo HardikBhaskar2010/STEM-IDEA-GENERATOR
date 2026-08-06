@@ -63,7 +63,7 @@ class AuthService {
         },
       })
 
-      if (error) return { user: null, error }
+      if (error) {return { user: null, error }}
 
       // The profile will be automatically created by the database trigger
       // defined in auth_profiles_schema.sql (handle_new_user function)
@@ -81,7 +81,7 @@ class AuthService {
           password: data.password,
         })
 
-      if (error) return { user: null, error }
+      if (error) {return { user: null, error }}
 
       return { user: authData.user, error: null, isGuest: false }
     } catch (err) {

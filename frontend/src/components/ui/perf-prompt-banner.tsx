@@ -6,7 +6,7 @@ import { usePerf } from '@/contexts/PerfContext';
 export const PerfPromptBanner: React.FC = () => {
   const { shouldPrompt, setLowPerf, dismissPrompt } = usePerf();
 
-  if (!shouldPrompt) return null;
+  if (!shouldPrompt) {return null;}
 
   return (
     <div 

@@ -273,15 +273,15 @@ export default function FloatingLines({
   const currentParallaxRef = useRef(new Vector2(0, 0));
 
   const getLineCount = (waveType: 'top' | 'middle' | 'bottom'): number => {
-    if (typeof lineCount === 'number') return lineCount;
-    if (!enabledWaves.includes(waveType)) return 0;
+    if (typeof lineCount === 'number') {return lineCount;}
+    if (!enabledWaves.includes(waveType)) {return 0;}
     const index = enabledWaves.indexOf(waveType);
     return lineCount[index] ?? 6;
   };
 
   const getLineDistance = (waveType: 'top' | 'middle' | 'bottom'): number => {
-    if (typeof lineDistance === 'number') return lineDistance;
-    if (!enabledWaves.includes(waveType)) return 0.1;
+    if (typeof lineDistance === 'number') {return lineDistance;}
+    if (!enabledWaves.includes(waveType)) {return 0.1;}
     const index = enabledWaves.indexOf(waveType);
     return lineDistance[index] ?? 0.1;
   };
@@ -295,7 +295,7 @@ export default function FloatingLines({
   const bottomLineDistance = enabledWaves.includes('bottom') ? getLineDistance('bottom') * 0.01 : 0.01;
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {return;}
 
     const scene = new Scene();
 
@@ -384,7 +384,7 @@ export default function FloatingLines({
 
     const setSize = () => {
       const el = containerRef.current;
-      if (!el) return;
+      if (!el) {return;}
       const width = el.clientWidth || 1;
       const height = el.clientHeight || 1;
 

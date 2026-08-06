@@ -1,5 +1,5 @@
 import React from 'react';
-import { ContentBlock } from '@/lib/learnParser';
+import type { ContentBlock } from '@/lib/learnParser';
 import CodeBlock from './CodeBlock';
 import NoteCard from './NoteCard';
 

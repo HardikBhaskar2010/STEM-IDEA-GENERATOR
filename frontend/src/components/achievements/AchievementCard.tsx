@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Lock, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Achievement, getTierConfig, getCategoryConfig } from '@/services/achievementService';
+import type { Achievement} from '@/services/achievementService';
+import { getTierConfig, getCategoryConfig } from '@/services/achievementService';
 import { AchievementBadge } from './AchievementBadge';
 
 interface AchievementCardProps {

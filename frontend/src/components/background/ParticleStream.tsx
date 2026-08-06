@@ -7,7 +7,7 @@ export const ParticleStream: React.FC = () => {
   const { shouldAnimate, isHighPerf } = usePerformanceAnimations();
 
   useEffect(() => {
-    if (!shouldAnimate || !isHighPerf || !containerRef.current) return;
+    if (!shouldAnimate || !isHighPerf || !containerRef.current) {return;}
 
     const container = containerRef.current;
     const particles: HTMLDivElement[] = [];
@@ -42,7 +42,7 @@ export const ParticleStream: React.FC = () => {
     };
   }, [shouldAnimate, isHighPerf]);
 
-  if (!shouldAnimate || !isHighPerf) return null;
+  if (!shouldAnimate || !isHighPerf) {return null;}
 
   return (
     <div 

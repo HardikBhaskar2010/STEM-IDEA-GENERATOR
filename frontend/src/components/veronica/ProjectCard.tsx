@@ -57,7 +57,7 @@ export function ProjectCard({
   );
 
   const handleDownloadIno = () => {
-    if (!firstInoFile) return;
+    if (!firstInoFile) {return;}
     const blob = new Blob([firstInoFile.content || ''], { type: 'text/x-arduino' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -74,7 +74,7 @@ export function ProjectCard({
   };
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving) {return;}
     setIsSaving(true);
     try {
       const saved = await projectService.saveProject({
@@ -112,13 +112,13 @@ export function ProjectCard({
 
   const handleOpen = () => {
     const id = savedProjectId || actionMap.get('open_project')?.id;
-    if (!id) return;
+    if (!id) {return;}
     navigate(`/veronica-project/${id}`);
   };
 
   const handleDownload = async () => {
     const id = actionMap.get('download_project')?.id || project.project_id;
-    if (!id || isDownloading) return;
+    if (!id || isDownloading) {return;}
     setIsDownloading(true);
     try {
       const zipBlob = await downloadVeronicaProjectZip(id);

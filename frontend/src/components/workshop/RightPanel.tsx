@@ -255,9 +255,9 @@ export const RightPanel: React.FC = () => {
                 <div className="space-y-2">
                   {(() => {
                     const comp = components.find(c => c.id === selectedComponentId);
-                    if (!comp) return <p className="text-gray-500 text-[10px]">No component selected</p>;
+                    if (!comp) {return <p className="text-gray-500 text-[10px]">No component selected</p>;}
                     const pins = useCircuitStore.getState().userPins[comp.type] || [];
-                    if (pins.length === 0) return <p className="text-gray-500 text-[10px]">No custom pins placed yet.</p>;
+                    if (pins.length === 0) {return <p className="text-gray-500 text-[10px]">No custom pins placed yet.</p>;}
                     return pins.map(p => (
                       <div key={p.id} className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 group">
                         <div className="flex flex-col">
@@ -329,7 +329,7 @@ export const RightPanel: React.FC = () => {
               stopSimulation();
               if (activeExperimentId) {
                 const exp = getExperimentById(activeExperimentId);
-                if (exp) useCircuitStore.getState().setActiveExperiment(activeExperimentId, exp);
+                if (exp) {useCircuitStore.getState().setActiveExperiment(activeExperimentId, exp);}
               }
             }}
           >

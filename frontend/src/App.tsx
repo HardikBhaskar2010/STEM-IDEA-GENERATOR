@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect } from "react";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
@@ -28,10 +29,10 @@ import { SciFiCursor } from "@/components/layout/SciFiCursor";
 const WelcomeRoute = () => {
   const { isLoading, mode } = useAuth();
 
-  if (isLoading) return <PageLoading />;
+  if (isLoading) {return <PageLoading />;}
 
   // Only skip welcome when truly authenticated (not guest).
-  if (mode === "authenticated") return <Navigate to="/dashboard" replace />;
+  if (mode === "authenticated") {return <Navigate to="/dashboard" replace />;}
 
   return <Welcome />;
 };

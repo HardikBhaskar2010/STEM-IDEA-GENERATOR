@@ -21,11 +21,11 @@ export const TTSVisualizer: React.FC<TTSVisualizerProps> = ({
 
   useEffect(() => {
     const animate = () => {
-      if (!canvasRef.current) return;
+      if (!canvasRef.current) {return;}
       
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {return;}
 
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);

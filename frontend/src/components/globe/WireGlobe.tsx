@@ -19,7 +19,8 @@ import { Pins } from './Pins';
 import { PulseWaves } from './PulseWaves';
 import { Arcs } from './Arcs';
 import { PinInfoCard } from './PinInfoCard';
-import { GLOBE_PINS, GlobePin } from './globePins';
+import type { GlobePin } from './globePins';
+import { GLOBE_PINS } from './globePins';
 import { latLngToVec3 } from './GlobePoints';
 
 /* -------------------------------------------------------------------------- */
@@ -175,7 +176,7 @@ const GlobeScene: React.FC<GlobeSceneProps> = ({
   }, [activePin]);
 
   useFrame(({ camera, size }, delta) => {
-    if (!groupRef.current) return;
+    if (!groupRef.current) {return;}
 
     if (activePin) {
       // Smoothly rotate the targeted pin to the front

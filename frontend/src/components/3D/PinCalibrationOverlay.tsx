@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import type React from 'react';
+import { useRef, useState } from 'react';
 import { useThree } from '@react-three/fiber';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { useCircuitStore } from '@/store/useCircuitStore';
 
 // Temporary overlay that captures clicks on any object in the scene
@@ -8,7 +9,7 @@ export const PinCalibrationOverlay: React.FC = () => {
   const { calibrationMode, setCalibrationMode, addUserPin, components } = useCircuitStore();
   const { camera, scene } = useThree();
 
-  if (!calibrationMode) return null;
+  if (!calibrationMode) {return null;}
 
   const handlePointerDown = (e: THREE.Event) => {
     e.stopPropagation(); // Prevent normal click behaviors

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 
 const shouldDisableCustomCursor = () => {
-  if (typeof window === "undefined") return true;
+  if (typeof window === "undefined") {return true;}
   const mq = window.matchMedia?.("(hover: none) and (pointer: coarse)");
   return mq ? mq.matches : false;
 };
 
 const isInteractive = (el: Element | null) => {
-  if (!el) return false;
+  if (!el) {return false;}
   const interactive = el.closest(
     'a,button,[role="button"],input,select,textarea,label,[data-cursor="pointer"]'
   );
@@ -29,11 +29,11 @@ export const SciFiCursor: React.FC = () => {
   const [size, setSize] = useState({ w: 26, h: 26 });
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {return;}
 
     const disable = shouldDisableCustomCursor();
     setDisabled(disable);
-    if (disable) return;
+    if (disable) {return;}
 
     const handleMove = (e: MouseEvent) => {
       const x = e.clientX;
@@ -89,7 +89,7 @@ export const SciFiCursor: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
+    if (typeof document === "undefined") {return;}
     if (!enabled || disabled) {
       document.documentElement.classList.remove("scifi-cursor-enabled");
       document.body.classList.remove("scifi-cursor-enabled");
@@ -103,7 +103,7 @@ export const SciFiCursor: React.FC = () => {
     };
   }, [enabled, disabled]);
 
-  if (disabled) return null;
+  if (disabled) {return null;}
 
   // Dot offset = how far the real pointer is from the wrapper center.
   // When not hovering, position === rawPosition so offset is (0, 0) → dot stays centered.

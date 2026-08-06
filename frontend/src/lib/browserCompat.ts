@@ -97,7 +97,7 @@ export const features = {
   requestAnimationFrame: typeof window !== 'undefined' && 'requestAnimationFrame' in window,
   requestIdleCallback: typeof window !== 'undefined' && 'requestIdleCallback' in window,
   webGL: (() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') {return false;}
     try {
       const canvas = document.createElement('canvas');
       return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
@@ -106,7 +106,7 @@ export const features = {
     }
   })(),
   webGL2: (() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') {return false;}
     try {
       const canvas = document.createElement('canvas');
       return !!canvas.getContext('webgl2');
@@ -118,7 +118,7 @@ export const features = {
   serviceWorkers: typeof window !== 'undefined' && 'serviceWorker' in navigator,
   webAssembly: typeof window !== 'undefined' && 'WebAssembly' in window,
   localStorage: (() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') {return false;}
     try {
       localStorage.setItem('test', 'test');
       localStorage.removeItem('test');
@@ -128,7 +128,7 @@ export const features = {
     }
   })(),
   sessionStorage: (() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') {return false;}
     try {
       sessionStorage.setItem('test', 'test');
       sessionStorage.removeItem('test');
@@ -145,7 +145,7 @@ export const features = {
  * Check if CSS property is supported
  */
 export function supportsCSSProperty(property: string, value?: string): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   const element = document.createElement('div');
   const style = element.style as any;
@@ -162,7 +162,7 @@ export function supportsCSSProperty(property: string, value?: string): boolean {
  * Get CSS vendor prefix
  */
 export function getVendorPrefix(): string {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === 'undefined') {return '';}
   
   const styles = window.getComputedStyle(document.documentElement, '');
   const pre = (Array.prototype.slice
@@ -177,7 +177,7 @@ export function getVendorPrefix(): string {
  * Polyfill requestAnimationFrame
  */
 export function polyfillRAF(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   
   if (!window.requestAnimationFrame) {
     window.requestAnimationFrame = (callback: FrameRequestCallback) => {
@@ -228,7 +228,7 @@ export function createFallback<T>(feature: string, supported: T, fallback: T): T
  * Log browser compatibility info (for debugging)
  */
 export function logCompatibility(): void {
-  if (typeof console === 'undefined') return;
+  if (typeof console === 'undefined') {return;}
   
   const browser = getBrowserInfo();
   console.group('🌐 Browser Compatibility');

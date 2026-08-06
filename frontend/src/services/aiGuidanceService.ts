@@ -1,14 +1,15 @@
 // AI Guidance Service for Frontend
 // Requirements: 2.2, 2.3, 3.1, 5.1
 
-import { 
+import type { 
   ChatRequest, 
   ChatResponse, 
   ContextResponse, 
   HistoryResponse,
+  AIGuidanceError} from '@/types/aiGuidance';
+import {
   ChatMessage,
   ProjectContext,
-  AIGuidanceError,
   APIResponse
 } from '@/types/aiGuidance';
 
@@ -133,8 +134,8 @@ class AIGuidanceService {
   async getChatHistory(projectId: string, sessionId?: string, limit: number = 100): Promise<HistoryResponse> {
     try {
       const params = new URLSearchParams();
-      if (sessionId) params.append('session_id', sessionId);
-      if (limit !== 100) params.append('limit', limit.toString());
+      if (sessionId) {params.append('session_id', sessionId);}
+      if (limit !== 100) {params.append('limit', limit.toString());}
 
       const url = `${this.baseUrl}/projects/${projectId}/guidance/history${params.toString() ? '?' + params.toString() : ''}`;
       

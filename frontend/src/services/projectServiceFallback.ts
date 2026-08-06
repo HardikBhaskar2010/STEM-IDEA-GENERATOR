@@ -308,7 +308,7 @@ class ProjectServiceFallback {
   private getStoredProjects(): SavedProject[] {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      let projects = stored ? JSON.parse(stored) : [];
+      const projects = stored ? JSON.parse(stored) : [];
       
       // Return empty array if no projects exist
       if (projects.length === 0) {

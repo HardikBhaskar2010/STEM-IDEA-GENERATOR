@@ -392,8 +392,8 @@ export const VeronicaCommunity: React.FC<VeronicaCommunityProps> = ({ onRemixWit
     : SEEDED_POSTS.filter((p) => p.category === activeCategory);
 
   const sorted = [...baseFiltered].sort((a, b) => {
-    if (sortBy === 'new') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
-    if (sortBy === 'top') return b.upvotes - a.upvotes;
+    if (sortBy === 'new') {return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);}
+    if (sortBy === 'top') {return b.upvotes - a.upvotes;}
     return (b.trending ? 1 : 0) - (a.trending ? 1 : 0);
   });
 

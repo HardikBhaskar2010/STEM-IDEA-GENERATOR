@@ -25,10 +25,10 @@ export const HeroFallback: React.FC<HeroFallbackProps> = ({ onEnter }) => {
   // ─── IntersectionObserver reveal ────────────────────────────────────────
   useEffect(() => {
     const section = sectionRef.current;
-    if (!section) return;
+    if (!section) {return;}
 
     const targets = section.querySelectorAll<HTMLElement>('[data-reveal]');
-    if (!targets.length) return;
+    if (!targets.length) {return;}
 
     const observer = new IntersectionObserver(
       (entries) => {

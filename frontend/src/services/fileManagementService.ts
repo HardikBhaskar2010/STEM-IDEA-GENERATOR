@@ -1,12 +1,13 @@
 // Real API service for file management
 // Connected to backend API endpoints
 
-import { CodeFile } from './codeGenerationService';
+import type { CodeFile } from './codeGenerationService';
+import type { 
+  ErrorContext} from '@/utils/errorHandler';
 import { 
   withRetry, 
   withTimeout, 
   ServiceError, 
-  ErrorContext, 
   errorLogger,
   withFallback,
   DEFAULT_RETRY_OPTIONS
@@ -563,7 +564,7 @@ class FileManagementService {
    * Format file size for display
    */
   formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {return '0 B';}
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

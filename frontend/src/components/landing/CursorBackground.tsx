@@ -50,7 +50,7 @@ export const CursorBackground: React.FC = () => {
   }, [springX, springY]);
 
   useEffect(() => {
-    if (!isHoverDevice || prefersReducedMotion) return;
+    if (!isHoverDevice || prefersReducedMotion) {return;}
 
     const onMove = (e: MouseEvent) => {
       const nx = e.clientX / window.innerWidth;

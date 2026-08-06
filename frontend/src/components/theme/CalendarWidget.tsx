@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SoftCard } from './SoftCard';
 import { Button } from '@/components/ui/button';
-import { EventType } from './EventCard';
+import type { EventType } from './EventCard';
 
 interface DayActivity {
   date: string;

@@ -18,8 +18,10 @@
  *   </ParallaxLayers>
  */
 
-import React, { createContext, useContext, RefObject } from 'react';
-import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
+import type { RefObject } from 'react';
+import React, { createContext, useContext } from 'react';
+import type { MotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 // ─── Context: share scroll progress with all child layers ────────────────────
 const ScrollCtx = createContext<MotionValue<number> | null>(null);

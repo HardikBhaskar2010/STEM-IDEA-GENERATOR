@@ -10,7 +10,7 @@
  * Uses translate3d and will-change for optimal performance
  */
 export function enableGPUAcceleration(element: HTMLElement | null, properties: string[] = ['transform']): void {
-  if (!element) return;
+  if (!element) {return;}
   
   // Force GPU acceleration with translate3d
   element.style.transform = element.style.transform || 'translate3d(0, 0, 0)';
@@ -24,7 +24,7 @@ export function enableGPUAcceleration(element: HTMLElement | null, properties: s
  * Important to call after animation completes to free GPU resources
  */
 export function disableGPUAcceleration(element: HTMLElement | null): void {
-  if (!element) return;
+  if (!element) {return;}
   
   // Remove will-change to free GPU resources
   element.style.willChange = 'auto';
@@ -43,7 +43,7 @@ export function createGPUTransform(x: number = 0, y: number = 0, z: number = 0):
  * Applies best practices for smooth 60fps animations
  */
 export function optimizeForAnimation(element: HTMLElement | null): void {
-  if (!element) return;
+  if (!element) {return;}
   
   // GPU acceleration
   element.style.transform = 'translate3d(0, 0, 0)';
@@ -73,7 +73,7 @@ export function batchStyleUpdates(updates: Array<{ element: HTMLElement; styles:
  * Check if GPU acceleration is supported
  */
 export function isGPUAccelerationSupported(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   const canvas = document.createElement('canvas');
   const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -84,7 +84,7 @@ export function isGPUAccelerationSupported(): boolean {
  * Get optimal transform property based on browser support
  */
 export function getTransformProperty(): string {
-  if (typeof window === 'undefined') return 'transform';
+  if (typeof window === 'undefined') {return 'transform';}
   
   const prefixes = ['transform', 'webkitTransform', 'mozTransform', 'msTransform'];
   const testElement = document.createElement('div');
@@ -102,7 +102,7 @@ export function getTransformProperty(): string {
  * Force GPU layer creation for complex animations
  */
 export function forceGPULayer(element: HTMLElement | null): void {
-  if (!element) return;
+  if (!element) {return;}
   
   element.style.transform = 'translateZ(0)';
   element.style.willChange = 'transform';
@@ -112,7 +112,7 @@ export function forceGPULayer(element: HTMLElement | null): void {
  * Clean up GPU optimization
  */
 export function cleanupGPUOptimization(element: HTMLElement | null): void {
-  if (!element) return;
+  if (!element) {return;}
   
   element.style.willChange = 'auto';
   element.style.transform = '';

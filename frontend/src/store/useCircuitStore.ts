@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { getExperimentById } from '@/lib/experiments';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -166,11 +165,11 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
   clearConnections: () => set({ connections: [] }),
   connectPins: (from, to) =>
     set((s) => {
-      if (from === to) return s;
+      if (from === to) {return s;}
       const exists = s.connections.some(
         (c) => (c.from === from && c.to === to) || (c.from === to && c.to === from)
       );
-      if (exists) return s;
+      if (exists) {return s;}
       return {
         connections: [
           ...s.connections,
@@ -187,14 +186,14 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
 
   startSimulation: () => {
     const { isSimulating, simulationTick } = get();
-    if (isSimulating) return;
+    if (isSimulating) {return;}
     const interval = setInterval(simulationTick, 100);
     set({ isSimulating: true, isPowered: true, simInterval: interval });
   },
 
   stopSimulation: () => {
     const { simInterval } = get();
-    if (simInterval) clearInterval(simInterval);
+    if (simInterval) {clearInterval(simInterval);}
     set({ isSimulating: false, isPowered: false, simInterval: null });
     // reset all LEDs
     set((s) => ({
@@ -206,7 +205,7 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
 
   simulationTick: () => {
     const { components, connections, pins, isPowered } = get();
-    if (!isPowered) return;
+    if (!isPowered) {return;}
 
     // Build a simple voltage map from connections
     const voltageMap: Record<string, number> = {};
@@ -216,9 +215,9 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
       if (comp.type === 'arduino') {
         // 5V and GND reference pins
         Object.keys(pins).forEach((pid) => {
-          if (pid.startsWith(`${comp.id}-5v`)) voltageMap[pid] = 5;
-          if (pid.startsWith(`${comp.id}-gnd`)) voltageMap[pid] = 0;
-          if (pid.startsWith(`${comp.id}-d`)) voltageMap[pid] = 5; // default HIGH simplification
+          if (pid.startsWith(`${comp.id}-5v`)) {voltageMap[pid] = 5;}
+          if (pid.startsWith(`${comp.id}-gnd`)) {voltageMap[pid] = 0;}
+          if (pid.startsWith(`${comp.id}-d`)) {voltageMap[pid] = 5;} // default HIGH simplification
         });
       }
     });

@@ -55,7 +55,7 @@ export const ImageSeqCanvas: React.FC<ImageSeqCanvasProps> = ({
 
   // ─── Load frames ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (frames.length === 0) return;
+    if (frames.length === 0) {return;}
 
     let cancelled = false;
 
@@ -81,7 +81,7 @@ export const ImageSeqCanvas: React.FC<ImageSeqCanvasProps> = ({
     // Load rest in idle batches.
     const loadRest = async () => {
       for (let i = 1; i < frames.length; i++) {
-        if (cancelled) break;
+        if (cancelled) {break;}
         await loadFrame(i);
         // Yield to browser between frames to avoid jank.
         await new Promise<void>((r) => {
@@ -101,21 +101,21 @@ export const ImageSeqCanvas: React.FC<ImageSeqCanvasProps> = ({
   // ─── Draw frame ──────────────────────────────────────────────────────────
   const drawFrame = useCallback((progress: number) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {return;}
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const totalFrames = frames.length;
-    if (totalFrames === 0) return;
+    if (totalFrames === 0) {return;}
 
     // Clamp and derive index
     const clamped = Math.max(0, Math.min(1, progress));
     const frameIndex = Math.round(clamped * (totalFrames - 1));
-    if (frameIndex === lastFrameRef.current) return; // no-op if same frame
+    if (frameIndex === lastFrameRef.current) {return;} // no-op if same frame
     lastFrameRef.current = frameIndex;
 
     const img = imagesRef.current[frameIndex];
-    if (!img) return; // not loaded yet — hold last drawn frame
+    if (!img) {return;} // not loaded yet — hold last drawn frame
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);

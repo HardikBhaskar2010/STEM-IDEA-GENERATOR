@@ -55,7 +55,7 @@ export const TeamSetupModal: React.FC<TeamSetupModalProps> = ({ open, onClose, o
   };
 
   const handleValidateCode = async () => {
-    if (!teamCode.trim()) return;
+    if (!teamCode.trim()) {return;}
     const result = await validateTeamCode(teamCode.trim());
     setCodeValidation(result);
   };

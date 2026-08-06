@@ -1,4 +1,4 @@
-import { EventType } from '@/components/theme/EventCard';
+import type { EventType } from '@/components/theme/EventCard';
 
 export interface ActivityEvent {
   id: string;

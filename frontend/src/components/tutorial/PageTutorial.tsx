@@ -38,7 +38,7 @@ const PageTutorial: React.FC<PageTutorialProps> = ({ pageName, steps }) => {
   }, [pageName, isPageTutorialComplete, isActive]);
 
   useEffect(() => {
-    if (!isActive || !step) return;
+    if (!isActive || !step) {return;}
 
     const updatePositions = () => {
       if (step.target) {
@@ -109,10 +109,10 @@ const PageTutorial: React.FC<PageTutorialProps> = ({ pageName, steps }) => {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (!isActive) return;
-      if (e.key === 'Escape') handleSkip();
-      if (e.key === 'ArrowRight') handleNext();
-      if (e.key === 'ArrowLeft') handlePrevious();
+      if (!isActive) {return;}
+      if (e.key === 'Escape') {handleSkip();}
+      if (e.key === 'ArrowRight') {handleNext();}
+      if (e.key === 'ArrowLeft') {handlePrevious();}
     };
 
     window.addEventListener('keydown', handleKeyPress);

@@ -18,9 +18,9 @@ const ParticleField = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {return;}
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -52,8 +52,8 @@ const ParticleField = () => {
       particles.forEach((p) => {
         p.x += p.vx;
         p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        if (p.x < 0 || p.x > canvas.width) {p.vx *= -1;}
+        if (p.y < 0 || p.y > canvas.height) {p.vy *= -1;}
 
         // Mouse repulsion
         const dx = p.x - mouseRef.current.x;

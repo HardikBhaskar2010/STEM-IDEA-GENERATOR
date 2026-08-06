@@ -41,7 +41,7 @@ export const useVoiceInput = (options: UseVoiceInputOptions = {}): UseVoiceInput
 
   // Initialize speech recognition
   useEffect(() => {
-    if (!isSupported) return;
+    if (!isSupported) {return;}
 
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();

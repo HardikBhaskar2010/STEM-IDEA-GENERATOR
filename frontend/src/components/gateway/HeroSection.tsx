@@ -25,7 +25,7 @@ const HeroSection = () => {
 
   // Anime.js stagger entrance for title characters
   useEffect(() => {
-    if (hasAnimated.current) return;
+    if (hasAnimated.current) {return;}
     hasAnimated.current = true;
 
     // Animate orbiting elements with anime

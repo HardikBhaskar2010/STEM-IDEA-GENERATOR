@@ -67,9 +67,9 @@ const WELCOME_MSG = (mode: VeronicaMode): ChatMessage => ({
 
 const inferProjectTypeHint = (message: string) => {
   const msg = message.toLowerCase();
-  if (msg.includes('robot')) return 'robotics';
-  if (msg.includes('iot') || msg.includes('monitor')) return 'iot';
-  if (msg.includes('web') || msg.includes('react')) return 'web-development';
+  if (msg.includes('robot')) {return 'robotics';}
+  if (msg.includes('iot') || msg.includes('monitor')) {return 'iot';}
+  if (msg.includes('web') || msg.includes('react')) {return 'web-development';}
   return 'electronics';
 };
 
@@ -92,7 +92,7 @@ const makeDefaultTab = (mode: VeronicaMode = 'idea'): { tab: ChatTab; messages: 
 
 const pendingSaves = new Map<string, NodeJS.Timeout>();
 function debouncedSave(key: string, runSave: () => void) {
-  if (pendingSaves.has(key)) clearTimeout(pendingSaves.get(key));
+  if (pendingSaves.has(key)) {clearTimeout(pendingSaves.get(key));}
   pendingSaves.set(
     key,
     setTimeout(() => {
@@ -128,7 +128,7 @@ const VeronicaAI: React.FC = () => {
   // Load Database Chats
   useEffect(() => {
     async function initChats() {
-      if (!user) return;
+      if (!user) {return;}
       const dbChats = await getVeronicaChats();
       if (dbChats && dbChats.length > 0) {
         const loadedTabs: ChatTab[] = dbChats.map((c: any) => ({
@@ -169,7 +169,7 @@ const VeronicaAI: React.FC = () => {
 
   // ── Realtime subscription for external updates (e.g. from backend) ──
   useEffect(() => {
-    if (!activeTabId) return;
+    if (!activeTabId) {return;}
 
     const channel = supabase
       .channel(`veronica-chat-realtime-${activeTabId}`)
@@ -199,7 +199,7 @@ const VeronicaAI: React.FC = () => {
 
             setChatHistory((prev) => {
               const current = prev[activeTabId] || [];
-              if (current.some(msg => msg.id === newMsg.id)) return prev;
+              if (current.some(msg => msg.id === newMsg.id)) {return prev;}
               return { ...prev, [activeTabId]: [...current, newMsg] };
             });
           } else if (payload.eventType === 'UPDATE') {
@@ -244,7 +244,7 @@ const VeronicaAI: React.FC = () => {
   // Sync preview URL from any running sandbox
   useEffect(() => {
     const running = Object.values(sandboxState).find(s => s.previewUrl);
-    if (running?.previewUrl) setPreviewUrl(running.previewUrl);
+    if (running?.previewUrl) {setPreviewUrl(running.previewUrl);}
   }, [sandboxState]);
 
   const handleRunProject = useCallback(async (projectId: string) => {
@@ -306,7 +306,7 @@ const VeronicaAI: React.FC = () => {
   // (within 120 px) — so reading history isn't interrupted by new messages.
   const scrollToBottomIfNear = useCallback(() => {
     const viewport = scrollViewportRef.current;
-    if (!viewport) return;
+    if (!viewport) {return;}
     const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
     if (distanceFromBottom < 120) {
       viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
@@ -419,7 +419,7 @@ const VeronicaAI: React.FC = () => {
   // ── Send ──
   const handleSend = useCallback(async (overrideText?: string) => {
     const text = (overrideText ?? inputValue).trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading) {return;}
 
     appendToActive({ role: 'user', content: text, projectTypeHint: inferProjectTypeHint(text) });
     setInputValue('');
@@ -601,7 +601,7 @@ const VeronicaAI: React.FC = () => {
               }}
               onDuplicateTab={(id) => {
                 const source = tabs.find(t => t.id === id);
-                if (!source) return;
+                if (!source) {return;}
                 const { tab, messages } = makeDefaultTab(source.mode);
                 const newTab = { ...tab, title: `${source.title} (copy)` };
                 setTabs(prev => [...prev, newTab]);
@@ -724,8 +724,8 @@ const VeronicaAI: React.FC = () => {
                             <div className="space-y-3">
                               {(() => {
                                 const p = (() => {
-                                  if (!m.isStreamingBuild) return '100%';
-                                  if (!m.agentEvents) return '0%';
+                                  if (!m.isStreamingBuild) {return '100%';}
+                                  if (!m.agentEvents) {return '0%';}
                                   const ev = [...m.agentEvents].reverse().find(e => typeof e.progress === 'number');
                                   return ev && ev.progress ? `${Math.floor(ev.progress * 100)}%` : '0%';
                                 })();
@@ -873,7 +873,7 @@ const VeronicaAI: React.FC = () => {
                         </span>
                       </div>
                       <button
-                        onClick={() => { if (previewUrl) { const el = document.querySelector<HTMLIFrameElement>('#veronica-preview-frame'); if (el) el.src = previewUrl; } }}
+                        onClick={() => { if (previewUrl) { const el = document.querySelector<HTMLIFrameElement>('#veronica-preview-frame'); if (el) {el.src = previewUrl;} } }}
                         className="p-1.5 rounded hover:bg-white/[0.06] text-gray-500 hover:text-gray-200 transition-colors"
                         title="Reload"
                       >

@@ -55,7 +55,7 @@ const ProjectDetail: React.FC = () => {
   }, [authLoading, user, id, navigate]);
 
   const loadProject = async () => {
-    if (!id) return;
+    if (!id) {return;}
     setIsLoading(true);
     const loadedProject = await projectService.getProjectById(id);
     if (loadedProject) {
@@ -73,7 +73,7 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleSaveChanges = async () => {
-    if (!project || !editData) return;
+    if (!project || !editData) {return;}
     setIsSaving(true);
 
     const success = await projectService.updateProject(project.id, {
@@ -103,7 +103,7 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleToggleStar = async () => {
-    if (!project) return;
+    if (!project) {return;}
     const updated = await projectService.toggleStarProject(project.id, !project.starred);
     if (updated) {
       setProject(updated);
@@ -111,7 +111,7 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleToggleStep = async (stepIndex: number) => {
-    if (!project) return;
+    if (!project) {return;}
     
     // Prevent toggling steps on abandoned projects
     if (project.status === 'abandoned') {
@@ -135,9 +135,9 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!project) return;
+    if (!project) {return;}
     const confirmed = window.confirm('Are you sure you want to delete this project?');
-    if (!confirmed) return;
+    if (!confirmed) {return;}
 
     const success = await projectService.deleteProject(project.id);
     if (success) {
@@ -150,9 +150,9 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleMarkAsAbandoned = async () => {
-    if (!project) return;
+    if (!project) {return;}
     const confirmed = window.confirm('Are you sure you want to mark this project as abandoned?');
-    if (!confirmed) return;
+    if (!confirmed) {return;}
 
     const updated = await projectService.markAsAbandoned(project.id);
     if (updated) {

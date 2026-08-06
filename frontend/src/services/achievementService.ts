@@ -97,7 +97,7 @@ const _inflight = new Map<string, Promise<any>>();
 
 function _getCached<T>(key: string): T | null {
   const entry = _cache.get(key);
-  if (!entry) return null;
+  if (!entry) {return null;}
   if (Date.now() > entry.expiresAt) {
     _cache.delete(key);
     return null;
@@ -122,12 +122,12 @@ async function _fetch<T>(
 ): Promise<T> {
   if (!options.skipCache) {
     const cached = _getCached<T>(cacheKey);
-    if (cached !== null) return cached;
+    if (cached !== null) {return cached;}
   }
 
   // Already in-flight? Return the same promise (dedup).
   const existing = _inflight.get(cacheKey);
-  if (existing) return existing as Promise<T>;
+  if (existing) {return existing as Promise<T>;}
 
   const pending = fetcher().then((result) => {
     _setCached(cacheKey, result);
@@ -160,7 +160,7 @@ export function invalidateAchievementCache(key?: string): void {
 export const getAllAchievements = async (): Promise<Achievement[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/achievements/all`);
-    if (!response.ok) return [];
+    if (!response.ok) {return [];}
     const result = await response.json();
     return result.achievements || [];
   } catch (error) {
@@ -172,14 +172,14 @@ export const getAllAchievements = async (): Promise<Achievement[]> => {
 export const getUserAchievements = async (forceRefresh = false): Promise<Achievement[]> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    if (!user) {return [];}
 
     const cacheKey = `user-achievements-${user.id}`;
     return await _fetch(
       cacheKey,
       async () => {
         const response = await fetch(`${API_BASE_URL}/achievements/user/${user.id}`);
-        if (!response.ok) return [];
+        if (!response.ok) {return [];}
         const result = await response.json();
         return result.achievements || [];
       },
@@ -194,14 +194,14 @@ export const getUserAchievements = async (forceRefresh = false): Promise<Achieve
 export const getUserAchievementStats = async (forceRefresh = false): Promise<AchievementStats | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!user) {return null;}
 
     const cacheKey = `user-achievement-stats-${user.id}`;
     return await _fetch(
       cacheKey,
       async () => {
         const response = await fetch(`${API_BASE_URL}/achievements/user/${user.id}/stats`);
-        if (!response.ok) return null;
+        if (!response.ok) {return null;}
         const result = await response.json();
         return result.stats || null;
       },
@@ -216,7 +216,7 @@ export const getUserAchievementStats = async (forceRefresh = false): Promise<Ach
 export const unlockAchievement = async (achievementCode: string): Promise<boolean> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    if (!user) {throw new Error('Not authenticated');}
 
     const response = await fetch(`${API_BASE_URL}/achievements/unlock`, {
       method: 'POST',
@@ -227,7 +227,7 @@ export const unlockAchievement = async (achievementCode: string): Promise<boolea
       }),
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) {return false;}
 
     const result = await response.json();
     // Invalidate cache so next read is fresh
@@ -242,13 +242,13 @@ export const unlockAchievement = async (achievementCode: string): Promise<boolea
 export const checkAndUnlockAchievements = async (): Promise<{ unlocked_count: number; newly_unlocked: any[] }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { unlocked_count: 0, newly_unlocked: [] };
+    if (!user) {return { unlocked_count: 0, newly_unlocked: [] };}
 
     const response = await fetch(`${API_BASE_URL}/achievements/check-and-unlock/${user.id}`, {
       method: 'POST',
     });
 
-    if (!response.ok) return { unlocked_count: 0, newly_unlocked: [] };
+    if (!response.ok) {return { unlocked_count: 0, newly_unlocked: [] };}
 
     const result = await response.json();
     const unlocked_count = result.unlocked_count || 0;
@@ -271,10 +271,10 @@ export const checkAndUnlockAchievements = async (): Promise<{ unlocked_count: nu
 export const getRecentUnlocks = async (limit: number = 10): Promise<RecentUnlock[]> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    if (!user) {return [];}
 
     const response = await fetch(`${API_BASE_URL}/achievements/recent-unlocks/${user.id}?limit=${limit}`);
-    if (!response.ok) return [];
+    if (!response.ok) {return [];}
 
     const result = await response.json();
     return result.recent_unlocks || [];
@@ -287,7 +287,7 @@ export const getRecentUnlocks = async (limit: number = 10): Promise<RecentUnlock
 export const getAchievementLeaderboard = async (limit: number = 50): Promise<any[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/achievements/leaderboard?limit=${limit}`);
-    if (!response.ok) return [];
+    if (!response.ok) {return [];}
 
     const result = await response.json();
     return result.leaderboard || [];

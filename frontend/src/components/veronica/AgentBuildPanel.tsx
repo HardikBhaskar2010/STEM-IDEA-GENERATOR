@@ -44,14 +44,14 @@ function buildTree(files: ProjectFile[]): Record<string, any> {
 }
 
 function getFileIcon(name: string): string {
-  if (name.endsWith('.tsx') || name.endsWith('.jsx')) return '⚛';
-  if (name.endsWith('.ts') || name.endsWith('.js')) return '📜';
-  if (name.endsWith('.css')) return '🎨';
-  if (name.endsWith('.html')) return '🌐';
-  if (name.endsWith('.json')) return '{}';
-  if (name.endsWith('.md')) return '📝';
-  if (name.endsWith('.ino')) return '🔌';
-  if (name.endsWith('.py')) return '🐍';
+  if (name.endsWith('.tsx') || name.endsWith('.jsx')) {return '⚛';}
+  if (name.endsWith('.ts') || name.endsWith('.js')) {return '📜';}
+  if (name.endsWith('.css')) {return '🎨';}
+  if (name.endsWith('.html')) {return '🌐';}
+  if (name.endsWith('.json')) {return '{}';}
+  if (name.endsWith('.md')) {return '📝';}
+  if (name.endsWith('.ino')) {return '🔌';}
+  if (name.endsWith('.py')) {return '🐍';}
   return '📄';
 }
 

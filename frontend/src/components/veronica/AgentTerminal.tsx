@@ -176,33 +176,33 @@ type HealingState = 'attempting' | 'succeeded' | 'failed' | null;
 
 function getHealingState(events: AgentEvent[]): HealingState {
   const last = events.slice().reverse().find(e => e.event.startsWith('healing_'));
-  if (!last) return null;
-  if (last.event === 'healing_start') return 'attempting';
-  if (last.event === 'healing_success') return 'succeeded';
-  if (last.event === 'healing_failed') return 'failed';
+  if (!last) {return null;}
+  if (last.event === 'healing_start') {return 'attempting';}
+  if (last.event === 'healing_success') {return 'succeeded';}
+  if (last.event === 'healing_failed') {return 'failed';}
   return null;
 }
 
 const HealingBadge: React.FC<{ state: HealingState }> = ({ state }) => {
-  if (!state) return null;
-  if (state === 'attempting') return (
+  if (!state) {return null;}
+  if (state === 'attempting') {return (
     <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
       <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
       <span className="text-[11px] font-bold text-amber-400 tracking-wide uppercase">Self-healing…</span>
     </div>
-  );
-  if (state === 'succeeded') return (
+  );}
+  if (state === 'succeeded') {return (
     <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
       <CheckCheck className="w-3 h-3 text-emerald-400 shrink-0" />
       <span className="text-[11px] font-bold text-emerald-400 tracking-wide uppercase">Auto-fixed</span>
     </div>
-  );
-  if (state === 'failed') return (
+  );}
+  if (state === 'failed') {return (
     <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full">
       <X className="w-3 h-3 text-rose-400 shrink-0" />
       <span className="text-[11px] font-bold text-rose-400 tracking-wide uppercase">Fix failed</span>
     </div>
-  );
+  );}
   return null;
 };
 
@@ -394,8 +394,8 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ events, isStreamin
 
           {events.map((ev, i) => {
             // Skip rendered-elsewhere types
-            if (ev.event === 'intent_enriched') return null;
-            if (ev.event === 'qa_start' || ev.event === 'qa_check_pass' || ev.event === 'qa_check_fail' || ev.event === 'qa_done') return null;
+            if (ev.event === 'intent_enriched') {return null;}
+            if (ev.event === 'qa_start' || ev.event === 'qa_check_pass' || ev.event === 'qa_check_fail' || ev.event === 'qa_done') {return null;}
 
             // Decision card
             if (ev.event === 'decision') {
@@ -451,7 +451,7 @@ export const AgentTerminal: React.FC<AgentTerminalProps> = ({ events, isStreamin
             };
 
             const cfg = BADGE[ev.event];
-            if (!cfg) return null;
+            if (!cfg) {return null;}
             const Icon = cfg.icon;
             const time = fmt(ev.timestamp);
 

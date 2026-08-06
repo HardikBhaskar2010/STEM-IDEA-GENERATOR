@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
-import { useCodeGeneration, GenerationParams, CodeFile, GeneratedCode, GenerationProgress } from '@/hooks/useCodeGeneration';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import type { GenerationParams, CodeFile, GeneratedCode, GenerationProgress } from '@/hooks/useCodeGeneration';
+import { useCodeGeneration } from '@/hooks/useCodeGeneration';
 import { useFileOperations } from '@/hooks/useFileOperations';
 
 interface CodeGenerationState {

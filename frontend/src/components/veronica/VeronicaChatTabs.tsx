@@ -45,9 +45,9 @@ const STATUS_DOT: Record<ChatTabStatus, string> = {
 
 function formatRelative(date: Date): string {
   const diff = (Date.now() - date.getTime()) / 1000;
-  if (diff < 60) return 'now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  if (diff < 60) {return 'now';}
+  if (diff < 3600) {return `${Math.floor(diff / 60)}m`;}
+  if (diff < 86400) {return `${Math.floor(diff / 3600)}h`;}
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
@@ -83,7 +83,7 @@ const TabContextMenu: React.FC<ContextMenuProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleRenameSubmit = () => {
-    if (draft.trim()) onRename?.(tabId, draft.trim());
+    if (draft.trim()) {onRename?.(tabId, draft.trim());}
     setRenaming(false);
     onClose();
   };
@@ -101,7 +101,7 @@ const TabContextMenu: React.FC<ContextMenuProps> = ({
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter') handleRenameSubmit();
+              if (e.key === 'Enter') {handleRenameSubmit();}
               if (e.key === 'Escape') { setRenaming(false); onClose(); }
             }}
             className="w-full bg-[#0a0a0f] border border-white/10 rounded px-2 py-1 text-[12px] text-gray-200 outline-none focus:border-indigo-500/40"

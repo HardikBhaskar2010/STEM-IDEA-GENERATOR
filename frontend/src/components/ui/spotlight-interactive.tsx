@@ -1,6 +1,7 @@
 'use client';
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { motion, useSpring, useTransform, SpringOptions } from 'framer-motion';
+import type { SpringOptions } from 'framer-motion';
+import { motion, useSpring, useTransform } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 type SpotlightProps = {
@@ -37,7 +38,7 @@ export function SpotlightInteractive({
 
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
-      if (!parentElement) return;
+      if (!parentElement) {return;}
       const { left, top } = parentElement.getBoundingClientRect();
       mouseX.set(event.clientX - left);
       mouseY.set(event.clientY - top);
@@ -46,7 +47,7 @@ export function SpotlightInteractive({
   );
 
   useEffect(() => {
-    if (!parentElement) return;
+    if (!parentElement) {return;}
 
     parentElement.addEventListener('mousemove', handleMouseMove);
     parentElement.addEventListener('mouseenter', () => setIsHovered(true));

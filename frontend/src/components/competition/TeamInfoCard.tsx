@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TeamInfo } from '@/services/competitionService';
+import type { TeamInfo } from '@/services/competitionService';
 import { Users, School, Code, LogOut, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { leaveTeam } from '@/services/competitionService';

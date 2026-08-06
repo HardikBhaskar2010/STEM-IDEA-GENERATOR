@@ -1,7 +1,7 @@
 // Chat History Service - LocalStorage Based
 // Manages chat messages in browser's localStorage without authentication
 
-import { ChatMessage } from '@/types/aiGuidance';
+import type { ChatMessage } from '@/types/aiGuidance';
 
 interface ChatHistoryData {
   projectId: string;

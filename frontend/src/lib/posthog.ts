@@ -9,7 +9,7 @@ let isInitialized = false;
  * Initialize PostHog client for frontend analytics
  */
 export const initPostHog = () => {
-  if (isInitialized) return;
+  if (isInitialized) {return;}
 
   if (!POSTHOG_KEY) {
     console.info('💡 PostHog: VITE_POSTHOG_KEY not set. Running in dry-run mode (events logged to dev console).');

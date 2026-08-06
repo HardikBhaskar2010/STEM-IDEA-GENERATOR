@@ -18,7 +18,7 @@ const FeaturesSection = () => {
   const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (!inView || hasAnimated.current) return;
+    if (!inView || hasAnimated.current) {return;}
     hasAnimated.current = true;
 
     // Staggered card reveal with anime.js

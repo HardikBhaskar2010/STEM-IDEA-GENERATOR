@@ -31,7 +31,7 @@ function rgbToHex(r: number, g: number, b: number): string {
  */
 function parseColor(color: string): { r: number; g: number; b: number } | null {
   const ctx = document.createElement('canvas').getContext('2d');
-  if (!ctx) return null;
+  if (!ctx) {return null;}
 
   ctx.fillStyle = color;
   const computed = ctx.fillStyle;
@@ -63,7 +63,7 @@ export function useBackgroundColor(selector: string = 'body'): ColorInfo {
   useEffect(() => {
     const updateBackgroundColor = () => {
       const element = document.querySelector(selector);
-      if (!element) return;
+      if (!element) {return;}
 
       const computedStyle = window.getComputedStyle(element);
       let bgColor = computedStyle.backgroundColor;
@@ -83,7 +83,7 @@ export function useBackgroundColor(selector: string = 'body'): ColorInfo {
       }
 
       const parsed = parseColor(bgColor);
-      if (!parsed) return;
+      if (!parsed) {return;}
 
       const luminosity = calculateLuminosity(parsed.r, parsed.g, parsed.b);
       const isDark = luminosity < 0.5;

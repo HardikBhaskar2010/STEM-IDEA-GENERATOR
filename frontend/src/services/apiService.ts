@@ -151,7 +151,7 @@ export async function* generateProjectStream(params: ProjectParams) {
   }
 
   const reader = response.body?.getReader();
-  if (!reader) throw new Error("Stream not supported");
+  if (!reader) {throw new Error("Stream not supported");}
 
   const decoder = new TextDecoder("utf-8");
   let buffer = '';
@@ -159,7 +159,7 @@ export async function* generateProjectStream(params: ProjectParams) {
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {break;}
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
@@ -168,7 +168,7 @@ export async function* generateProjectStream(params: ProjectParams) {
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const dataStr = line.slice(6).trim();
-          if (dataStr === '[DONE]') return;
+          if (dataStr === '[DONE]') {return;}
           if (dataStr) {
             try {
               yield JSON.parse(dataStr);

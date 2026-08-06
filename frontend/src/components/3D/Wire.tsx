@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { useCircuitStore, Connection } from '@/store/useCircuitStore';
+import type { Connection } from '@/store/useCircuitStore';
+import { useCircuitStore } from '@/store/useCircuitStore';
 
 // Wire color palette based on connection type
 const WIRE_COLORS = [

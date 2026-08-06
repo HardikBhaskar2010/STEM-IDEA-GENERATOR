@@ -62,7 +62,7 @@ export function useAnimationFrame(callback: (time: number) => void, enabled: boo
   const previousTimeRef = useRef<number>();
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {return;}
 
     const animate = (time: number) => {
       if (previousTimeRef.current !== undefined) {
@@ -93,7 +93,7 @@ export function useInterval(callback: () => void, delay: number | null) {
   }, [callback]);
 
   useEffect(() => {
-    if (delay === null) return;
+    if (delay === null) {return;}
 
     const id = setInterval(() => savedCallback.current(), delay);
 
@@ -108,7 +108,7 @@ export function useCanvasCleanup(canvasRef: React.RefObject<HTMLCanvasElement>) 
   useEffect(() => {
     return () => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {return;}
 
       const ctx = canvas.getContext('2d');
       if (ctx) {

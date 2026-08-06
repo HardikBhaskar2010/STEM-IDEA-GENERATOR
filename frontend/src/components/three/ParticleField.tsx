@@ -95,7 +95,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
   }, [themeColor]);
 
   useFrame((state) => {
-    if (!points.current || animationComplexity === 'minimal') return;
+    if (!points.current || animationComplexity === 'minimal') {return;}
 
     const time = state.clock.getElapsedTime();
     const positions = points.current.geometry.attributes.position.array as Float32Array;

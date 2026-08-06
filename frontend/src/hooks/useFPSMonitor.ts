@@ -29,7 +29,7 @@ export function useFPSMonitor(enabled: boolean = true): FPSMetrics {
   const rafIdRef = useRef<number>();
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {return;}
 
     const measure = () => {
       const currentTime = performance.now();

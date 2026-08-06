@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { deviceCapability, DeviceCapability } from '@/lib/deviceCapability';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import type { DeviceCapability } from '@/lib/deviceCapability';
+import { deviceCapability } from '@/lib/deviceCapability';
 import { webglManager } from '@/lib/webglManager';
 
 interface ThreeDContextValue {

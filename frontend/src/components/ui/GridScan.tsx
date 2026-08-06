@@ -366,13 +366,13 @@ export const GridScan: React.FC<GridScanProps> = ({
 
   const pushScan = (t: number) => {
     const arr = scanStartsRef.current.slice();
-    if (arr.length >= MAX_SCANS) arr.shift();
+    if (arr.length >= MAX_SCANS) {arr.shift();}
     arr.push(t);
     scanStartsRef.current = arr;
     if (materialRef.current) {
       const u = materialRef.current.uniforms;
       const buf = new Array(MAX_SCANS).fill(0);
-      for (let i = 0; i < arr.length && i < MAX_SCANS; i++) buf[i] = arr[i];
+      for (let i = 0; i < arr.length && i < MAX_SCANS; i++) {buf[i] = arr[i];}
       u.uScanStarts.value = buf;
       u.uScanCount.value = arr.length;
     }
@@ -395,7 +395,7 @@ export const GridScan: React.FC<GridScanProps> = ({
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el) {return;}
     let leaveTimer: number | null = null;
 
     // When listenOnWindow=true the container has pointer-events:none so we
@@ -403,7 +403,7 @@ export const GridScan: React.FC<GridScanProps> = ({
     const moveTarget: EventTarget = listenOnWindow ? window : el;
 
     const onMove = (e: MouseEvent) => {
-      if (uiFaceActive) return;
+      if (uiFaceActive) {return;}
       if (leaveTimer) {
         clearTimeout(leaveTimer);
         leaveTimer = null;
@@ -415,7 +415,7 @@ export const GridScan: React.FC<GridScanProps> = ({
     };
     const onClick = async () => {
       const nowSec = performance.now() / 1000;
-      if (scanOnClick) pushScan(nowSec);
+      if (scanOnClick) {pushScan(nowSec);}
       if (
         enableGyro &&
         typeof window !== 'undefined' &&
@@ -434,8 +434,8 @@ export const GridScan: React.FC<GridScanProps> = ({
       }
     };
     const onLeave = () => {
-      if (uiFaceActive) return;
-      if (leaveTimer) clearTimeout(leaveTimer);
+      if (uiFaceActive) {return;}
+      if (leaveTimer) {clearTimeout(leaveTimer);}
       leaveTimer = window.setTimeout(
         () => {
           lookTarget.current.set(0, 0);
@@ -450,22 +450,22 @@ export const GridScan: React.FC<GridScanProps> = ({
     if (!listenOnWindow) {
       el.addEventListener('mouseenter', onEnter);
       el.addEventListener('mouseleave', onLeave);
-      if (scanOnClick) el.addEventListener('click', onClick);
+      if (scanOnClick) {el.addEventListener('click', onClick);}
     }
     return () => {
       moveTarget.removeEventListener('mousemove', onMove as EventListener);
       if (!listenOnWindow) {
         el.removeEventListener('mouseenter', onEnter);
         el.removeEventListener('mouseleave', onLeave);
-        if (scanOnClick) el.removeEventListener('click', onClick);
+        if (scanOnClick) {el.removeEventListener('click', onClick);}
       }
-      if (leaveTimer) clearTimeout(leaveTimer);
+      if (leaveTimer) {clearTimeout(leaveTimer);}
     };
   }, [uiFaceActive, snapBackDelay, scanOnClick, enableGyro, listenOnWindow]);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {return;}
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
@@ -549,7 +549,7 @@ export const GridScan: React.FC<GridScanProps> = ({
     const onResize = () => {
       renderer.setSize(container.clientWidth, container.clientHeight);
       material.uniforms.iResolution.value.set(container.clientWidth, container.clientHeight, renderer.getPixelRatio());
-      if (composerRef.current) composerRef.current.setSize(container.clientWidth, container.clientHeight);
+      if (composerRef.current) {composerRef.current.setSize(container.clientWidth, container.clientHeight);}
     };
     window.addEventListener('resize', onResize);
 
@@ -602,7 +602,7 @@ export const GridScan: React.FC<GridScanProps> = ({
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
       window.removeEventListener('resize', onResize);
       material.dispose();
       (quad.geometry as THREE.BufferGeometry).dispose();
@@ -677,9 +677,9 @@ export const GridScan: React.FC<GridScanProps> = ({
   ]);
 
   useEffect(() => {
-    if (!enableGyro) return;
+    if (!enableGyro) {return;}
     const handler = (e: DeviceOrientationEvent) => {
-      if (uiFaceActive) return;
+      if (uiFaceActive) {return;}
       const gamma = e.gamma ?? 0;
       const beta = e.beta ?? 0;
       const nx = THREE.MathUtils.clamp(gamma / 45, -1, 1);
@@ -701,9 +701,9 @@ export const GridScan: React.FC<GridScanProps> = ({
           faceapi.nets.tinyFaceDetector.loadFromUri(modelsPath),
           faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelsPath)
         ]);
-        if (!canceled) setModelsReady(true);
+        if (!canceled) {setModelsReady(true);}
       } catch {
-        if (!canceled) setModelsReady(false);
+        if (!canceled) {setModelsReady(false);}
       }
     };
     load();
@@ -717,9 +717,9 @@ export const GridScan: React.FC<GridScanProps> = ({
     let lastDetect = 0;
 
     const start = async () => {
-      if (!enableWebcam || !modelsReady) return;
+      if (!enableWebcam || !modelsReady) {return;}
       const video = videoRef.current;
-      if (!video) return;
+      if (!video) {return;}
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -735,7 +735,7 @@ export const GridScan: React.FC<GridScanProps> = ({
       const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
 
       const detect = async (ts: number) => {
-        if (stop) return;
+        if (stop) {return;}
 
         if (ts - lastDetect >= 33) {
           lastDetect = ts;
@@ -809,7 +809,7 @@ export const GridScan: React.FC<GridScanProps> = ({
       const video = videoRef.current;
       if (video) {
         const stream = video.srcObject as MediaStream | null;
-        if (stream) stream.getTracks().forEach(t => t.stop());
+        if (stream) {stream.getTracks().forEach(t => t.stop());}
         video.pause();
         video.srcObject = null;
       }
@@ -855,11 +855,11 @@ function smoothDampVec2(
   const x = omega * deltaTime;
   const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
 
-  let change = current.clone().sub(target);
+  const change = current.clone().sub(target);
   const originalTo = target.clone();
 
   const maxChange = maxSpeed * smoothTime;
-  if (change.length() > maxChange) change.setLength(maxChange);
+  if (change.length() > maxChange) {change.setLength(maxChange);}
 
   target = current.clone().sub(change);
   const temp = currentVelocity.clone().addScaledVector(change, omega).multiplyScalar(deltaTime);
@@ -913,11 +913,11 @@ function smoothDampFloat(
 
 function medianPush(buf: number[], v: number, maxLen: number) {
   buf.push(v);
-  if (buf.length > maxLen) buf.shift();
+  if (buf.length > maxLen) {buf.shift();}
 }
 
 function median(buf: number[]) {
-  if (buf.length === 0) return 0;
+  if (buf.length === 0) {return 0;}
   const a = [...buf].sort((x, y) => x - y);
   const mid = Math.floor(a.length / 2);
   return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) * 0.5;

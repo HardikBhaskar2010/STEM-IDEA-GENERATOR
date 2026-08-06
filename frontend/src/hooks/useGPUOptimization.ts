@@ -23,7 +23,7 @@ export function useGPUOptimization<T extends HTMLElement>(
   const ref = useRef<T>(null);
 
   useEffect(() => {
-    if (!optimize || !ref.current) return;
+    if (!optimize || !ref.current) {return;}
 
     const element = ref.current;
     
@@ -47,17 +47,17 @@ export function useGPUTransform<T extends HTMLElement>() {
   const ref = useRef<T>(null);
 
   const setTransform = (x: number, y: number, z: number = 0) => {
-    if (!ref.current) return;
+    if (!ref.current) {return;}
     ref.current.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
   };
 
   const resetTransform = () => {
-    if (!ref.current) return;
+    if (!ref.current) {return;}
     ref.current.style.transform = 'translate3d(0, 0, 0)';
   };
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current) {return;}
     
     // Initialize with GPU acceleration
     ref.current.style.transform = 'translate3d(0, 0, 0)';

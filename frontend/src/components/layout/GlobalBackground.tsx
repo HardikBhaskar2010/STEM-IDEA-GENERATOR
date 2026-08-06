@@ -34,7 +34,7 @@ export function GlobalBackground() {
     const hslToHex = (hslStr: string) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      if (!ctx) return '#000000';
+      if (!ctx) {return '#000000';}
       ctx.fillStyle = hslStr;
       return ctx.fillStyle; // returns hex/rgb string
     };
@@ -45,7 +45,7 @@ export function GlobalBackground() {
     };
   }, [colorTheme]);
 
-  if (isExcluded) return null;
+  if (isExcluded) {return null;}
 
   return (
     <div 

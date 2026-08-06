@@ -32,10 +32,10 @@ export function useIntersectionObserver<T extends HTMLElement>(
 
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    if (!element) {return;}
 
     // Don't observe if already frozen
-    if (frozenRef.current) return;
+    if (frozenRef.current) {return;}
 
     // Check for IntersectionObserver support
     if (typeof IntersectionObserver === 'undefined') {
@@ -93,7 +93,7 @@ export function useScrollAnimation<T extends HTMLElement>(
 
   useEffect(() => {
     const element = ref.current;
-    if (!element || !isIntersecting) return;
+    if (!element || !isIntersecting) {return;}
 
     const handleScroll = () => {
       const rect = element.getBoundingClientRect();
@@ -130,7 +130,7 @@ export function useIntersectionRatio<T extends HTMLElement>(
 
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    if (!element) {return;}
 
     if (typeof IntersectionObserver === 'undefined') {
       setRatio(1);

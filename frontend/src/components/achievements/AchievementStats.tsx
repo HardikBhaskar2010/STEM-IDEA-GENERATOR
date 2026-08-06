@@ -2,7 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Trophy, Sparkles, TrendingUp } from 'lucide-react';
-import { AchievementStats as Stats, ACHIEVEMENT_TIERS } from '@/services/achievementService';
+import type { AchievementStats as Stats} from '@/services/achievementService';
+import { ACHIEVEMENT_TIERS } from '@/services/achievementService';
 import { cn } from '@/lib/utils';
 
 interface AchievementStatsProps {
@@ -76,7 +77,7 @@ export const AchievementStats: React.FC<AchievementStatsProps> = ({
           <div className="text-sm font-medium mb-3">Achievements by Tier</div>
           {tierStats.map(({ tier, count }) => {
             const tierConfig = ACHIEVEMENT_TIERS.find(t => t.value === tier);
-            if (!tierConfig) return null;
+            if (!tierConfig) {return null;}
 
             return (
               <div

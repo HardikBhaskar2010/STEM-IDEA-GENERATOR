@@ -200,11 +200,11 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const filteredProjects = projects.filter(project => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'completed') return project.status === 'completed';
-    if (activeTab === 'in-progress') return project.status === 'in-progress';
-    if (activeTab === 'planning') return project.status === 'planning';
-    if (activeTab === 'abandoned') return project.status === 'abandoned';
+    if (activeTab === 'all') {return true;}
+    if (activeTab === 'completed') {return project.status === 'completed';}
+    if (activeTab === 'in-progress') {return project.status === 'in-progress';}
+    if (activeTab === 'planning') {return project.status === 'planning';}
+    if (activeTab === 'abandoned') {return project.status === 'abandoned';}
     return true;
   });
 

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 export const EnergyGrid: React.FC<{ className?: string }> = ({ className }) => {
   const { shouldAnimate, isHighPerf } = usePerformanceAnimations();
 
-  if (!shouldAnimate || !isHighPerf) return null;
+  if (!shouldAnimate || !isHighPerf) {return null;}
 
   return (
     <div className={cn("fixed inset-0 pointer-events-none z-[-1] overflow-hidden", className)}>

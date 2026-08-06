@@ -89,10 +89,10 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({ file, onConfirm, onCancel
 
   // ── Render loop ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady) {return;}
     const canvas = canvasRef.current;
     const img    = imgRef.current;
-    if (!canvas || !img) return;
+    if (!canvas || !img) {return;}
 
     const ctx = canvas.getContext('2d')!;
     const cx  = CANVAS_SIZE / 2;
@@ -168,13 +168,13 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({ file, onConfirm, onCancel
   }, [getCanvasPos]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging || !lastPos.current) return;
+    if (!isDragging || !lastPos.current) {return;}
     const pos = getCanvasPos(e);
     const dx  = pos.x - lastPos.current.x;
     const dy  = pos.y - lastPos.current.y;
     lastPos.current = pos;
     const img = imgRef.current;
-    if (!img) return;
+    if (!img) {return;}
     setTransform(prev => clampTransform({ ...prev, x: prev.x + dx, y: prev.y + dy }, img.naturalWidth, img.naturalHeight));
   }, [isDragging, getCanvasPos]);
 
@@ -186,7 +186,7 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({ file, onConfirm, onCancel
   const onWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     const img = imgRef.current;
-    if (!img) return;
+    if (!img) {return;}
     const delta = e.deltaY < 0 ? 1.08 : 0.93;
     const minScale = (CIRCLE_R * 2) / Math.min(img.naturalWidth, img.naturalHeight);
     setTransform(prev => {
@@ -198,7 +198,7 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({ file, onConfirm, onCancel
   // ── Zoom slider ─────────────────────────────────────────────────────────────
   const onZoomSlider = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const img = imgRef.current;
-    if (!img) return;
+    if (!img) {return;}
     const minScale = (CIRCLE_R * 2) / Math.min(img.naturalWidth, img.naturalHeight);
     const maxScale = minScale * 4;
     const t = parseFloat(e.target.value) / 100;
@@ -208,7 +208,7 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({ file, onConfirm, onCancel
 
   const currentZoomPct = useCallback((): number => {
     const img = imgRef.current;
-    if (!img) return 0;
+    if (!img) {return 0;}
     const minScale = (CIRCLE_R * 2) / Math.min(img.naturalWidth, img.naturalHeight);
     const maxScale = minScale * 4;
     return ((transform.scale - minScale) / (maxScale - minScale)) * 100;
@@ -217,7 +217,7 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({ file, onConfirm, onCancel
   // ── Export ──────────────────────────────────────────────────────────────────
   const handleSave = useCallback(() => {
     const img = imgRef.current;
-    if (!img) return;
+    if (!img) {return;}
 
     const out  = document.createElement('canvas');
     out.width  = OUTPUT_SIZE;
@@ -247,7 +247,7 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({ file, onConfirm, onCancel
     );
 
     out.toBlob(blob => {
-      if (blob) onConfirm(blob);
+      if (blob) {onConfirm(blob);}
     }, 'image/png', 0.95);
   }, [transform, onConfirm]);
 

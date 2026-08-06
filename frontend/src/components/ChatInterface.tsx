@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { ChatInterfaceProps, ChatMessage, ProjectContext } from '@/types/aiGuidance';
+import type { ChatInterfaceProps, ChatMessage, ProjectContext } from '@/types/aiGuidance';
 import { aiGuidanceService } from '@/services/aiGuidanceService';
 import { chatHistoryService } from '@/services/chatHistoryService';
 import ChatMessageComponent from './ChatMessage';
@@ -219,7 +219,7 @@ ${projectData.steps?.map((step, i) => `${i + 1}. ${step}`).join('\n') || 'None s
    */
   const sendMessage = async (messageText?: string) => {
     const text = messageText || currentMessage.trim();
-    if (!text || isLoading || !sessionId) return;
+    if (!text || isLoading || !sessionId) {return;}
 
     setIsLoading(true);
     setError(null);
@@ -390,7 +390,7 @@ ${projectData.steps?.map((step, i) => `${i + 1}. ${step}`).join('\n') || 'None s
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <div 

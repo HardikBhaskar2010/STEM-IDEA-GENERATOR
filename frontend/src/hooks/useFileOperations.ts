@@ -287,7 +287,7 @@ export const useFileOperations = (): UseFileOperationsReturn => {
 
   // Get file icon based on type
   const getFileIcon = useCallback((fileType: string, isMainFile = false): string => {
-    if (isMainFile) return '⭐';
+    if (isMainFile) {return '⭐';}
     
     switch (fileType.toLowerCase()) {
       case 'js':
@@ -315,7 +315,7 @@ export const useFileOperations = (): UseFileOperationsReturn => {
 
   // Format file size
   const formatFileSize = useCallback((bytes: number): string => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {return '0 B';}
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

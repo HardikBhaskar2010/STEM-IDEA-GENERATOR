@@ -56,7 +56,7 @@ const WelcomeTour: React.FC = () => {
   const step = tourSteps[currentStep];
 
   useEffect(() => {
-    if (!tutorialState.isActive || tutorialState.hasSeenWelcome) return;
+    if (!tutorialState.isActive || tutorialState.hasSeenWelcome) {return;}
 
     const updatePositions = () => {
       if (step.target) {
@@ -113,9 +113,9 @@ const WelcomeTour: React.FC = () => {
   };
 
   const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') handleSkip();
-    if (e.key === 'ArrowRight') handleNext();
-    if (e.key === 'ArrowLeft') handlePrevious();
+    if (e.key === 'Escape') {handleSkip();}
+    if (e.key === 'ArrowRight') {handleNext();}
+    if (e.key === 'ArrowLeft') {handlePrevious();}
   };
 
   useEffect(() => {

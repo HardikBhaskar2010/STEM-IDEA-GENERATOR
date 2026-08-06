@@ -3,7 +3,7 @@
 // Updated to use localStorage instead of backend database
 
 import { useState, useCallback } from 'react';
-import { ChatMessage, ChatInterfaceState } from '@/types/aiGuidance';
+import type { ChatMessage, ChatInterfaceState } from '@/types/aiGuidance';
 import { aiGuidanceService } from '@/services/aiGuidanceService';
 import { chatHistoryService } from '@/services/chatHistoryService';
 

@@ -75,14 +75,14 @@ export const GlobePoints: React.FC<GlobePointsProps> = ({
     let cancelled = false;
     loadGeoJson()
       .then((geo) => {
-        if (cancelled) return;
+        if (cancelled) {return;}
         setPositions(geoJsonToPoints(geo, radius));
       })
       .catch(console.error);
     return () => { cancelled = true; };
   }, [radius]);
 
-  if (!positions) return null;
+  if (!positions) {return null;}
 
   return (
     <points>

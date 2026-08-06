@@ -7,8 +7,6 @@
  * "hollow-oceans, solid-continents" look.
  */
 
-import * as THREE from 'three';
-
 function latLngToXYZ(lat: number, lng: number, radius: number): [number, number, number] {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lng + 180) * (Math.PI / 180);
@@ -35,7 +33,7 @@ export function geoJsonToPoints(geojson: any, radius = 1): Float32Array {
 
   geojson.features.forEach((feature: any) => {
     const geom = feature.geometry;
-    if (!geom) return;
+    if (!geom) {return;}
 
     if (geom.type === 'Polygon') {
       processPolygon(geom.coordinates, radius, out);

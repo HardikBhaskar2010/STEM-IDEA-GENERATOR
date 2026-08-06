@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EXPERIMENTS } from '@/lib/experiments';
-import { useCircuitStore, ComponentType, PlacedComponent } from '@/store/useCircuitStore';
+import type { ComponentType, PlacedComponent } from '@/store/useCircuitStore';
+import { useCircuitStore } from '@/store/useCircuitStore';
 import {
   Cpu,
   Zap,
@@ -135,8 +136,8 @@ export const LeftSidebar: React.FC = () => {
   };
 
   const difficultyColor = (d: string) => {
-    if (d === 'Beginner') return 'text-green-400';
-    if (d === 'Intermediate') return 'text-yellow-400';
+    if (d === 'Beginner') {return 'text-green-400';}
+    if (d === 'Intermediate') {return 'text-yellow-400';}
     return 'text-red-400';
   };
 

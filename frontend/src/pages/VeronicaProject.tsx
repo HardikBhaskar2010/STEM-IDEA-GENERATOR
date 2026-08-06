@@ -72,7 +72,7 @@ const VeronicaProject: React.FC = () => {
   const [isFixing, setIsFixing] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {return;}
     (async () => {
       setIsLoading(true);
       try {
@@ -93,12 +93,12 @@ const VeronicaProject: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if (!id || !runId || !isRunning) return;
+    if (!id || !runId || !isRunning) {return;}
     let cancelled = false;
     const interval = setInterval(async () => {
       try {
         const logRes = await getVeronicaRunLogs(id, runId);
-        if (!cancelled) setLogs(logRes.logs);
+        if (!cancelled) {setLogs(logRes.logs);}
       } catch {
         // ignore polling errors
       }
@@ -124,16 +124,16 @@ const VeronicaProject: React.FC = () => {
   }, [spec]);
 
   const selectedFile = useMemo(() => {
-    if (!selectedPath) return null;
+    if (!selectedPath) {return null;}
     return editorFiles.find((f) => f.file_path === selectedPath) ?? null;
   }, [editorFiles, selectedPath]);
 
   const handleSave = async (content: string) => {
-    if (!id || !selectedFile) return;
+    if (!id || !selectedFile) {return;}
     const path = selectedFile.file_path;
     await updateVeronicaProjectFile(id, path, content);
     setSpec((prev) => {
-      if (!prev) return prev;
+      if (!prev) {return prev;}
       const nextFiles = (prev.files || []).map((f) => (f.path === path ? { ...f, content } : f));
       return { ...prev, files: nextFiles };
     });
@@ -141,7 +141,7 @@ const VeronicaProject: React.FC = () => {
   };
 
   const handleDownloadZip = async () => {
-    if (!id || isDownloading) return;
+    if (!id || isDownloading) {return;}
     setIsDownloading(true);
     try {
       const zipBlob = await downloadVeronicaProjectZip(id);
@@ -164,7 +164,7 @@ const VeronicaProject: React.FC = () => {
   );
 
   const handleDownloadIno = () => {
-    if (!firstInoFile) return;
+    if (!firstInoFile) {return;}
     const blob = new Blob([firstInoFile.content || ''], { type: 'text/x-arduino' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -177,7 +177,7 @@ const VeronicaProject: React.FC = () => {
   };
 
   const handleRun = async () => {
-    if (!id || isRunning) return;
+    if (!id || isRunning) {return;}
     try {
       setIsRunning(true);
       const res = await startVeronicaRun(id);
@@ -199,7 +199,7 @@ const VeronicaProject: React.FC = () => {
   };
 
   const handleStop = async () => {
-    if (!id || !runId) return;
+    if (!id || !runId) {return;}
     try {
       await stopVeronicaRun(id, runId);
       setIsRunning(false);
@@ -215,7 +215,7 @@ const VeronicaProject: React.FC = () => {
   };
 
   const handleSelfFix = async () => {
-    if (!id || !runId || isFixing) return;
+    if (!id || !runId || isFixing) {return;}
     setIsFixing(true);
     try {
       const res = await runVeronicaSelfFix(id, runId);

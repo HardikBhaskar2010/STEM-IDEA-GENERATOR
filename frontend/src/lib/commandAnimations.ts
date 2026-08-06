@@ -161,7 +161,7 @@ export const revealText = (
     ? document.querySelector<HTMLElement>(target)
     : target;
 
-  if (!element) return null;
+  if (!element) {return null;}
 
   // Wrap each letter in a span
   const text = element.textContent || '';
@@ -210,7 +210,7 @@ export const drawPath = (
     ? document.querySelector<SVGPathElement>(target)
     : target;
 
-  if (!path) return null;
+  if (!path) {return null;}
 
   const length = path.getTotalLength();
   path.style.strokeDasharray = `${length}`;
@@ -238,7 +238,7 @@ export const staggerChildren = (
     ? document.querySelector<HTMLElement>(parent)
     : parent;
 
-  if (!container) return null;
+  if (!container) {return null;}
 
   const children = container.querySelectorAll(childSelector);
 

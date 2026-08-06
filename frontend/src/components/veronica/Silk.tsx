@@ -1,8 +1,9 @@
 /* eslint-disable react/no-unknown-property */
 import React, { forwardRef, useMemo, useRef, useLayoutEffect } from 'react';
-import { Canvas, useFrame, useThree, RootState } from '@react-three/fiber';
-import { Color, Mesh, ShaderMaterial } from 'three';
-import type { IUniform } from 'three';
+import type { RootState } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Color } from 'three';
+import type { IUniform , Mesh, ShaderMaterial } from 'three';
 import { usePreferences, COLOR_THEMES } from '@/contexts/PreferencesContext';
 
 type NormalizedRGB = [number, number, number];
@@ -139,13 +140,13 @@ const Silk: React.FC<SilkProps> = ({
   const { colorTheme } = usePreferences();
 
   const resolvedColor = useMemo(() => {
-    if (color) return color;
+    if (color) {return color;}
     const theme = COLOR_THEMES[colorTheme as keyof typeof COLOR_THEMES] || COLOR_THEMES.allblack;
     const hslStr = `hsl(${theme.colors.primary})`;
     // Convert HSL to hex using a small canvas (same trick as GlobalBackground)
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    if (!ctx) return '#111827';
+    if (!ctx) {return '#111827';}
     ctx.fillStyle = hslStr;
     const hex = ctx.fillStyle; // normalized hex/rgb
     return hex as string;

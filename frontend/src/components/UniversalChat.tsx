@@ -164,7 +164,7 @@ export const UniversalChat: React.FC<UniversalChatProps> = ({ className }) => {
   }, [messages.length]);
 
   const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim() || isLoading) return;
+    if (!content.trim() || isLoading) {return;}
 
     // Add user message
     await addMessage('user', content, 'text');

@@ -22,7 +22,7 @@ const BenefitsSection = () => {
   const cardY = useTransform(scrollYProgress, [0, 0.5, 1], [40, 0, -20]);
 
   useEffect(() => {
-    if (!inView || hasAnimated.current) return;
+    if (!inView || hasAnimated.current) {return;}
     hasAnimated.current = true;
 
     // Card entrance

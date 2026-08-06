@@ -19,7 +19,7 @@ const CTASection = () => {
   const cardY = useTransform(scrollYProgress, [0.1, 0.5], [60, 0]);
 
   useEffect(() => {
-    if (!inView || hasAnimated.current) return;
+    if (!inView || hasAnimated.current) {return;}
     hasAnimated.current = true;
 
     anime({

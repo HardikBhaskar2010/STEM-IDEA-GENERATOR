@@ -23,7 +23,7 @@ export function PerformanceMonitor({ isOpen, onClose }: PerformanceMonitorProps)
   const [budget, setBudget] = useState({ ok: true, violations: [] as string[] });
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {return;}
 
     // FPS Monitor
     const fpsMonitor = new FPSMonitor();
@@ -53,17 +53,17 @@ export function PerformanceMonitor({ isOpen, onClose }: PerformanceMonitorProps)
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const getFPSColor = (fps: number) => {
-    if (fps >= 55) return 'text-green-500';
-    if (fps >= 30) return 'text-yellow-500';
+    if (fps >= 55) {return 'text-green-500';}
+    if (fps >= 30) {return 'text-yellow-500';}
     return 'text-red-500';
   };
 
   const getMemoryColor = (percentage: number) => {
-    if (percentage < 50) return 'text-green-500';
-    if (percentage < 80) return 'text-yellow-500';
+    if (percentage < 50) {return 'text-green-500';}
+    if (percentage < 80) {return 'text-yellow-500';}
     return 'text-red-500';
   };
 

@@ -13,7 +13,8 @@ import { Progress } from '@/components/ui/progress';
 import Layout from '@/components/layout/Layout';
 import { toast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
-import { usePreferences, COLOR_THEMES, ColorTheme } from '@/contexts/PreferencesContext';
+import type { ColorTheme } from '@/contexts/PreferencesContext';
+import { usePreferences, COLOR_THEMES } from '@/contexts/PreferencesContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePerf } from '@/contexts/PerfContext';
 import { useCompetition } from '@/contexts/CompetitionContext';
@@ -244,7 +245,7 @@ const Profile: React.FC = () => {
     const file = e.target.files?.[0];
     // Reset input so selecting the same file again still triggers onChange
     e.target.value = '';
-    if (!file || !user || isGuest) return;
+    if (!file || !user || isGuest) {return;}
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -262,7 +263,7 @@ const Profile: React.FC = () => {
 
   // Handler: Cropper confirmed — upload the circular crop
   const handleCropConfirm = useCallback(async (blob: Blob) => {
-    if (!user || isGuest) return;
+    if (!user || isGuest) {return;}
     setCropFile(null);
     setIsUploadingAvatar(true);
     try {
@@ -290,7 +291,7 @@ const Profile: React.FC = () => {
   // Handler: Add interest
   const handleAddInterest = (interest: string) => {
     const trimmedInterest = interest.trim();
-    if (!trimmedInterest) return;
+    if (!trimmedInterest) {return;}
 
     if (editedProfile.interests.includes(trimmedInterest)) {
       toast({

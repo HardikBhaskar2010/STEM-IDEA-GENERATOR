@@ -768,7 +768,7 @@ class AIVoiceService {
    * Get available voices
    */
   getAvailableVoices(): SpeechSynthesisVoice[] {
-    if (!this.synthesis) return [];
+    if (!this.synthesis) {return [];}
     return this.synthesis.getVoices();
   }
 
@@ -795,17 +795,17 @@ class AIVoiceService {
     const lowerTranscript = transcript.toLowerCase();
 
     // Extract project type
-    if (lowerTranscript.includes('robot')) params.projectType = 'robotics';
-    else if (lowerTranscript.includes('iot') || lowerTranscript.includes('smart home')) params.projectType = 'iot';
-    else if (lowerTranscript.includes('electronic') || lowerTranscript.includes('circuit')) params.projectType = 'electronics';
-    else if (lowerTranscript.includes('automation') || lowerTranscript.includes('automat')) params.projectType = 'automation';
-    else if (lowerTranscript.includes('sensor') || lowerTranscript.includes('monitor')) params.projectType = 'sensors';
+    if (lowerTranscript.includes('robot')) {params.projectType = 'robotics';}
+    else if (lowerTranscript.includes('iot') || lowerTranscript.includes('smart home')) {params.projectType = 'iot';}
+    else if (lowerTranscript.includes('electronic') || lowerTranscript.includes('circuit')) {params.projectType = 'electronics';}
+    else if (lowerTranscript.includes('automation') || lowerTranscript.includes('automat')) {params.projectType = 'automation';}
+    else if (lowerTranscript.includes('sensor') || lowerTranscript.includes('monitor')) {params.projectType = 'sensors';}
 
     // Extract skill level
-    if (lowerTranscript.includes('beginner') || lowerTranscript.includes('start')) params.skillLevel = 'beginner';
-    else if (lowerTranscript.includes('intermediate') || lowerTranscript.includes('medium')) params.skillLevel = 'intermediate';
-    else if (lowerTranscript.includes('advanced')) params.skillLevel = 'advanced';
-    else if (lowerTranscript.includes('expert')) params.skillLevel = 'expert';
+    if (lowerTranscript.includes('beginner') || lowerTranscript.includes('start')) {params.skillLevel = 'beginner';}
+    else if (lowerTranscript.includes('intermediate') || lowerTranscript.includes('medium')) {params.skillLevel = 'intermediate';}
+    else if (lowerTranscript.includes('advanced')) {params.skillLevel = 'advanced';}
+    else if (lowerTranscript.includes('expert')) {params.skillLevel = 'expert';}
 
     // Extract budget
     const budgetMatch = transcript.match(/\$\s*(\d+)/);
