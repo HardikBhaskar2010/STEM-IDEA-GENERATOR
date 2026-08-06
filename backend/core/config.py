@@ -29,7 +29,7 @@ class OpenRouterConfig:
     def __init__(self, api_key_override: Optional[str] = None):
         self.api_key = self._load_api_key(api_key_override)
         self.base_url = "https://openrouter.ai/api/v1"
-        self.model = "stepfun/step-3.5-flash:free"
+        self.model = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct")
         # Increased timeout for heavy models that may take longer to respond
         self.timeout = int(os.getenv("OPENROUTER_TIMEOUT", "300"))  # Default 5 minutes
         self.max_retries = 3
