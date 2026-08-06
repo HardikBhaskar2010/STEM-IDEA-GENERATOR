@@ -262,8 +262,8 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
 
       {/* Expanded list */}
       {!collapsed && (
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="flex flex-col gap-1 px-3 pb-4">
+        <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden">
+          <div className="flex flex-col gap-1.5 px-2.5 pb-4 w-full box-border overflow-x-hidden">
             {filteredTabs.length === 0 && (
               <p className="text-[11px] text-gray-600 text-center py-6">No chats found</p>
             )}
@@ -274,7 +274,7 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
               const isMenuOpen = menuOpenId === tab.id;
 
               return (
-                <div key={tab.id} className="group relative flex items-center w-full min-w-0 px-0.5">
+                <div key={tab.id} className="group relative flex items-center w-full min-w-0">
                   {/* Status dot — left edge inside button */}
                   <span
                     className={cn(
@@ -287,7 +287,7 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
                     onClick={() => onSelectTab(tab.id)}
                     data-no-cursor="true"
                     className={cn(
-                      'w-full min-w-0 text-left rounded-xl py-2.5 pl-6 pr-7 transition-all duration-200 border flex flex-col gap-1.5 relative overflow-hidden box-border',
+                      'w-full min-w-0 text-left rounded-xl py-2.5 pl-5 pr-7 transition-all duration-200 border flex flex-col gap-1.5 relative overflow-hidden box-border',
                       isActive
                         ? 'bg-[#151722] border-indigo-500/30 shadow-md ring-1 ring-indigo-500/20'
                         : 'border-transparent hover:bg-white/[0.04]'
@@ -297,22 +297,22 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-xl opacity-100" />
                     )}
                     <span className={cn(
-                      'text-[13px] font-medium truncate w-full block pr-2',
+                      'text-[13px] font-medium truncate w-full block pr-1',
                       isActive ? 'text-gray-100' : 'text-gray-300'
                     )}>
                       {tab.title}
                     </span>
-                    <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center justify-between w-full min-w-0 gap-2">
                       <Badge
                         variant="outline"
                         className={cn(
-                          'h-4.5 px-2 text-[9px] font-medium border rounded-full font-sans tracking-wide',
+                          'h-4.5 px-2 text-[9px] font-medium border rounded-full font-sans tracking-wide shrink-0',
                           meta.pillColor
                         )}
                       >
                         {meta.label}
                       </Badge>
-                      <span className="text-[10px] text-gray-500">
+                      <span className="text-[10px] text-gray-400 shrink-0 font-mono">
                         {formatRelative(tab.createdAt)}
                       </span>
                     </div>
