@@ -115,3 +115,5 @@ opentelemetry-instrumentation-fastapi==0.43b0
 opentelemetry-instrumentation-redis==0.43b0
 opentelemetry-instrumentation-asyncpg==0.43b0
 opentelemetry-exporter-otlp==1.22.0
+posthog==3.10.0
+
