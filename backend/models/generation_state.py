@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -17,7 +17,7 @@ class GenerationState(BaseModel):
     enabling resume from interruption.
     """
     
-    sandbox_id: str = Field(..., description="E2B sandbox identifier")
+    sandbox_id: Optional[str] = Field(default=None, description="E2B sandbox identifier (empty when running in local/memory mode)")
     project_id: str = Field(..., description="Unique project identifier")
     phase: str = Field(
         ...,
@@ -31,6 +31,10 @@ class GenerationState(BaseModel):
     files_created: List[str] = Field(
         default_factory=list,
         description="List of file paths successfully created"
+    )
+    generated_files: Dict[str, str] = Field(
+        default_factory=dict,
+        description="In-memory file store: path -> content (used when sandbox_id is empty)"
     )
     commands_executed: List[str] = Field(
         default_factory=list,

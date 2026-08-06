@@ -407,24 +407,13 @@ class VeronicaOrchestrator:
             # ----------------------------------------------------------------
             logger.info("[AGENTIC] Phase 1: Sandbox Initialization")
             try:
-                if existing_spec_str and request_project_id:
-                    # Restore mode: Use the runner's create_sandbox to upload files and start Vite
-                    spec = self._get_store().load_spec(request_project_id)
-                    files_dict = {f.path: f.content for f in spec.files if f.content}
-                    sandbox_run = await self._get_sandbox_service()._get_runner().create_sandbox(project_id, files_dict)
-                    sandbox_id = sandbox_run.run_id
-                    
-                    # Ensure viewer URL is initialized via the SandboxService format
-                    viewer_url = self._get_sandbox_service()._generate_viewer_url(sandbox_id)
-                    logger.info("[AGENTIC] Restored sandbox %s from %d local files", sandbox_id, len(files_dict))
-                else:
-                    # Fresh build mode
-                    sandbox_info = await self._get_sandbox_service().create_sandbox()
-                    sandbox_id = sandbox_info["sandbox_id"]
-                    viewer_url = sandbox_info["viewer_url"]
+                # Option B: In-memory generation, no E2B sandbox
+                sandbox_id = ""
+                viewer_url = ""
+                logger.info("[AGENTIC] Using in-memory file generation (E2B sandbox bypassed)")
             except Exception as exc:
-                logger.error("[AGENTIC] Sandbox creation failed: %s", exc)
-                yield self._emit("error", data=f"Sandbox creation failed: {exc}")
+                logger.error("[AGENTIC] Sandbox initialization failed: %s", exc)
+                yield self._emit("error", data=f"Initialization failed: {exc}")
                 yield self._emit("done_failed")
                 return
 
@@ -537,24 +526,9 @@ class VeronicaOrchestrator:
             # ----------------------------------------------------------------
             # Phase 3: Scaffolding
             # ----------------------------------------------------------------
-            # If this is an Edit/Resume, we skip scaffolding as the project is already set up
-            if existing_spec_str:
-                logger.info("[AGENTIC] Phase 3: Scaffolding skipped (Edit/Resume Mode)")
-                yield self._emit("scaffold_ready", data="Scaffolding skipped (Edit/Resume)", progress=1.0)
-            else:
-                logger.info("[AGENTIC] Phase 3: Scaffolding")
-                state.phase = "scaffolding"
-                async for event in self._execute_scaffolding(plan, sandbox_id, state):
-                    yield event
-
-            # Write implementation plan AFTER scaffolding (ensure sandbox is empty for create-vite)
-            try:
-                plan_md = plan.to_markdown()
-                await self._get_sandbox_service().write_file(
-                    sandbox_id, "IMPLEMENTATION_PLAN.md", plan_md
-                )
-            except Exception as exc:
-                logger.warning("[AGENTIC] Could not write plan to sandbox: %s", exc)
+            logger.info("[AGENTIC] Phase 3: Scaffolding (Skipped for in-memory generation)")
+            state.phase = "scaffolding"
+            yield self._emit("scaffold_ready", data="Scaffolding bypassed (in-memory mode)", progress=1.0)
 
             # ----------------------------------------------------------------
             # Phase 4: Incremental File Creation
@@ -562,17 +536,15 @@ class VeronicaOrchestrator:
             logger.info("[AGENTIC] Phase 4: File Creation (%d files)", len(plan.files))
             state.phase = "files"
 
-            async for event in self._create_files_incrementally(plan, sandbox_id, state):
+            async for event in self._create_files_in_memory(plan, state):
                 yield event
 
             # ----------------------------------------------------------------
             # Phase 5: Debugging Loop
             # ----------------------------------------------------------------
-            logger.info("[AGENTIC] Phase 5: Debugging Loop")
+            logger.info("[AGENTIC] Phase 5: Debugging Loop (Skipped for in-memory generation)")
             state.phase = "debugging"
-
-            async for event in self._debugging_loop(sandbox_id, plan, state):
-                yield event
+            yield self._emit("debugging_done", data="Debugging bypassed", progress=1.0)
 
             # ----------------------------------------------------------------
             # Done — emit final event
@@ -588,7 +560,7 @@ class VeronicaOrchestrator:
                     f"{' Click Run to launch a live preview!' if can_run else ''}"
                 ),
                 "actions": [
-                    {"type": "open_sandbox", "enabled": True, "url": viewer_url},
+                    {"type": "open_sandbox", "enabled": False, "url": viewer_url},
                     {"type": "download_project", "enabled": True, "id": project_id},
                 ],
                 "plan": {
@@ -601,8 +573,8 @@ class VeronicaOrchestrator:
             }
 
             # Sync final state to local store before finishing
-            if sandbox_id and plan:
-                await self._sync_sandbox_to_local(project_id, sandbox_id, plan, user_id=user_id)
+            if plan:
+                await self._sync_memory_to_local(project_id, plan, state.generated_files, user_id=user_id)
 
             yield self._emit("done", result=result_payload, viewer_url=viewer_url, progress=1.0)
             logger.info("[AGENTIC] Generation complete for project %s", project_id)
@@ -611,9 +583,9 @@ class VeronicaOrchestrator:
             logger.error("[AGENTIC] Generation failed: %s", exc, exc_info=True)
             
             # Sync partial state to local store on failure so user can download what worked
-            if sandbox_id and plan:
+            if plan:
                 try:
-                    await self._sync_sandbox_to_local(project_id, sandbox_id, plan, user_id=user_id)
+                    await self._sync_memory_to_local(project_id, plan, state.generated_files, user_id=user_id)
                 except Exception as sync_exc:
                     logger.warning("[AGENTIC] Post-failure sync failed: %s", sync_exc)
 
@@ -636,7 +608,7 @@ class VeronicaOrchestrator:
                         "You can still inspect the sandbox or download the files generated so far."
                     ),
                     "actions": [
-                        {"type": "open_sandbox", "enabled": True, "url": viewer_url},
+                        {"type": "open_sandbox", "enabled": False, "url": viewer_url},
                         {"type": "download_project", "enabled": True, "id": project_id},
                     ],
                     "project": {
@@ -654,15 +626,7 @@ class VeronicaOrchestrator:
             except Exception:
                 pass
         finally:
-            # Requirement 15.5 — always clean up sandbox
-            if sandbox_id:
-                try:
-                    # KEEP ALIVE FOR 60 MINUTES ON FAILURE, 5 MINUTES ON SUCCESS
-                    # For now, we keep it alive for better debugging as requested by user
-                    logger.info("[DEBUG] Sandbox %s kept alive for user inspection (60min timeout)", sandbox_id)
-                    # We don't call cleanup_sandbox here anymore, relying on E2B TTL
-                except Exception as cleanup_exc:
-                    logger.warning("[AGENTIC] Sandbox cleanup failed: %s", cleanup_exc)
+            pass
 
     # ==================================================================
     # Phase helpers
@@ -716,6 +680,61 @@ class VeronicaOrchestrator:
             logger.error("[AGENTIC] Local persistence failed: %s", e)
 
         # 4. Push to Supabase Cloud
+        if user_id:
+            try:
+                from backend.core.dependencies import get_supabase_service
+                svc = get_supabase_service()
+                
+                project_row = {
+                    "id": project_id,
+                    "title": spec.title,
+                    "description": spec.summary,
+                    "status": "completed",
+                    "project_type": "web_app",
+                    "project_files": [f.model_dump() for f in spec.files],
+                }
+                await svc.upsert_project(user_id, project_row)
+                logger.info("[AGENTIC] Successfully pushed project %s over Cloud Sync to Supabase!", project_id)
+            except Exception as e:
+                logger.error("[AGENTIC] Supabase Cloud Sync failed: %s", e)
+
+    async def _sync_memory_to_local(
+        self, project_id: str, plan: ImplementationPlan, generated_files: Dict[str, str], user_id: Optional[str] = None
+    ) -> None:
+        """Sync files from memory to local VeronicaProjectStore."""
+        logger.info("[AGENTIC] Syncing memory to local store for %s", project_id)
+        
+        from backend.models.project_spec import ProjectSpec, ProjectFile, VeronicaPlatform
+        
+        synced_files: List[ProjectFile] = []
+        for f_spec in plan.files:
+            content = generated_files.get(f_spec.path)
+            if content is not None:
+                synced_files.append(ProjectFile(
+                    path=f_spec.path,
+                    content=content,
+                    description=f_spec.purpose
+                ))
+            else:
+                logger.warning("[AGENTIC] File %s was in plan but not generated", f_spec.path)
+        
+        spec = ProjectSpec(
+            project_id=project_id,
+            title=plan.project_title,
+            platform=VeronicaPlatform.WEB, # Default to web for agentic builder
+            difficulty="Intermediate",
+            summary=plan.project_description,
+            learning_goals=plan.additional_features,
+            files=synced_files,
+            readme=f"# {plan.project_title}\n\n{plan.project_description}",
+        )
+        
+        try:
+            self._get_store().save_spec(spec)
+            logger.info("[AGENTIC] Successfully persisted %d files to local store", len(synced_files))
+        except Exception as e:
+            logger.error("[AGENTIC] Local persistence failed: %s", e)
+
         if user_id:
             try:
                 from backend.core.dependencies import get_supabase_service
@@ -1398,7 +1417,103 @@ class VeronicaOrchestrator:
                     )
                     break
 
-            # Save state every 5 files (Req 12.2)
+    async def _create_files_in_memory(
+        self,
+        plan: ImplementationPlan,
+        state: GenerationState,
+    ) -> AsyncIterator[str]:
+        """Create each file with a separate small LLM call, storing in memory.
+
+        Handles rate limits with exponential backoff (1s, 2s, 4s).
+        """
+        total = len(plan.files)
+        max_retries = 3
+
+        for i, file_spec in enumerate(plan.files, 1):
+            # Skip already-created files
+            if file_spec.path in state.files_created:
+                logger.info("[AGENTIC] Skipping already-created file: %s", file_spec.path)
+                continue
+
+            progress = self._calculate_progress("files", i - 1, total)
+            yield self._emit(
+                "file_start",
+                path=file_spec.path,
+                data=f"Creating {file_spec.path} ({i}/{total})",
+                progress=progress,
+            )
+
+            # Build context for this file
+            context = await self._build_file_context(plan, file_spec)
+
+            # Retry loop for rate limits and transient errors
+            success = False
+            for attempt in range(max_retries):
+                try:
+                    # Run file generation in task with 15s pings
+                    gen_task = asyncio.create_task(self._generate_file_content(context, file_spec))
+                    while not gen_task.done():
+                        done, pending = await asyncio.wait([gen_task], timeout=15.0)
+                        if pending:
+                            yield self._emit("ping", data="keep-alive")
+                    content = gen_task.result()
+
+                    # Write to memory
+                    state.generated_files[file_spec.path] = content
+
+                    # Track in state
+                    state.files_created.append(file_spec.path)
+
+                    yield self._emit(
+                        "file_done",
+                        path=file_spec.path,
+                        lines=len(content.splitlines()),
+                        data=f"Created {file_spec.path}",
+                        progress=self._calculate_progress("files", i, total),
+                    )
+                    success = True
+                    break
+
+                except UpstreamError as exc:
+                    # Retry on rate limits and transient upstream errors (429, 503)
+                    if exc.upstream_status in (429, 503) and attempt < max_retries - 1:
+                        wait_time = 2 ** attempt  # 1s, 2s, 4s
+                        logger.warning(
+                            "[AGENTIC] Upstream error %d for %s, waiting %ds (attempt %d/%d)",
+                            exc.upstream_status, file_spec.path, wait_time, attempt + 1, max_retries,
+                        )
+                        yield self._emit(
+                            "error",
+                            data=f"API error ({exc.upstream_status}) — retrying in {wait_time}s...",
+                        )
+                        await asyncio.sleep(wait_time)
+                    else:
+                        # Save state for resume
+                        try:
+                            state.last_error = str(exc)
+                            state.save(self._get_store())
+                        except Exception:
+                            pass
+                        # Surface the real error reason, not the sandbox wrapper
+                        real_reason = str(exc)
+                        if hasattr(exc, "__cause__") and exc.__cause__:
+                            real_reason = str(exc.__cause__)
+                        logger.error("[AGENTIC] File generation failed for %s: %s", file_spec.path, exc)
+                        yield self._emit(
+                            "error",
+                            data=f"Failed to generate {file_spec.path}: {real_reason}",
+                        )
+                        break
+
+                except Exception as exc:
+                    logger.error("[AGENTIC] Unexpected error generating %s: %s", file_spec.path, exc, exc_info=True)
+                    yield self._emit(
+                        "error",
+                        data=f"Failed to generate {file_spec.path}: {exc}",
+                    )
+                    break
+
+            # Save state every 5 files
             if i % 5 == 0:
                 try:
                     state.save(self._get_store())
