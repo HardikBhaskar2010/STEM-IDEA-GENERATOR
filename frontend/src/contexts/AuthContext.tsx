@@ -6,6 +6,8 @@ import { userProfileService, type UserRow } from '@/services/userProfileService'
 import { migrateGuestData } from '@/lib/supabase';
 import { UserIdManager } from '@/utils/userIdManager';
 
+import { identifyUser, resetUser } from '@/lib/posthog';
+
 // Owner email for admin access
 const OWNER_EMAIL = 'hardik.bhaskar2010@gmail.com';
 
@@ -78,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (currentUser && !authService.isGuestUser(currentUser)) {
           authUserIdRef.current = currentUser.id;
+          identifyUser(currentUser.id, { email: (currentUser as User).email });
           
           // Migrate guest data if applicable
           if (UserIdManager.hasGuestId()) {
@@ -106,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const subscription = authService.onAuthStateChange(async (newUser, newProvider) => {
       if (!newUser) {
+        resetUser();
         const guestResult = await authService.continueAsGuest();
         setUser(guestResult.user);
         setUserRow(null);
@@ -117,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (!authService.isGuestUser(newUser)) {
           authUserIdRef.current = newUser.id;
+          identifyUser(newUser.id, { email: (newUser as User).email });
 
           // Migrate guest data on active login transition
           if (UserIdManager.hasGuestId()) {

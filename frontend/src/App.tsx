@@ -79,12 +79,20 @@ if (typeof window !== "undefined") {
   preloadAnimations();
 }
 
-import { ThemeProvider } from "next-themes";
+import { initPostHog } from "@/lib/posthog";
+import { usePostHogPageViews } from "@/hooks/usePostHogPageViews";
+
+// Component inside BrowserRouter to trigger PostHog pageviews
+const PostHogPageViewTracker = () => {
+  usePostHogPageViews();
+  return null;
+};
 
 const App = () => {
   useEffect(() => {
     polyfillRAF();
     debugApiCalls();
+    initPostHog();
     console.log("🔍 Environment Variables:", {
       VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
       NODE_ENV: import.meta.env.NODE_ENV,
@@ -114,6 +122,7 @@ const App = () => {
                               <Sonner />
 
                               <BrowserRouter>
+                                <PostHogPageViewTracker />
                                 <SciFiCursor />
                                 {/* 🌐 Global GridScan background — theme-aware, skips /, /login, /signup, /about */}
                                 <GlobalBackground />

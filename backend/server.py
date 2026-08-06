@@ -127,14 +127,30 @@ app.add_middleware(
 )
 
 # ----------------------------------------------------------------
-# Monitoring middleware (existing infrastructure — optional)
+# PostHog Analytics Middleware
 # ----------------------------------------------------------------
-try:
-    from backend.infrastructure.middleware import add_monitoring_middleware  # noqa: PLC0415
-    add_monitoring_middleware(app)
-    logger.info("Monitoring middleware registered")
-except ImportError:
-    logger.debug("Optional monitoring middleware not found — skipping")
+import time  # noqa: E402
+from backend.core.posthog_analytics import init_backend_posthog, capture_api_metric  # noqa: E402
+
+init_backend_posthog()
+
+
+@app.middleware("http")
+async def posthog_analytics_middleware(request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration_ms = (time.time() - start_time) * 1000
+
+    path = request.url.path
+    if not path.startswith("/docs") and not path.startswith("/openapi.json"):
+        capture_api_metric(
+            path=path,
+            method=request.method,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+        )
+    return response
+
 
 # ----------------------------------------------------------------
 # Global exception handlers
