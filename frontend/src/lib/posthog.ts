@@ -1,39 +1,37 @@
 import posthog from 'posthog-js';
 
-const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
+const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST;
 
 let isInitialized = false;
 
 /**
- * Initialize PostHog client for frontend analytics
+ * Initialize PostHog client for frontend analytics.
  */
 export const initPostHog = () => {
   if (isInitialized) return;
 
-  if (!POSTHOG_KEY) {
-    console.info('💡 PostHog: VITE_POSTHOG_KEY not set. Running in dry-run mode (events logged to dev console).');
-    isInitialized = true;
+  if (!POSTHOG_KEY || !POSTHOG_HOST) {
+    if (import.meta.env.DEV) {
+      const missingVariable = POSTHOG_KEY ? 'VITE_POSTHOG_HOST' : 'VITE_POSTHOG_KEY';
+      throw new Error(
+        `${missingVariable} variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once ${missingVariable} is configured`,
+      );
+    }
     return;
   }
 
-  try {
-    posthog.init(POSTHOG_KEY, {
-      api_host: POSTHOG_HOST,
-      autocapture: true,
-      capture_pageview: false, // Handled dynamically via usePostHogPageViews hook
-      persistence: 'localStorage+cookie',
-      loaded: (ph) => {
-        if (import.meta.env.DEV) {
-          ph.debug();
-        }
-      },
-    });
-    isInitialized = true;
-    console.log('🚀 PostHog initialized successfully');
-  } catch (error) {
-    console.warn('⚠️ PostHog initialization warning:', error);
-  }
+  posthog.init(POSTHOG_KEY, {
+    api_host: POSTHOG_HOST,
+    capture_pageview: false,
+    capture_exceptions: {
+      capture_unhandled_errors: true,
+      capture_unhandled_rejections: true,
+      capture_console_errors: false,
+    },
+    defaults: '2026-05-30',
+  });
+  isInitialized = true;
 };
 
 /**
