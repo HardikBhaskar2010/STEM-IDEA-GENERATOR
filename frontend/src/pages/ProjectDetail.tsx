@@ -15,6 +15,7 @@ import ChatInterface from '@/components/ChatInterface';
 import { projectService, type SavedProject } from '@/services/projectService';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { trackEvent } from '@/lib/posthog';
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -86,6 +87,10 @@ const ProjectDetail: React.FC = () => {
     });
 
     if (success) {
+      trackEvent('project_updated', {
+        project_type: success.project_type,
+        project_status: success.status,
+      });
       setProject(success);
       setIsEditing(false);
       toast({
@@ -125,6 +130,11 @@ const ProjectDetail: React.FC = () => {
     
     const updated = await projectService.toggleStepCompletion(project.id, stepIndex);
     if (updated) {
+      trackEvent('project_step_toggled', {
+        project_status: updated.status,
+        progress: updated.progress,
+        step_completed: updated.completed_steps?.includes(stepIndex) ?? false,
+      });
       setProject(updated);
       setEditData(updated);
       toast({
@@ -141,6 +151,10 @@ const ProjectDetail: React.FC = () => {
 
     const success = await projectService.deleteProject(project.id);
     if (success) {
+      trackEvent('project_deleted', {
+        project_type: project.project_type,
+        project_status: project.status,
+      });
       toast({
         title: 'Project deleted',
         description: 'The project has been removed',
@@ -156,6 +170,10 @@ const ProjectDetail: React.FC = () => {
 
     const updated = await projectService.markAsAbandoned(project.id);
     if (updated) {
+      trackEvent('project_abandoned', {
+        project_type: updated.project_type,
+        progress: updated.progress,
+      });
       setProject(updated);
       setEditData(updated);
       toast({

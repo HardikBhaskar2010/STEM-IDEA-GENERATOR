@@ -17,6 +17,7 @@ import {
   runVeronicaSelfFix,
 } from '@/services/veronicaAIService';
 import { ArrowLeft, Download, Play, Square, Terminal, Wrench } from 'lucide-react';
+import { trackEvent } from '@/lib/posthog';
 
 type ProjectFile = {
   path: string;
@@ -153,6 +154,7 @@ const VeronicaProject: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      trackEvent('veronica_project_downloaded', { download_format: 'zip' });
     } finally {
       setIsDownloading(false);
     }
@@ -174,6 +176,7 @@ const VeronicaProject: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    trackEvent('veronica_project_downloaded', { download_format: 'ino' });
   };
 
   const handleRun = async () => {
@@ -183,6 +186,7 @@ const VeronicaProject: React.FC = () => {
       const res = await startVeronicaRun(id);
       setRunId(res.run_id);
       setPreviewUrl(res.preview_url ?? null);
+      trackEvent('veronica_run_started', { platform: spec?.platform });
       toast({ title: 'Run started', description: 'Sandbox run has been started.' });
       // Fetch initial logs (stubbed for now)
       const logRes = await getVeronicaRunLogs(id, res.run_id);
@@ -204,6 +208,7 @@ const VeronicaProject: React.FC = () => {
       await stopVeronicaRun(id, runId);
       setIsRunning(false);
       setPreviewUrl(null);
+      trackEvent('veronica_run_stopped', { platform: spec?.platform });
       toast({ title: 'Run stopped', description: 'Sandbox run has been stopped.' });
     } catch (e) {
       toast({
@@ -228,6 +233,10 @@ const VeronicaProject: React.FC = () => {
         }
       });
       setFixes(lines);
+      trackEvent('veronica_self_fix_completed', {
+        attempts: res.attempts.length,
+        fixes_applied: res.attempts.filter((attempt) => Boolean(attempt.applied_fix)).length,
+      });
       toast({ title: 'Self-fix finished', description: 'Review logs and applied fixes below.' });
     } catch (e) {
       toast({
