@@ -262,94 +262,96 @@ export const VeronicaChatTabs: React.FC<VeronicaChatTabsProps> = ({
 
       {/* Expanded list */}
       {!collapsed && (
-        <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden">
-          <div className="flex flex-col gap-1.5 px-2.5 pb-4 w-full box-border overflow-x-hidden">
-            {filteredTabs.length === 0 && (
-              <p className="text-[11px] text-gray-600 text-center py-6">No chats found</p>
-            )}
-            {filteredTabs.map((tab) => {
-              const meta = MODE_META[tab.mode];
-              const isActive = tab.id === activeTabId;
-              const status = tab.status ?? 'idle';
-              const isMenuOpen = menuOpenId === tab.id;
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2.5 pb-4 space-y-1">
+          {filteredTabs.length === 0 && (
+            <p className="text-[11px] text-gray-600 text-center py-6">No chats found</p>
+          )}
+          {filteredTabs.map((tab) => {
+            const meta = MODE_META[tab.mode];
+            const isActive = tab.id === activeTabId;
+            const status = tab.status ?? 'idle';
+            const isMenuOpen = menuOpenId === tab.id;
 
-              return (
-                <div key={tab.id} className="group relative flex items-center w-full min-w-0">
-                  {/* Status dot — left edge inside button */}
-                  <span
-                    className={cn(
-                      'absolute left-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full shrink-0 z-10 pointer-events-none',
-                      STATUS_DOT[status]
-                    )}
-                  />
+            return (
+              <div key={tab.id} className="group relative flex items-center w-full min-w-0">
+                <button
+                  onClick={() => onSelectTab(tab.id)}
+                  data-no-cursor="true"
+                  className={cn(
+                    'w-full min-w-0 text-left rounded-xl py-2 px-3 transition-all duration-200 border flex flex-col gap-1 relative overflow-hidden box-border',
+                    isActive
+                      ? 'bg-[#151722] border-indigo-500/30 shadow-md ring-1 ring-indigo-500/20'
+                      : 'border-transparent hover:bg-white/[0.04]'
+                  )}
+                >
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-xl opacity-100" />
+                  )}
 
-                  <button
-                    onClick={() => onSelectTab(tab.id)}
-                    data-no-cursor="true"
-                    className={cn(
-                      'w-full min-w-0 text-left rounded-xl py-2.5 pl-5 pr-7 transition-all duration-200 border flex flex-col gap-1.5 relative overflow-hidden box-border',
-                      isActive
-                        ? 'bg-[#151722] border-indigo-500/30 shadow-md ring-1 ring-indigo-500/20'
-                        : 'border-transparent hover:bg-white/[0.04]'
-                    )}
-                  >
-                    {isActive && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-xl opacity-100" />
-                    )}
+                  {/* Title + status dot row */}
+                  <div className="flex items-center gap-2 w-full min-w-0 pr-4">
+                    <span
+                      className={cn(
+                        'w-1.5 h-1.5 rounded-full shrink-0',
+                        STATUS_DOT[status]
+                      )}
+                    />
                     <span className={cn(
-                      'text-[13px] font-medium truncate w-full block pr-1',
+                      'text-[13px] font-medium truncate flex-1 block',
                       isActive ? 'text-gray-100' : 'text-gray-300'
                     )}>
                       {tab.title}
                     </span>
-                    <div className="flex items-center justify-between w-full min-w-0 gap-2">
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          'h-4.5 px-2 text-[9px] font-medium border rounded-full font-sans tracking-wide shrink-0',
-                          meta.pillColor
-                        )}
-                      >
-                        {meta.label}
-                      </Badge>
-                      <span className="text-[10px] text-gray-400 shrink-0 font-mono">
-                        {formatRelative(tab.createdAt)}
-                      </span>
-                    </div>
-                  </button>
+                  </div>
 
-                  {/* "..." Context menu button */}
-                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10">
-                    <button
-                      ref={isMenuOpen ? menuBtnRef : undefined}
-                      onClick={(e) => { e.stopPropagation(); setMenuOpenId(isMenuOpen ? null : tab.id); }}
+                  {/* Mode badge + timestamp row */}
+                  <div className="flex items-center justify-between w-full min-w-0 gap-1.5 pt-0.5">
+                    <Badge
+                      variant="outline"
                       className={cn(
-                        'p-1 rounded-md transition-all',
-                        isMenuOpen
-                          ? 'opacity-100 bg-white/10 text-gray-200'
-                          : 'opacity-0 group-hover:opacity-100 hover:bg-white/10 text-gray-500'
+                        'h-4 px-1.5 text-[9px] font-medium border rounded-full font-sans tracking-wide shrink-0',
+                        meta.pillColor
                       )}
                     >
-                      <MoreHorizontal className="w-3.5 h-3.5" />
-                    </button>
-
-                    {isMenuOpen && (
-                      <TabContextMenu
-                        tabId={tab.id}
-                        tabTitle={tab.title}
-                        onRename={onRenameTab}
-                        onDuplicate={onDuplicateTab}
-                        onDelete={onDeleteTab}
-                        onClose={() => setMenuOpenId(null)}
-                        anchorRef={menuBtnRef}
-                      />
-                    )}
+                      {meta.label}
+                    </Badge>
+                    <span className="text-[10px] text-gray-500 shrink-0 font-mono">
+                      {formatRelative(tab.createdAt)}
+                    </span>
                   </div>
+                </button>
+
+                {/* "..." Context menu button */}
+                <div className="absolute right-1.5 top-2.5 z-10">
+                  <button
+                    ref={isMenuOpen ? menuBtnRef : undefined}
+                    onClick={(e) => { e.stopPropagation(); setMenuOpenId(isMenuOpen ? null : tab.id); }}
+                    className={cn(
+                      'p-1 rounded-md transition-all',
+                      isMenuOpen
+                        ? 'opacity-100 bg-white/10 text-gray-200'
+                        : 'opacity-0 group-hover:opacity-100 hover:bg-white/10 text-gray-500'
+                    )}
+                  >
+                    <MoreHorizontal className="w-3.5 h-3.5" />
+                  </button>
+
+                  {isMenuOpen && (
+                    <TabContextMenu
+                      tabId={tab.id}
+                      tabTitle={tab.title}
+                      onRename={onRenameTab}
+                      onDuplicate={onDuplicateTab}
+                      onDelete={onDeleteTab}
+                      onClose={() => setMenuOpenId(null)}
+                      anchorRef={menuBtnRef}
+                    />
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {/* Footer model status */}
