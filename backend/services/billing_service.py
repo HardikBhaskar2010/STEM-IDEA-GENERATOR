@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from fastapi import HTTPException
-from backend.core.supabase_client import get_supabase_client
+from backend.services.supabase_service import _get_client as get_supabase_client
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,8 @@ async def check_and_consume_quota(user_id: str) -> bool:
         return True
         
     client = get_supabase_client()
+    if client is None:
+        return True # Fallback if no supabase configured
     try:
         # Fetch user plan and quota
         response = client.table("users").select("plan_tier, generation_quota").eq("id", user_id).single().execute()
@@ -56,6 +58,8 @@ async def check_and_consume_quota(user_id: str) -> bool:
 async def upgrade_user_to_pro(user_id: str) -> None:
     """Mock endpoint logic to upgrade user to Pro."""
     client = get_supabase_client()
+    if client is None:
+        return
     try:
         client.table("users").update({
             "plan_tier": "pro",
