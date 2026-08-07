@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import anime from "animejs";
 import { Sparkles, Rocket, Lightbulb } from "lucide-react";
@@ -10,6 +10,7 @@ const HeroSection = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const hasAnimated = useRef(false);
   const navigate = useNavigate();
+  const [prompt, setPrompt] = useState("");
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -131,20 +132,31 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start gap-4"
+            className="w-full max-w-xl"
           >
-            <button 
-              onClick={() => navigate("/dashboard")}
-              className="btn-glow px-8 py-4 rounded-xl font-display font-semibold text-primary-foreground text-lg w-full sm:w-auto shadow-xl"
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (prompt.trim()) {
+                  navigate(`/veronica-ai?prompt=${encodeURIComponent(prompt.trim())}`);
+                }
+              }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center sm:justify-start gap-3 w-full"
             >
-              Start Exploring
-            </button>
-            <button 
-              onClick={() => navigate("/veronica-ai")}
-              className="btn-ghost-glow px-8 py-4 rounded-xl font-display font-semibold text-lg w-full sm:w-auto backdrop-blur-md bg-background/50 border border-border/50 shadow-xl text-foreground hover:bg-background/80 transition-colors"
-            >
-              Generate Ideas
-            </button>
+              <input 
+                type="text" 
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Describe a STEM project idea to build..." 
+                className="flex-1 px-6 py-4 rounded-xl font-body text-lg bg-background/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-md shadow-xl"
+              />
+              <button 
+                type="submit"
+                className="btn-glow px-8 py-4 rounded-xl font-display font-semibold text-primary-foreground text-lg w-full sm:w-auto shadow-xl flex items-center justify-center gap-2"
+              >
+                Try It Now <Sparkles className="w-5 h-5" />
+              </button>
+            </form>
           </motion.div>
         </div>
       </motion.div>

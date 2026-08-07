@@ -33,6 +33,8 @@ from backend.models.generation_state import GenerationState
 from backend.models.implementation_plan import FileSpec, ImplementationPlan
 from backend.models.progress_event import EventType, ProgressEvent
 from backend.utils.token_budget import TokenBudget
+import sentry_sdk
+from backend.core.posthog_analytics import capture_generation_event
 
 logger = logging.getLogger(__name__)
 
@@ -422,6 +424,13 @@ class VeronicaOrchestrator:
                 project_id=project_id,
                 phase="sandbox",
             )
+            
+            capture_generation_event(
+                distinct_id=user_id or "anonymous",
+                event_type="started",
+                project_id=project_id,
+                properties={"is_resume": bool(request_project_id)}
+            )
 
             yield self._emit(
                 "sandbox_ready",
@@ -577,9 +586,29 @@ class VeronicaOrchestrator:
 
             yield self._emit("done", result=result_payload, viewer_url=viewer_url, progress=1.0)
             logger.info("[AGENTIC] Generation complete for project %s", project_id)
+            
+            capture_generation_event(
+                distinct_id=user_id or "anonymous",
+                event_type="successful",
+                project_id=project_id,
+                properties={"file_count": len(plan.files) if plan else 0}
+            )
 
         except Exception as exc:
             logger.error("[AGENTIC] Generation failed: %s", exc, exc_info=True)
+            sentry_sdk.set_context("generation", {
+                "prompt": message,
+                "project_id": project_id,
+                "sandbox_id": sandbox_id,
+            })
+            sentry_sdk.capture_exception(exc)
+            
+            capture_generation_event(
+                distinct_id=user_id or "anonymous",
+                event_type="failed",
+                project_id=project_id,
+                properties={"error": str(exc)}
+            )
             
             # Sync partial state to local store on failure so user can download what worked
             if plan:

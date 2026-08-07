@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Send, Sparkles, Cpu, Bug, Lightbulb, PanelLeftClose, PanelLeftOpen, Clock, AppWindowMac, Activity, Clock3, Filter, ArrowRight, Columns2, ExternalLink, RotateCcw, Loader2 } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -22,7 +23,6 @@ import { ProjectCard } from '@/components/veronica/ProjectCard';
 import DarkVeil from '@/components/veronica/DarkVeil';
 import { VeronicaChatTabs, type ChatTab } from '@/components/veronica/VeronicaChatTabs';
 import { VeronicaCommunity } from '@/components/veronica/VeronicaCommunity';
-import { useNavigate } from 'react-router-dom';
 import { AgentTerminal, type AgentEvent } from '@/components/veronica/AgentTerminal';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import { DebugBar } from '@/components/debug/DebugPanel';
@@ -107,6 +107,7 @@ function debouncedSave(key: string, runSave: () => void) {
 
 const VeronicaAI: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -427,6 +428,9 @@ const VeronicaAI: React.FC = () => {
 
     appendToActive({ role: 'user', content: text, projectTypeHint: inferProjectTypeHint(text) });
     trackEvent('veronica_message_sent', { mode });
+    if (!user) {
+      trackEvent('guest_exploration_started', { mode });
+    }
     setInputValue('');
     setIsLoading(true);
 
@@ -517,10 +521,14 @@ const VeronicaAI: React.FC = () => {
             messageCount: t.messageCount + 1,
             lastMessage: res.assistant_text.slice(0, 60),
           } : t)));
-        } catch (e) {
+        } catch (e: any) {
+          const isQuota = e?.message?.includes('402') || e?.status === 402;
+          if (isQuota) {
+            trackEvent('signup_intent_from_paywall', { mode, source: 'stream' });
+          }
           updateActiveMessage(streamMsgId, (m) => ({
             ...m,
-            content: e instanceof Error ? e.message : 'Build failed.',
+            content: isQuota ? 'You have exhausted your free generations. Please sign up or upgrade to Pro to continue building.' : (e instanceof Error ? e.message : 'Build failed.'),
             isStreamingBuild: false
           }));
         }
@@ -544,15 +552,33 @@ const VeronicaAI: React.FC = () => {
           projectTypeHint: inferProjectTypeHint(text),
         });
       }
-    } catch (e) {
+    } catch (e: any) {
+      const isQuota = e?.message?.includes('402') || e?.status === 402;
+      if (isQuota) {
+        trackEvent('signup_intent_from_paywall', { mode, source: 'sync' });
+      }
       appendToActive({
         role: 'assistant',
-        content: e instanceof Error ? e.message : 'Something went wrong. Please try again.',
+        content: isQuota ? 'You have exhausted your free generations. Please sign up or upgrade to Pro to continue building.' : (e instanceof Error ? e.message : 'Something went wrong. Please try again.'),
       });
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, mode, appendToActive, updateActiveMessage, activeTabId]);
+  }, [inputValue, isLoading, mode, appendToActive, updateActiveMessage, activeTabId, user]);
+
+  // Handle auto-start from landing page
+  useEffect(() => {
+    const initialPrompt = searchParams.get('prompt');
+    if (initialPrompt && !isLoading && chatHistory[activeTabId]?.length === 1) {
+      setMode('full_build');
+      // Trigger send in next tick to let react complete render
+      setTimeout(() => {
+        handleSend(initialPrompt);
+      }, 100);
+      searchParams.delete('prompt');
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, handleSend, isLoading, activeTabId, chatHistory, setSearchParams]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }

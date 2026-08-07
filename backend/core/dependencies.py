@@ -21,6 +21,7 @@ from backend.core.config import OpenRouterConfig
 from backend.core.logging import StructuredLogger
 from backend.integrations.openrouter.client import OpenRouterClient
 from backend.integrations.openrouter.health import OpenRouterHealthCheck
+from backend.infrastructure.init import initialize_infrastructure, shutdown_infrastructure
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.warning("OpenRouter health check failed at startup: %s — degraded mode", exc)
         app.state.openrouter_health = None
 
+    try:
+        await initialize_infrastructure()
+    except Exception as exc:
+        logger.error("Failed to initialize infrastructure: %s", exc)
+
     logger.info("Application startup complete")
 
     # ----------------------------------------------------------------
@@ -109,6 +115,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             logger.info("OpenRouterClient closed")
     except Exception as exc:
         logger.error("Error closing OpenRouterClient: %s", exc)
+
+    try:
+        await shutdown_infrastructure()
+    except Exception as exc:
+        logger.error("Error shutting down infrastructure: %s", exc)
 
     logger.info("Application shutdown complete")
 

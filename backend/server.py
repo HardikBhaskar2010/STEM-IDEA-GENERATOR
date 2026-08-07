@@ -73,6 +73,7 @@ from backend.routers.snapshots import snapshots_router
 from backend.routers.chat import chat_router
 from backend.routers.codegen import codegen_router
 from backend.routers.performance import performance_router
+from backend.routers.billing import billing_router
 
 from backend.routers.system import system_router
 
@@ -123,6 +124,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from backend.infrastructure.error_middleware import ErrorMiddleware
+from backend.infrastructure.logging_middleware import LoggingMiddleware
+from backend.infrastructure.rate_limit_middleware import RateLimitMiddleware
+
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(ErrorMiddleware)
+app.add_middleware(LoggingMiddleware)
 
 # ----------------------------------------------------------------
 # PostHog Analytics Middleware
@@ -186,6 +195,7 @@ app.include_router(snapshots_router)
 app.include_router(chat_router)
 app.include_router(codegen_router)
 app.include_router(performance_router)
+app.include_router(billing_router)
 app.include_router(system_router)
 
 if _achievement_available:

@@ -16,8 +16,10 @@ from pydantic import BaseModel
 
 from backend.core.dependencies import get_veronica_orchestrator, get_authenticated_user_id
 from backend.core.exceptions import AppError
+from backend.core.exceptions import AppError
 from backend.core.rate_limit import rate_limit
 from backend.orchestration.veronica_orchestrator import VeronicaOrchestrator
+from backend.services.billing_service import check_and_consume_quota
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +67,14 @@ def _http_from_app_error(exc: AppError) -> HTTPException:
 async def veronica_generate_project(
     request: Request,
     orchestrator: VeronicaOrchestrator = Depends(get_veronica_orchestrator),
+    user_id: Optional[str] = Depends(get_authenticated_user_id),
 ) -> Dict[str, Any]:
     """Generate a Veronica project.
 
     Requirements: 7, 7.10
     """
     try:
+        await check_and_consume_quota(user_id or f"guest_{request.client.host}")
         try:
             body = await request.json()
         except Exception:
@@ -98,6 +102,8 @@ async def veronica_generate_project_stream(
     Requirements: 7, 7.11
     """
     try:
+        await check_and_consume_quota(user_id or f"guest_{request.client.host}")
+        
         body = await request.json()
         body["user_id"] = user_id
 

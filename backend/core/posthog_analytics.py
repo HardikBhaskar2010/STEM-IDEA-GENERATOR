@@ -79,3 +79,19 @@ def capture_api_metric(
             "is_success": 200 <= status_code < 400,
         },
     )
+
+def capture_generation_event(
+    distinct_id: str,
+    event_type: str, # 'started', 'successful', 'failed'
+    project_id: str,
+    properties: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Capture generation funnel events."""
+    base_props = {"project_id": project_id}
+    if properties:
+        base_props.update(properties)
+    capture_backend_event(
+        distinct_id=distinct_id,
+        event_name=f"generation_{event_type}",
+        properties=base_props,
+    )
