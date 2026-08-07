@@ -74,7 +74,7 @@ Rules:
 - `files[].path` must be relative, use forward slashes, and must NOT contain `..` or start with `/` or a drive letter.
 - `readme` should be a COMPLETE, DETAILED README.md. It MUST include a comprehensive project idea description explaining what it is and how it works in detail, followed by detailed build/run steps, and a safety note. Do not be brief!
 - Put the main entry file as `is_main: true` (exactly one).
-- Keep file contents short but runnable; prefer correctness over length.
+- Do NOT use generic placeholders like "// Control code here". Write complete, functional, and highly detailed code for all files. Provide a fully fleshed out implementation.
 - Do not include markdown fences or extra text.
 - You MUST also generate a file named `prompt.txt` at the root. The content of `prompt.txt` should be a highly detailed prompt that the user can copy and paste into \"Full build\" mode to instruct the AI to generate the complete, production-ready version of this project.
 
