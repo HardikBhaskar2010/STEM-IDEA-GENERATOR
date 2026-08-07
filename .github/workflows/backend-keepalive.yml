@@ -34,7 +34,16 @@ jobs:
           echo "Targeting Backend Health URL: ${TARGET_URL}"
           
           # Execute HTTP GET request
-          HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" --max-time 20 "${TARGET_URL}")
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt..."
+            HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" -m 25 "${TARGET_URL}")
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              break
+            fi
+            if [ $attempt -lt 3 ]; then
+              sleep $((attempt * 5))
+            fi
+          done
           
           echo "Timestamp (UTC): $(date -u)"
           echo "HTTP Status Code: ${HTTP_STATUS}"
