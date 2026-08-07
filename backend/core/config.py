@@ -44,9 +44,6 @@ class OpenRouterConfig:
             api_key = override
         else:
             api_key = os.getenv("OPENROUTER_API_KEY")
-            if not api_key:
-                # Hardcoded fallback for local dev only; prefer env var in prod.
-                api_key = "REDACTED_SECRET"
 
         if not api_key:
             msg = "OPENROUTER_API_KEY environment variable is required"

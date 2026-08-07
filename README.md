@@ -11,7 +11,7 @@
 
 <img src="./screenshots/02-login-page.png" alt="STEM Idea Adventure — AI Command Bridge" width="800"/>
 
-**An immersive 3D platform combining AI intelligence with stunning visuals to revolutionize STEM education**
+**An immersive platform combining AI intelligence with cutting-edge tools to revolutionize STEM education**
  
 [✨ Features](#-features) • [🎬 Screenshots](#-screenshots) • [🚀 Quick Start](#-quick-start) • [📚 Documentation](#-api-documentation) • [🤝 Contributing](#-contributing)
 
@@ -26,12 +26,12 @@ STEM Idea Adventure isn't just another project generator—it's an **immersive e
 ### 🎯 Why Choose STEM Idea Adventure?
 
 - **🤖 AI-Powered Intelligence**: Advanced AI that understands your vision and creates tailored project roadmaps
-- **🎨 Stunning 3D Graphics**: Fully procedural 3D globe, immersive particle effects, and interactive data visualization
+- **🎨 Modern Interface**: Clean, accessible, and intuitive UI
 - **🔐 Soft-Locked Auth Experience**: Guest-friendly exploration with strategic feature locks
 - **🛡️ Secure Admin System**: Owner-only dashboard for complete component management
 - **🎤 Voice Control**: Natural conversation with AI assistant via voice commands
 - **💬 Smart Chat System**: Context-aware AI guidance that remembers your preferences
-- **🏆 Competition Platform**: School-ready team competitions with leaderboards and levels
+
 - **📦 500+ Components**: Comprehensive catalog with 3D previews and technical specs
 - **🎓 Interactive Learning**: Digital book experience with visual learning materials
 - **📊 Smart Tracking**: Automatic progress calculation based on completed tasks
@@ -54,7 +54,7 @@ A **guest-friendly** authentication system that lets users explore freely while 
 - **Full Browsing**: Navigate all pages and features
 - **Generate Projects**: Create unlimited AI-powered project ideas
 - **Browse Components**: Explore 500+ component catalog
-- **View Competitions**: See competition info and leaderboards
+- **Browse Components**: Explore 500+ component catalog
 - **Learn Resources**: Access all learning materials
 
 </td>
@@ -65,7 +65,7 @@ A **guest-friendly** authentication system that lets users explore freely while 
 - **Access Library** → Full page lock with CTA
 - **View Profile** → Full page lock with benefits
 - **Component Details** → Login Modal for specs
-- **Join Competitions** → Login Modal for teams
+- **Component Details** → Login Modal for specs
 - **Newsletter** → Opt-in checkbox on signup
 
 </td>
@@ -136,96 +136,9 @@ A **guest-friendly** authentication system that lets users explore freely while 
 </tr>
 </table>
 
-### 🏆 **Competition Platform**
 
-<table>
-<tr>
-<td width="50%">
 
-#### 👥 Team Management
-- **Create Teams**: Teachers generate unique 6-character codes
-- **Join Teams**: Students enter code to join competition
-- **Team Dashboard**: View team info and member count
-- **Leave Teams**: Easy opt-out from competitions
-- **Role System**: Teacher and student roles
 
-</td>
-<td width="50%">
-
-#### 🎯 Points & Levels System
-- **5 Level Tiers**: Explorer → Builder → Innovator → Inventor → Visionary
-- **XP Tracking**: Earn experience points for submissions
-- **Daily Streaks**: Build consistency with submission streaks
-- **Upvoting System**: Peers can upvote ideas for bonus points
-- **Progress Bars**: Visual level advancement tracking
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-#### 📊 Leaderboards
-- **Top Scorers**: Students with most points
-- **Consistency Leaders**: Longest submission streaks
-- **Team Rankings**: Combined team scores
-- **Real-Time Updates**: Live leaderboard changes
-- **Category Filters**: Filter by project category
-
-</td>
-<td width="50%">
-
-#### 📝 Submission System
-- **AI Integration**: Submit generated ideas directly
-- **Manual Submissions**: Add custom project ideas
-- **Category Selection**: 7 STEM categories (Robotics, IoT, AI, etc.)
-- **Submission History**: Track all your submissions
-- **Point Awards**: Instant points for each submission
-
-</td>
-</tr>
-</table>
-
-**Competition Flow:**
-```
-Teacher Creates Team → Shares Code → Students Join → Generate Ideas → Submit to Competition → Earn Points & Level Up → Compete on Leaderboards
-```
-
-### 🌍 **Procedural 3D Globe & Immersive Experience**
-
-<table>
-<tr>
-<td width="33%">
-
-#### 🌐 **Procedural Globe System**
-- 🗺️ **Live GeoJSON Parsing**: Converts raw map data to glowing 3D continent vertexes
-- 🎥 **Cinematic Focusing**: Shortest-path Quaternion Slerping smoothly rotates clicked hubs to the camera
-- 🔗 **Tracker Lines**: Advanced `useFrame` SVG projections linking 3D nodes to 2D UI panels 
-- 🎇 **Unreal Bloom**: Multi-pass post-processing for a radioactive neon glow aesthetic
-- 🎨 **Flawless Blending**: CSS `mix-blend-mode: lighten` natively integrating opaque canvas elements seamlessly into complex DOM gradients
-
-</td>
-<td width="33%">
-
-#### 🎭 **Next-Gen Visuals**
-- 🔮 Circular glow particles & atmospheric depth
-- 🌟 Dynamically generated immersive starfields
-- ⚡ 5000+ particles rendered smoothly on high-end devices
-- 💨 Smooth framer-motion UI transitions
-- 🖼️ WebGL & GPU-accelerated environments
-
-</td>
-<td width="33%">
-
-#### ⚙️ **Smart Adaptation**
-- 📱 Device capabilities detection
-- 🎮 Auto-optimization logic for low-end hardware
-- 🔋 Battery-aware React Three Fiber performance flags
-- 🌈 Adaptive rendering quality levels
-- ♿ Reduced motion accessibility support
-
-</td>
-</tr>
-</table>
 
 ### 💻 **Veronica AI Code Generator (Phase 4 - Enhanced)**
 
@@ -423,13 +336,12 @@ The frontend application consists of 18 distinct pages, each serving a specific 
 9. **Component Comparison (`/components/compare`)**: A tool to compare multiple hardware components side-by-side.
 10. **Library (`/library`)**: A personal repository of the user's saved STEM resources, blueprints, and projects.
 11. **Learn (`/learn`)**: Educational resources, tutorials, and step-by-step guides for various STEM topics.
-12. **Competition (`/competition`)**: The platform for school-ready STEM competitions, featuring teams, leaderboards, and levels.
-13. **Profile (`/profile`)**: User profile settings, achievements, stats, and preferences.
-14. **STEM Workshop (`/workshop`)**: An interactive workshop module for guided group sessions.
-15. **Presentation (`/presentation`)**: A dedicated presentation viewer/mode for showcasing projects.
-16. **Admin Dashboard (`/admin`)**: An administrative area to manage users, projects, components, and app settings.
-17. **About (`/about`)**: Information about the STEM Idea Generator, the team behind it, and its mission.
-18. **Auth Callback (`/auth/callback`)**: Handler for OAuth authentication callbacks.
+12. **Profile (`/profile`)**: User profile settings, achievements, stats, and preferences.
+13. **STEM Workshop (`/workshop`)**: An interactive workshop module for guided group sessions.
+14. **Presentation (`/presentation`)**: A dedicated presentation viewer/mode for showcasing projects.
+15. **Admin Dashboard (`/admin`)**: An administrative area to manage users, projects, components, and app settings.
+16. **About (`/about`)**: Information about the STEM Idea Generator, the team behind it, and its mission.
+17. **Auth Callback (`/auth/callback`)**: Handler for OAuth authentication callbacks.
 
 ---
 
@@ -446,7 +358,7 @@ The frontend application consists of 18 distinct pages, each serving a specific 
 ### 🏠 Home — AI Command Bridge
 <img src="./screenshots/01-home-page.png" alt="Home Page" width="100%"/>
 
-*Deep-space dark theme featuring an interactive, procedural 3D Globe tracking global STEM innovation hubs*
+*Deep-space dark theme interface*
 
 </td>
 <td align="center" width="50%">
@@ -503,14 +415,7 @@ The frontend application consists of 18 distinct pages, each serving a specific 
 *Logic & Software / Physical Hardware split with chapter search*
 
 </td>
-<td align="center" width="50%">
 
-### 🏆 Competition Platform
-<img src="./screenshots/07-competition-page.png" alt="Competition Page" width="100%"/>
-
-*Team-code join flow, leaderboard & level-up system*
-
-</td>
 </tr>
 <tr>
 <td align="center" colspan="2">

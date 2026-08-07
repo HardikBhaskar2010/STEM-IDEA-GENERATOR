@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from backend.core.dependencies import get_agent_orchestrator
 from backend.core.exceptions import AppError
 from backend.core.rate_limit import rate_limit
-from backend.orchestration.agent_orchestrator import AgentWorkflowOrchestrator
+from backend.services.agent_orchestrator import AgentWorkflowOrchestrator
 
 logger = logging.getLogger(__name__)
 

@@ -55,29 +55,7 @@ def _http_from_app_error(exc: AppError) -> HTTPException:
 # Endpoints
 # ---------------------------------------------------------------------------
 
-@veronica_router.post(
-    "/veronica-ai/chat",
-    dependencies=[rate_limit("veronica_ai")],
-)
-async def veronica_chat(
-    body: VeronicaAIChatRequest,
-    orchestrator: VeronicaOrchestrator = Depends(get_veronica_orchestrator),
-) -> Dict[str, Any]:
-    """Veronica AI chat endpoint.
 
-    Requirements: 7, 7.9
-    """
-    try:
-        return await orchestrator.chat(
-            message=body.message,
-            session_id=body.session_id,
-            context=body.context,
-        )
-    except AppError as exc:
-        raise _http_from_app_error(exc)
-    except Exception:
-        logger.exception("Unexpected error in veronica_chat")
-        raise HTTPException(status_code=500, detail={"error": "InternalServerError", "message": "Chat failed"})
 
 
 @veronica_router.post(

@@ -232,9 +232,9 @@ class VeronicaOrchestrator:
         except Exception as exc:
             logger.warning("Veronica LLM generation failed (%s), providing fallback project spec", exc)
             import uuid
-            from backend.models.veronica import (
-                VeronicaProjectSpec,
-                VeronicaProjectFile,
+            from backend.models.project_spec import (
+                ProjectSpec,
+                ProjectFile,
                 VeronicaPlatform,
             )
             title = message.strip()[:40].title() if message else "STEM Project"
@@ -291,16 +291,15 @@ class VeronicaOrchestrator:
 </body>
 </html>"""
 
-            spec = VeronicaProjectSpec(
+            spec = ProjectSpec(
                 project_id=pid,
                 title=title,
                 platform=VeronicaPlatform.WEB,
-                tech_stack=["HTML", "CSS", "JavaScript"],
+                difficulty="Beginner",
                 summary=f"STEM Web Project for {title}.",
                 files=[
-                    VeronicaProjectFile(path="index.html", content=html_code, language="html")
-                ],
-                entrypoint="index.html"
+                    ProjectFile(path="index.html", content=html_code)
+                ]
             )
             base_dir = os.getenv("VERONICA_PROJECT_DIR", "/tmp/veronica_projects")
             store = VeronicaProjectStore(base_dir=base_dir)
@@ -2208,9 +2207,12 @@ class VeronicaOrchestrator:
 
         Requirements: 16
         """
-        from backend.services.veronica_memory import VeronicaMemory  # noqa: PLC0415
-        mem = VeronicaMemory()
-        return mem.get(user_id) or {}
+        from backend.services.veronica_memory import VeronicaMemoryStore  # noqa: PLC0415
+        import os
+        base_dir = os.getenv("VERONICA_PROJECT_DIR", "/tmp/veronica_projects")
+        store = VeronicaMemoryStore(base_dir=base_dir)
+        mem = store.load(user_id)
+        return {"preferences": mem.preferences, "learning_goals": mem.learning_goals}
 
     async def update_user_memory(
         self, user_id: str, memory_data: Dict[str, Any]
@@ -2219,7 +2221,14 @@ class VeronicaOrchestrator:
 
         Requirements: 16
         """
-        from backend.services.veronica_memory import VeronicaMemory  # noqa: PLC0415
-        mem = VeronicaMemory()
-        mem.update(user_id, memory_data)
+        from backend.services.veronica_memory import VeronicaMemoryStore, UserMemory  # noqa: PLC0415
+        import os
+        base_dir = os.getenv("VERONICA_PROJECT_DIR", "/tmp/veronica_projects")
+        store = VeronicaMemoryStore(base_dir=base_dir)
+        mem = UserMemory(
+            user_id=user_id,
+            preferences=memory_data.get("preferences", {}),
+            learning_goals=memory_data.get("learning_goals", {})
+        )
+        store.save(mem)
         return {"status": "updated", "user_id": user_id}

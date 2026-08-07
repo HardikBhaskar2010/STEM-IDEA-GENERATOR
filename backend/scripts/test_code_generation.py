@@ -170,14 +170,16 @@ except Exception as e:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # Summary
 # ─────────────────────────────────────────────────────────────────────────────
-print()
-if failures:
-    print(f"\033[91m{len(failures)} test(s) FAILED:\033[0m")
-    for f in failures:
-        print(f"  • {f}")
-    sys.exit(1)
-else:
-    print("\033[92mAll tests passed.\033[0m")
-    sys.exit(0)
+if __name__ == "__main__":
+    print()
+    if failures:
+        print(f"\033[91m{len(failures)} test(s) FAILED:\033[0m")
+        for f in failures:
+            print(f"  • {f}")
+        sys.exit(1)
+    else:
+        print("\033[92mAll tests passed.\033[0m")
+        sys.exit(0)

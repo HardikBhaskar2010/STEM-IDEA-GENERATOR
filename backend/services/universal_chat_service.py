@@ -10,7 +10,7 @@ import re
 import os
 import json
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, AsyncGenerator
 from database.connection import get_db_client
 
 logger = logging.getLogger(__name__)
@@ -841,6 +841,53 @@ class UniversalChatService:
                 'last_action': None,
                 'conversation_state': {}
             }
+
+    async def chat(
+        self,
+        messages: List[Dict[str, Any]],
+        session_id: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = 0.7,
+        max_tokens: Optional[int] = 2048,
+    ) -> Dict[str, Any]:
+        from backend.integrations.openrouter.client import OpenRouterClient
+        client = OpenRouterClient()
+        resp = await client.chat_completion(
+            messages=messages,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature
+        )
+        return {"response": resp}
+
+    async def chat_stream(
+        self,
+        messages: List[Dict[str, Any]],
+        session_id: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = 0.7,
+        max_tokens: Optional[int] = 2048,
+    ) -> AsyncGenerator[str, None]:
+        from backend.integrations.openrouter.client import OpenRouterClient
+        import json
+        client = OpenRouterClient()
+        async for chunk in client.chat_completion_stream(
+            messages=messages,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature
+        ):
+            yield json.dumps({"text": chunk})
+
+    async def get_history(self, session_id: str) -> Dict[str, Any]:
+        """Compatibility method for chat.py"""
+        # We don't have user_id here, but we can try guest
+        msgs = await self.get_session_messages("guest", session_id)
+        return {"messages": msgs}
+
+    async def clear_session(self, session_id: str) -> None:
+        """Compatibility method for chat.py"""
+        await self.delete_session("guest", session_id)
 
 # Create singleton instance
 universal_chat_service = UniversalChatService()

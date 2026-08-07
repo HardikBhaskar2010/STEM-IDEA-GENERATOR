@@ -183,7 +183,7 @@ def get_agent_orchestrator(
 
     Requirements: 34.7
     """
-    from backend.orchestration.agent_orchestrator import AgentWorkflowOrchestrator  # noqa: PLC0415
+    from backend.services.agent_orchestrator import AgentWorkflowOrchestrator  # noqa: PLC0415
     return AgentWorkflowOrchestrator(openrouter_client=openrouter_client)
 
 
@@ -246,4 +246,48 @@ async def get_authenticated_user_id(request: Request) -> str | None:
     except Exception as exc:
         logger.debug("get_authenticated_user_id: token validation failed: %s", exc)
     return None
+
+async def require_admin(request: Request) -> str:
+    """Enforce admin access by checking if the authenticated user's email matches the hardcoded owner."""
+    import os
+    from fastapi import HTTPException
+    
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authentication token")
+
+    token = auth_header.split(" ", 1)[1].strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Empty authentication token")
+
+    try:
+        import httpx
+        url = os.getenv("SUPABASE_URL") or os.getenv("VITE_SUPABASE_URL", "")
+        key = os.getenv("SUPABASE_ANON_KEY", "")
+        if not url:
+            raise HTTPException(status_code=500, detail="Supabase URL not configured")
+        
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(
+                f"{url}/auth/v1/user",
+                headers={"Authorization": f"Bearer {token}", "apikey": key},
+            )
+            
+        if resp.status_code == 200:
+            data = resp.json()
+            email = data.get("email")
+            
+            # Hardcoded admin check
+            if email != "hardik.bhaskar2010@gmail.com":
+                raise HTTPException(status_code=403, detail="Admin privileges required")
+                
+            return data.get("id")
+        else:
+            raise HTTPException(status_code=401, detail="Invalid token")
+            
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.debug("require_admin: validation failed: %s", exc)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 

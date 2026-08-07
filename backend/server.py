@@ -70,7 +70,6 @@ from backend.routers.veronica import veronica_router
 from backend.routers.sandbox import sandbox_router
 from backend.routers.agents import agents_router
 from backend.routers.snapshots import snapshots_router
-from backend.routers.guidance import guidance_router
 from backend.routers.chat import chat_router
 from backend.routers.codegen import codegen_router
 from backend.routers.performance import performance_router
@@ -120,7 +119,6 @@ ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",   # all Vercel preview URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -185,7 +183,6 @@ app.include_router(veronica_router)
 app.include_router(sandbox_router)
 app.include_router(agents_router)
 app.include_router(snapshots_router)
-app.include_router(guidance_router)
 app.include_router(chat_router)
 app.include_router(codegen_router)
 app.include_router(performance_router)
