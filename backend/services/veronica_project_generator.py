@@ -24,7 +24,8 @@ def _projectspec_prompt(*, project_id: str, message: str, platform: VeronicaPlat
             "Arduino project requirements:\n"
             "- Include a wiring section with pin mappings.\n"
             "- Include a materials list.\n"
-            "- Include at least one .ino file under `arduino/` (e.g. `arduino/main.ino`) and it must compile logically.\n"
+            "- Include at least one .ino file under `arduino/` (e.g. `arduino/main.ino`) and it MUST compile logically. NEVER use .ini extensions for Arduino code, only .ino, .h, and .cpp.\n"
+            "- Write correct, high-quality C++ code for Arduino.\n"
         ),
         VeronicaPlatform.RASPBERRY_PI: (
             "Raspberry Pi project requirements:\n"
@@ -71,10 +72,11 @@ Return ONLY valid JSON that conforms to this exact schema:
 
 Rules:
 - `files[].path` must be relative, use forward slashes, and must NOT contain `..` or start with `/` or a drive letter.
-- `readme` should be a complete README.md content with build/run steps and a short safety note.
+- `readme` should be a COMPLETE, DETAILED README.md. It MUST include a comprehensive project idea description explaining what it is and how it works in detail, followed by detailed build/run steps, and a safety note. Do not be brief!
 - Put the main entry file as `is_main: true` (exactly one).
 - Keep file contents short but runnable; prefer correctness over length.
 - Do not include markdown fences or extra text.
+- You MUST also generate a file named `prompt.txt` at the root. The content of `prompt.txt` should be a highly detailed prompt that the user can copy and paste into \"Full build\" mode to instruct the AI to generate the complete, production-ready version of this project.
 
 {platform_notes}
 

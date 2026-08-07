@@ -153,6 +153,7 @@ const VeronicaAI: React.FC = () => {
              intent: m.intent,
              confidence: m.confidence,
              actions: m.actions,
+             project: m.project_snap ?? null,
              agentEvents: (Array.isArray(m.actions) && m.actions.length > 0 && (m.actions[0] as any).event)
                ? (m.actions as any[])
                : undefined,

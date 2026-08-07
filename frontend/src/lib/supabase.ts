@@ -575,7 +575,7 @@ export async function getVeronicaChats(): Promise<Record<string, unknown>[]> {
 
     let query = supabase
       .from('veronica_project_chats')
-      .select('*, veronica_chat_messages(id, role, content, intent, confidence, actions, created_at)')
+      .select('*, veronica_chat_messages(id, role, content, intent, confidence, actions, project_snap, created_at)')
       .eq('is_archived', false)
       .order('last_message_at', { ascending: false });
 
