@@ -33,13 +33,20 @@ jobs:
 
           echo "Targeting Backend Health URL: ${TARGET_URL}"
           
-          # Execute HTTP GET request
+          # Execute HTTP GET request with retries and timeout tolerance for cold starts
+          HTTP_STATUS="000"
           for attempt in 1 2 3; do
             echo "Attempt $attempt..."
-            HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" -m 25 "${TARGET_URL}")
-            if [ "$HTTP_STATUS" -eq 200 ]; then
+            rm -f /tmp/response.json
+            HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" --connect-timeout 15 -m 60 "${TARGET_URL}" 2>/dev/null) || HTTP_STATUS="000"
+            if [ -z "$HTTP_STATUS" ]; then
+              HTTP_STATUS="000"
+            fi
+            if [ "$HTTP_STATUS" -eq 200 ] 2>/dev/null; then
+              echo "Success on attempt $attempt!"
               break
             fi
+            echo "Attempt $attempt returned status: ${HTTP_STATUS}"
             if [ $attempt -lt 3 ]; then
               sleep $((attempt * 5))
             fi
@@ -48,7 +55,11 @@ jobs:
           echo "Timestamp (UTC): $(date -u)"
           echo "HTTP Status Code: ${HTTP_STATUS}"
           echo "Response Body:"
-          cat /tmp/response.json || true
+          if [ -f /tmp/response.json ] && [ -s /tmp/response.json ]; then
+            cat /tmp/response.json
+          else
+            echo "(No response body captured)"
+          fi
           echo ""
 
           if [ "$HTTP_STATUS" -ne 200 ]; then
