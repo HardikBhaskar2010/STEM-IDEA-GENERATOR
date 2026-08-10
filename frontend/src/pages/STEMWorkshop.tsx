@@ -1,9 +1,9 @@
-import React, { useEffect, Suspense } from 'react';
-import { LeftSidebar } from '@/components/workshop/LeftSidebar';
-import { RightPanel } from '@/components/workshop/RightPanel';
-import { PlaygroundScene } from '@/components/3D/PlaygroundScene';
+﻿import React, { useEffect } from 'react';
+import { LeftSidebar }     from '@/components/workshop/LeftSidebar';
+import { RightPanel }      from '@/components/workshop/RightPanel';
+import { SchematicCanvas } from '@/components/schematic/SchematicCanvas';
 import { useCircuitStore } from '@/store/useCircuitStore';
-import { EXPERIMENTS, getExperimentById } from '@/lib/experiments';
+import { getExperimentById } from '@/lib/experiments';
 import { Zap, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -53,7 +53,7 @@ const TopBar: React.FC = () => {
           <span>{connections.length} wires</span>
         </div>
 
-        {/* Simulation status */}
+        {/* Simulation status pill */}
         <div
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${
             isSimulating
@@ -73,18 +73,6 @@ const TopBar: React.FC = () => {
   );
 };
 
-// ─── Loading fallback for 3D canvas ──────────────────────────────────────────
-
-const SceneLoader: React.FC = () => (
-  <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#020810] to-[#050a18]">
-    <div className="text-center">
-      <div className="w-12 h-12 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 animate-spin mx-auto mb-4" />
-      <p className="text-cyan-400/60 text-sm font-medium">Loading 3D Workspace...</p>
-      <p className="text-gray-600 text-xs mt-1">Initializing Three.js renderer</p>
-    </div>
-  </div>
-);
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const STEMWorkshop: React.FC = () => {
@@ -100,24 +88,20 @@ const STEMWorkshop: React.FC = () => {
   }, []);
 
   return (
-    <div
-      className="h-screen flex flex-col overflow-hidden bg-transparent"
-    >
+    <div className="h-screen flex flex-col overflow-hidden bg-transparent">
       {/* Top bar */}
       <TopBar />
 
-      {/* Main layout: left sidebar + 3D canvas + right panel */}
+      {/* Main layout: left sidebar + schematic canvas + right panel */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-64 xl:w-72 flex-shrink-0 overflow-hidden hidden md:block">
           <LeftSidebar />
         </aside>
 
-        {/* Center: 3D Canvas */}
+        {/* Center: 2D Schematic Canvas */}
         <main className="flex-1 relative overflow-hidden">
-          <Suspense fallback={<SceneLoader />}>
-            <PlaygroundScene className="w-full h-full" />
-          </Suspense>
+          <SchematicCanvas className="w-full h-full" />
         </main>
 
         {/* Right Panel */}
@@ -132,7 +116,7 @@ const STEMWorkshop: React.FC = () => {
           <Zap size={40} className="text-cyan-400 mx-auto mb-4" />
           <h2 className="text-white font-bold text-lg mb-2">Desktop Required</h2>
           <p className="text-gray-400 text-sm">
-            STEM Workshop is optimized for desktop browsers for the best 3D experience.
+            STEM Workshop is optimized for desktop browsers for the best experience.
           </p>
         </div>
       </div>

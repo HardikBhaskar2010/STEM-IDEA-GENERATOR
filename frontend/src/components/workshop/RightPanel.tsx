@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCircuitStore } from '@/store/useCircuitStore';
-import { EXPERIMENTS, getExperimentById } from '@/lib/experiments';
+import { getExperimentById } from '@/lib/experiments';
 import {
   Play,
   RotateCcw,
@@ -12,9 +12,7 @@ import {
   Zap,
   BookOpen,
   Code2,
-  GitBranch,
   Info,
-  Target,
 } from 'lucide-react';
 
 // ─── Syntax highlight (minimal) ──────────────────────────────────────────────
@@ -49,66 +47,7 @@ function highlightArduino(code: string): React.ReactNode {
   });
 }
 
-// ─── Circuit Diagram (simple SVG) ────────────────────────────────────────────
-
-function CircuitDiagram({ expId }: { expId: string }) {
-  // Minimal SVG diagrams per experiment
-  const diagrams: Record<string, React.ReactNode> = {
-    blink: (
-      <svg viewBox="0 0 200 120" className="w-full h-32 text-cyan-400">
-        {/* Arduino */}
-        <rect x="10" y="40" width="60" height="40" fill="#1a6b1a" rx="3" />
-        <text x="40" y="65" textAnchor="middle" fill="#86efac" fontSize="8">Arduino</text>
-        {/* Wire from D13 */}
-        <line x1="70" y1="55" x2="100" y2="55" stroke="#00e5ff" strokeWidth="1.5" />
-        {/* Resistor */}
-        <rect x="100" y="50" width="25" height="10" fill="none" stroke="#c8a050" strokeWidth="1.5" rx="2" />
-        <text x="112" y="70" textAnchor="middle" fill="#c8a050" fontSize="7">220Ω</text>
-        {/* LED */}
-        <polygon points="125,50 125,60 140,55" fill="#ff3333" stroke="#ff3333" strokeWidth="1" />
-        <line x1="140" y1="50" x2="140" y2="60" stroke="#ff3333" strokeWidth="2" />
-        {/* Wire to GND */}
-        <line x1="140" y1="55" x2="170" y2="55" stroke="#4444ff" strokeWidth="1.5" />
-        <text x="170" y="59" fill="#aaaaff" fontSize="7">GND</text>
-        <text x="70" y="52" fill="#00e5ff" fontSize="7">D13</text>
-      </svg>
-    ),
-    'button-toggle': (
-      <svg viewBox="0 0 220 120" className="w-full h-32">
-        <rect x="10" y="30" width="60" height="60" fill="#1a6b1a" rx="3" />
-        <text x="40" y="65" textAnchor="middle" fill="#86efac" fontSize="8">Arduino</text>
-        {/* Button */}
-        <circle cx="110" cy="50" r="12" fill="none" stroke="#cc3333" strokeWidth="1.5" />
-        <line x1="104" y1="60" x2="104" y2="70" stroke="#c8a050" strokeWidth="1.2" />
-        <line x1="116" y1="60" x2="116" y2="70" stroke="#c8a050" strokeWidth="1.2" />
-        <text x="110" y="87" textAnchor="middle" fill="#cc3333" fontSize="7">BTN</text>
-        {/* LED */}
-        <polygon points="155,40 155,60 175,50" fill="#33ff77" stroke="#33ff77" strokeWidth="1" />
-        <line x1="175" y1="40" x2="175" y2="60" stroke="#33ff77" strokeWidth="2" />
-        <text x="160" y="75" fill="#33ff77" fontSize="7">LED</text>
-        {/* Wires */}
-        <line x1="70" y1="60" x2="98" y2="50" stroke="#ff4444" strokeWidth="1.5" />
-        <line x1="122" y1="50" x2="140" y2="50" stroke="#00e5ff" strokeWidth="1.5" />
-        <line x1="175" y1="50" x2="200" y2="50" stroke="#4444ff" strokeWidth="1.5" />
-        <text x="200" y="54" fill="#aaaaff" fontSize="7">GND</text>
-      </svg>
-    ),
-  };
-
-  return (
-    <div className="bg-gray-900/50 rounded-lg p-3 border border-white/5">
-      <div className="text-gray-400 text-[10px] font-medium mb-2 flex items-center gap-1">
-        <GitBranch size={10} />
-        CIRCUIT DIAGRAM
-      </div>
-      {diagrams[expId] ?? (
-        <div className="text-gray-600 text-xs text-center py-4">
-          Select an experiment to view diagram
-        </div>
-      )}
-    </div>
-  );
-}
+// CircuitDiagram removed — the main SchematicCanvas IS the diagram.
 
 // ─── RightPanel ───────────────────────────────────────────────────────────────
 
@@ -123,8 +62,6 @@ export const RightPanel: React.FC = () => {
     clearComponents,
     components,
     connections,
-    calibrationMode,
-    setCalibrationMode,
     selectedComponentId,
   } = useCircuitStore();
 
@@ -226,11 +163,6 @@ export const RightPanel: React.FC = () => {
               </ol>
             </Section>
 
-            {/* Circuit Diagram */}
-            <Section id="diagram" icon={<GitBranch size={12} />} title="CIRCUIT DIAGRAM">
-              <CircuitDiagram expId={experiment.id} />
-            </Section>
-
             {/* Code */}
             <Section id="code" icon={<Code2 size={12} />} title="ARDUINO CODE">
               <div className="relative">
@@ -249,35 +181,7 @@ export const RightPanel: React.FC = () => {
               </div>
             </Section>
 
-            {/* Calibrated Pins for the selected component type */}
-            {selectedComponentId && (
-              <Section id="calibration" icon={<Target size={12} />} title="CALIBRATED PINS">
-                <div className="space-y-2">
-                  {(() => {
-                    const comp = components.find(c => c.id === selectedComponentId);
-                    if (!comp) {return <p className="text-gray-500 text-[10px]">No component selected</p>;}
-                    const pins = useCircuitStore.getState().userPins[comp.type] || [];
-                    if (pins.length === 0) {return <p className="text-gray-500 text-[10px]">No custom pins placed yet.</p>;}
-                    return pins.map(p => (
-                      <div key={p.id} className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 group">
-                        <div className="flex flex-col">
-                          <span className="text-cyan-400 text-[10px] font-bold">{p.label}</span>
-                          <span className="text-gray-500 text-[9px] font-mono">
-                            [{p.relativePosition[0].toFixed(3)}, {p.relativePosition[1].toFixed(3)}, {p.relativePosition[2].toFixed(3)}]
-                          </span>
-                        </div>
-                        <button 
-                          onClick={() => useCircuitStore.getState().removeUserPin(comp.type, p.id)}
-                          className="text-red-400/40 hover:text-red-400 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={10} />
-                        </button>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </Section>
-            )}
+
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
@@ -306,19 +210,6 @@ export const RightPanel: React.FC = () => {
         >
           <Play size={14} className={isSimulating ? 'animate-pulse' : ''} />
           {isSimulating ? 'Stop Simulation' : 'Run Simulation'}
-        </button>
-
-        {/* Pin Calibration Mode Toggle */}
-        <button
-          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-xs transition-all ${
-            calibrationMode
-              ? 'bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30'
-              : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-300'
-          }`}
-          onClick={() => setCalibrationMode(!calibrationMode)}
-        >
-          <Target size={14} className={calibrationMode ? 'animate-pulse text-pink-400' : ''} />
-          {calibrationMode ? 'Exit Calibration Mode' : 'Add Custom Pin'}
         </button>
 
         <div className="flex gap-2">

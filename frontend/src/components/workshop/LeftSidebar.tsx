@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { EXPERIMENTS } from '@/lib/experiments';
 import type { ComponentType, PlacedComponent } from '@/store/useCircuitStore';
 import { useCircuitStore } from '@/store/useCircuitStore';
@@ -12,7 +12,6 @@ import {
   Cog,
   Sun,
   Minus,
-  ChevronDown,
   Layers,
   FlaskConical,
 } from 'lucide-react';
@@ -29,78 +28,15 @@ interface LibraryItem {
 }
 
 const LIBRARY_ITEMS: LibraryItem[] = [
-  {
-    type: 'arduino',
-    label: 'Arduino Uno',
-    description: 'Microcontroller board',
-    icon: <Cpu size={16} />,
-    color: '#1a6b1a',
-    defaultProps: {},
-  },
-  {
-    type: 'breadboard',
-    label: 'Breadboard',
-    description: '400-point breadboard',
-    icon: <Layers size={16} />,
-    color: '#c8b870',
-    defaultProps: {},
-  },
-  {
-    type: 'led',
-    label: 'LED',
-    description: 'Light emitting diode',
-    icon: <Circle size={16} />,
-    color: '#ff3333',
-    defaultProps: { isOn: false, brightness: 0, color: '#ff3333' },
-  },
-  {
-    type: 'resistor',
-    label: 'Resistor',
-    description: '220Ω resistor',
-    icon: <Minus size={16} />,
-    color: '#c8a050',
-    defaultProps: {},
-  },
-  {
-    type: 'button',
-    label: 'Push Button',
-    description: 'Momentary switch',
-    icon: <ToggleLeft size={16} />,
-    color: '#cc3333',
-    defaultProps: { buttonState: false },
-  },
-  {
-    type: 'potentiometer',
-    label: 'Potentiometer',
-    description: 'Rotary knob (0-1023)',
-    icon: <Sliders size={16} />,
-    color: '#4444aa',
-    defaultProps: { potValue: 512 },
-  },
-  {
-    type: 'buzzer',
-    label: 'Buzzer',
-    description: 'Passive piezo buzzer',
-    icon: <Volume2 size={16} />,
-    color: '#333333',
-    defaultProps: { isOn: false, buzzFreq: 440 },
-  },
-  {
-    type: 'servo',
-    label: 'Servo Motor',
-    description: '180° hobby servo',
-    icon: <Cog size={16} />,
-    color: '#2244aa',
-    defaultProps: { servoAngle: 90 },
-  },
-  {
-    type: 'ldr',
-    label: 'LDR Sensor',
-    description: 'Light dependent resistor',
-    icon: <Sun size={16} />,
-    color: '#aa8800',
-    defaultProps: { ldrValue: 512 },
-  },
+  { type: 'arduino',       label: 'Arduino Uno',   description: 'Microcontroller board',   icon: <Cpu size={16} />,       color: '#1a6b1a', defaultProps: {} },
+  { type: 'breadboard',    label: 'Breadboard',    description: '400-point breadboard',    icon: <Layers size={16} />,    color: '#c8b870', defaultProps: {} },
+  { type: 'led',           label: 'LED',           description: 'Light emitting diode',    icon: <Circle size={16} />,    color: '#ff3333', defaultProps: { isOn: false, brightness: 0, color: '#ff3333' } },
+  { type: 'resistor',      label: 'Resistor',      description: '220Ω resistor',           icon: <Minus size={16} />,     color: '#c8a050', defaultProps: {} },
+  { type: 'button',        label: 'Push Button',   description: 'Momentary switch',        icon: <ToggleLeft size={16} />, color: '#cc3333', defaultProps: { buttonState: false } },
+  { type: 'potentiometer', label: 'Potentiometer', description: 'Rotary knob (0-1023)',    icon: <Sliders size={16} />,   color: '#4444aa', defaultProps: { potValue: 512 } },
+  { type: 'buzzer',        label: 'Buzzer',        description: 'Passive piezo buzzer',    icon: <Volume2 size={16} />,   color: '#333333', defaultProps: { isOn: false, buzzFreq: 440 } },
+  { type: 'servo',         label: 'Servo Motor',   description: '180° hobby servo',        icon: <Cog size={16} />,       color: '#2244aa', defaultProps: { servoAngle: 90 } },
+  { type: 'ldr',           label: 'LDR Sensor',    description: 'Light dependent resistor',icon: <Sun size={16} />,       color: '#aa8800', defaultProps: { ldrValue: 512 } },
 ];
 
 // ─── Counter for unique IDs ───────────────────────────────────────────────────
@@ -123,13 +59,13 @@ export const LeftSidebar: React.FC = () => {
   };
 
   const handleAddComponent = (item: LibraryItem) => {
-    const spread = (Math.random() - 0.5) * 4;
+    const jitter = Math.round((Math.random() - 0.5) * 4) * 40;
     const newComp: PlacedComponent = {
       id: genId(item.type),
       type: item.type,
       label: item.label,
-      position: [spread, 0, spread],
-      rotation: [0, 0, 0],
+      position: { x: 200 + jitter, y: 160 + jitter },
+      rotation: 0,
       ...item.defaultProps,
     };
     addComponent(newComp);
@@ -216,7 +152,7 @@ export const LeftSidebar: React.FC = () => {
             {LIBRARY_ITEMS.map((item) => (
               <button
                 key={item.type}
-                className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-white/5 bg-white/3 
+                className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-white/5 bg-white/3
                            hover:border-cyan-400/40 hover:bg-cyan-400/5 transition-all text-left group"
                 onClick={() => handleAddComponent(item)}
               >

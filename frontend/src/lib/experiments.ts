@@ -1,45 +1,27 @@
-import type { ExperimentDef } from '@/store/useCircuitStore';
+﻿import type { ExperimentDef } from '@/store/useCircuitStore';
 
-// ─── Helper to generate unique component IDs ───────────────────────────────
+// ─── 2D Layout Convention ─────────────────────────────────────────────────────
+// All positions are {x, y} in pixels, snapped to 40px grid.
+// Arduino: x=80, y=80 (left anchor).
+// Components fan right: resistors at x=360, passive/output at x=520-600.
+// Parallel elements (e.g. 3 LEDs for traffic light) spaced 80px apart vertically.
 
 export const EXPERIMENTS: ExperimentDef[] = [
-  // ── 1. Arduino Uno Blink ──────────────────────────────────────────────────
+  // ── 1. Arduino Blink ─────────────────────────────────────────────────────
   {
     id: 'blink',
     title: 'Arduino Blink',
-    description:
-      'The classic "Hello World" of electronics. Blink an LED on and off using pin 13.',
+    description: 'The classic "Hello World" of electronics. Blink an LED on and off using pin 13.',
     difficulty: 'Beginner',
     components: [
-      {
-        id: 'ard-1',
-        type: 'arduino',
-        label: 'Arduino Uno',
-        position: [0, 0, 0],
-        rotation: [0, 0, 0],
-      },
-      {
-        id: 'led-1',
-        type: 'led',
-        label: 'Red LED',
-        position: [2, 0, 0],
-        rotation: [0, 0, 0],
-        isOn: false,
-        brightness: 0,
-        color: '#ff3333',
-      },
-      {
-        id: 'res-1',
-        type: 'resistor',
-        label: '220Ω Resistor',
-        position: [1.2, 0, 0],
-        rotation: [0, 0, 0],
-      },
+      { id: 'ard-1', type: 'arduino',  label: 'Arduino Uno',   position: { x: 80,  y: 80 }, rotation: 0 },
+      { id: 'res-1', type: 'resistor', label: '220Ω Resistor', position: { x: 360, y: 160 }, rotation: 0 },
+      { id: 'led-1', type: 'led',      label: 'Red LED',       position: { x: 520, y: 160 }, rotation: 0, isOn: false, brightness: 0, color: '#ff3333' },
     ],
     connections: [
-      { id: 'w1', from: 'ard-1-d13', to: 'res-1-in', isLive: false },
-      { id: 'w2', from: 'res-1-out', to: 'led-1-anode', isLive: false },
-      { id: 'w3', from: 'led-1-cathode', to: 'ard-1-gnd', isLive: false },
+      { id: 'w1', from: 'ard-1-d13',      to: 'res-1-pin1',     isLive: false },
+      { id: 'w2', from: 'res-1-pin2',     to: 'led-1-anode',    isLive: false },
+      { id: 'w3', from: 'led-1-cathode',  to: 'ard-1-gnd',      isLive: false },
     ],
     code: `// STEM Workshop - Blink Example
 void setup() {
@@ -60,53 +42,24 @@ void loop() {
     ],
   },
 
-  // ── 2. LED Toggle with Button ─────────────────────────────────────────────
+  // ── 2. LED Toggle with Button ────────────────────────────────────────────
   {
     id: 'button-toggle',
     title: 'LED Toggle with Button',
-    description:
-      'Use a push button to toggle an LED on and off. Introduces digital input reading.',
+    description: 'Use a push button to toggle an LED on and off. Introduces digital input reading.',
     difficulty: 'Beginner',
     components: [
-      {
-        id: 'ard-1',
-        type: 'arduino',
-        label: 'Arduino Uno',
-        position: [0, 0, 0],
-        rotation: [0, 0, 0],
-      },
-      {
-        id: 'btn-1',
-        type: 'button',
-        label: 'Push Button',
-        position: [-2, 0, 0.5],
-        rotation: [0, 0, 0],
-        buttonState: false,
-      },
-      {
-        id: 'led-1',
-        type: 'led',
-        label: 'Green LED',
-        position: [2, 0, 0],
-        rotation: [0, 0, 0],
-        isOn: false,
-        brightness: 0,
-        color: '#33ff77',
-      },
-      {
-        id: 'res-1',
-        type: 'resistor',
-        label: '220Ω Resistor',
-        position: [1, 0, 0],
-        rotation: [0, 0, 0],
-      },
+      { id: 'ard-1', type: 'arduino',  label: 'Arduino Uno',   position: { x: 80,  y: 80  }, rotation: 0 },
+      { id: 'btn-1', type: 'button',   label: 'Push Button',   position: { x: 360, y: 80  }, rotation: 0, buttonState: false },
+      { id: 'res-1', type: 'resistor', label: '220Ω Resistor', position: { x: 360, y: 200 }, rotation: 0 },
+      { id: 'led-1', type: 'led',      label: 'Green LED',     position: { x: 520, y: 200 }, rotation: 0, isOn: false, brightness: 0, color: '#33ff77' },
     ],
     connections: [
-      { id: 'w1', from: 'ard-1-5v', to: 'btn-1-in', isLive: false },
-      { id: 'w2', from: 'btn-1-out', to: 'ard-1-d2', isLive: false },
-      { id: 'w3', from: 'ard-1-d13', to: 'res-1-in', isLive: false },
-      { id: 'w4', from: 'res-1-out', to: 'led-1-anode', isLive: false },
-      { id: 'w5', from: 'led-1-cathode', to: 'ard-1-gnd', isLive: false },
+      { id: 'w1', from: 'ard-1-5v',      to: 'btn-1-leg1',     isLive: false },
+      { id: 'w2', from: 'btn-1-leg2',    to: 'ard-1-d2',       isLive: false },
+      { id: 'w3', from: 'ard-1-d13',     to: 'res-1-pin1',     isLive: false },
+      { id: 'w4', from: 'res-1-pin2',    to: 'led-1-anode',    isLive: false },
+      { id: 'w5', from: 'led-1-cathode', to: 'ard-1-gnd',      isLive: false },
     ],
     code: `// STEM Workshop - Button Toggle
 const int buttonPin = 2;
@@ -141,61 +94,27 @@ void loop() {
   {
     id: 'traffic-light',
     title: 'Traffic Light',
-    description:
-      'Simulate a real traffic light with three LEDs cycling through red, yellow, and green.',
+    description: 'Simulate a real traffic light with three LEDs cycling through red, yellow, and green.',
     difficulty: 'Beginner',
     components: [
-      {
-        id: 'ard-1',
-        type: 'arduino',
-        label: 'Arduino Uno',
-        position: [0, 0, 0],
-        rotation: [0, 0, 0],
-      },
-      {
-        id: 'led-red',
-        type: 'led',
-        label: 'Red LED',
-        position: [2.5, 0, 1],
-        rotation: [0, 0, 0],
-        isOn: false,
-        brightness: 0,
-        color: '#ff2222',
-      },
-      {
-        id: 'led-yellow',
-        type: 'led',
-        label: 'Yellow LED',
-        position: [2.5, 0, 0],
-        rotation: [0, 0, 0],
-        isOn: false,
-        brightness: 0,
-        color: '#ffdd00',
-      },
-      {
-        id: 'led-green',
-        type: 'led',
-        label: 'Green LED',
-        position: [2.5, 0, -1],
-        rotation: [0, 0, 0],
-        isOn: false,
-        brightness: 0,
-        color: '#22ff55',
-      },
-      { id: 'res-r', type: 'resistor', label: '220Ω Resistor', position: [1.5, 0, 1], rotation: [0, 0, 0] },
-      { id: 'res-y', type: 'resistor', label: '220Ω Resistor', position: [1.5, 0, 0], rotation: [0, 0, 0] },
-      { id: 'res-g', type: 'resistor', label: '220Ω Resistor', position: [1.5, 0, -1], rotation: [0, 0, 0] },
+      { id: 'ard-1',    type: 'arduino',  label: 'Arduino Uno',   position: { x: 80,  y: 160 }, rotation: 0 },
+      { id: 'res-r',    type: 'resistor', label: '220Ω Resistor', position: { x: 360, y: 80  }, rotation: 0 },
+      { id: 'res-y',    type: 'resistor', label: '220Ω Resistor', position: { x: 360, y: 160 }, rotation: 0 },
+      { id: 'res-g',    type: 'resistor', label: '220Ω Resistor', position: { x: 360, y: 240 }, rotation: 0 },
+      { id: 'led-red',  type: 'led', label: 'Red LED',    position: { x: 520, y: 80  }, rotation: 0, isOn: false, brightness: 0, color: '#ff2222' },
+      { id: 'led-yellow', type: 'led', label: 'Yellow LED', position: { x: 520, y: 160 }, rotation: 0, isOn: false, brightness: 0, color: '#ffdd00' },
+      { id: 'led-green',  type: 'led', label: 'Green LED',  position: { x: 520, y: 240 }, rotation: 0, isOn: false, brightness: 0, color: '#22ff55' },
     ],
     connections: [
-      { id: 'w1', from: 'ard-1-d11', to: 'res-r-in', isLive: false },
-      { id: 'w2', from: 'res-r-out', to: 'led-red-anode', isLive: false },
-      { id: 'w3', from: 'led-red-cathode', to: 'ard-1-gnd', isLive: false },
-      { id: 'w4', from: 'ard-1-d10', to: 'res-y-in', isLive: false },
-      { id: 'w5', from: 'res-y-out', to: 'led-yellow-anode', isLive: false },
-      { id: 'w6', from: 'led-yellow-cathode', to: 'ard-1-gnd', isLive: false },
-      { id: 'w7', from: 'ard-1-d9', to: 'res-g-in', isLive: false },
-      { id: 'w8', from: 'res-g-out', to: 'led-green-anode', isLive: false },
-      { id: 'w9', from: 'led-green-cathode', to: 'ard-1-gnd', isLive: false },
+      { id: 'w1', from: 'ard-1-d11',         to: 'res-r-pin1',         isLive: false },
+      { id: 'w2', from: 'res-r-pin2',         to: 'led-red-anode',      isLive: false },
+      { id: 'w3', from: 'led-red-cathode',    to: 'ard-1-gnd',          isLive: false },
+      { id: 'w4', from: 'ard-1-d10',          to: 'res-y-pin1',         isLive: false },
+      { id: 'w5', from: 'res-y-pin2',         to: 'led-yellow-anode',   isLive: false },
+      { id: 'w6', from: 'led-yellow-cathode', to: 'ard-1-gnd',          isLive: false },
+      { id: 'w7', from: 'ard-1-d9',           to: 'res-g-pin1',         isLive: false },
+      { id: 'w8', from: 'res-g-pin2',         to: 'led-green-anode',    isLive: false },
+      { id: 'w9', from: 'led-green-cathode',  to: 'ard-1-gnd',          isLive: false },
     ],
     code: `// STEM Workshop - Traffic Light
 const int redPin    = 11;
@@ -239,44 +158,21 @@ void loop() {
   {
     id: 'fade-pot',
     title: 'Fading LED with Potentiometer',
-    description:
-      'Control LED brightness with a potentiometer using PWM analog output.',
+    description: 'Control LED brightness with a potentiometer using PWM analog output.',
     difficulty: 'Beginner',
     components: [
-      {
-        id: 'ard-1',
-        type: 'arduino',
-        label: 'Arduino Uno',
-        position: [0, 0, 0],
-        rotation: [0, 0, 0],
-      },
-      {
-        id: 'pot-1',
-        type: 'potentiometer',
-        label: 'Potentiometer',
-        position: [-2, 0, 0],
-        rotation: [0, 0, 0],
-        potValue: 512,
-      },
-      {
-        id: 'led-1',
-        type: 'led',
-        label: 'Blue LED',
-        position: [2, 0, 0],
-        rotation: [0, 0, 0],
-        isOn: false,
-        brightness: 0.5,
-        color: '#3388ff',
-      },
-      { id: 'res-1', type: 'resistor', label: '220Ω Resistor', position: [1.2, 0, 0], rotation: [0, 0, 0] },
+      { id: 'ard-1', type: 'arduino',       label: 'Arduino Uno',   position: { x: 80,  y: 80 }, rotation: 0 },
+      { id: 'pot-1', type: 'potentiometer', label: 'Potentiometer', position: { x: 80,  y: 280 }, rotation: 0, potValue: 512 },
+      { id: 'res-1', type: 'resistor',      label: '220Ω Resistor', position: { x: 360, y: 160 }, rotation: 0 },
+      { id: 'led-1', type: 'led',           label: 'Blue LED',      position: { x: 520, y: 160 }, rotation: 0, isOn: false, brightness: 0.5, color: '#3388ff' },
     ],
     connections: [
-      { id: 'w1', from: 'ard-1-5v', to: 'pot-1-vcc', isLive: false },
-      { id: 'w2', from: 'pot-1-gnd', to: 'ard-1-gnd', isLive: false },
-      { id: 'w3', from: 'pot-1-wiper', to: 'ard-1-a0', isLive: false },
-      { id: 'w4', from: 'ard-1-d9', to: 'res-1-in', isLive: false },
-      { id: 'w5', from: 'res-1-out', to: 'led-1-anode', isLive: false },
-      { id: 'w6', from: 'led-1-cathode', to: 'ard-1-gnd', isLive: false },
+      { id: 'w1', from: 'ard-1-5v',      to: 'pot-1-vcc',     isLive: false },
+      { id: 'w2', from: 'pot-1-gnd',     to: 'ard-1-gnd',     isLive: false },
+      { id: 'w3', from: 'pot-1-wiper',   to: 'ard-1-a0',      isLive: false },
+      { id: 'w4', from: 'ard-1-d9',      to: 'res-1-pin1',    isLive: false },
+      { id: 'w5', from: 'res-1-pin2',    to: 'led-1-anode',   isLive: false },
+      { id: 'w6', from: 'led-1-cathode', to: 'ard-1-gnd',     isLive: false },
     ],
     code: `// STEM Workshop - Fade LED with Potentiometer
 const int potPin = A0;
@@ -303,46 +199,23 @@ void loop() {
   {
     id: 'ldr-night-light',
     title: 'Light Sensor Night Light',
-    description:
-      'Automatically turn an LED on when it gets dark using an LDR (light-dependent resistor).',
+    description: 'Automatically turn an LED on when it gets dark using an LDR (light-dependent resistor).',
     difficulty: 'Intermediate',
     components: [
-      {
-        id: 'ard-1',
-        type: 'arduino',
-        label: 'Arduino Uno',
-        position: [0, 0, 0],
-        rotation: [0, 0, 0],
-      },
-      {
-        id: 'ldr-1',
-        type: 'ldr',
-        label: 'LDR Sensor',
-        position: [-2, 0, 0],
-        rotation: [0, 0, 0],
-        ldrValue: 512,
-      },
-      {
-        id: 'led-1',
-        type: 'led',
-        label: 'White LED',
-        position: [2, 0, 0],
-        rotation: [0, 0, 0],
-        isOn: false,
-        brightness: 0,
-        color: '#ffffff',
-      },
-      { id: 'res-1', type: 'resistor', label: '10kΩ Resistor', position: [-1, 0, 0], rotation: [0, 0, 0] },
-      { id: 'res-2', type: 'resistor', label: '220Ω Resistor', position: [1, 0, 0], rotation: [0, 0, 0] },
+      { id: 'ard-1', type: 'arduino',  label: 'Arduino Uno',    position: { x: 80,  y: 80  }, rotation: 0 },
+      { id: 'ldr-1', type: 'ldr',      label: 'LDR Sensor',     position: { x: 80,  y: 280 }, rotation: 0, ldrValue: 512 },
+      { id: 'res-1', type: 'resistor', label: '10kΩ Resistor',  position: { x: 280, y: 280 }, rotation: 0 },
+      { id: 'res-2', type: 'resistor', label: '220Ω Resistor',  position: { x: 360, y: 160 }, rotation: 0 },
+      { id: 'led-1', type: 'led',      label: 'White LED',      position: { x: 520, y: 160 }, rotation: 0, isOn: false, brightness: 0, color: '#ffffff' },
     ],
     connections: [
-      { id: 'w1', from: 'ard-1-5v', to: 'ldr-1-pin1', isLive: false },
-      { id: 'w2', from: 'ldr-1-pin2', to: 'res-1-in', isLive: false },
-      { id: 'w3', from: 'res-1-out', to: 'ard-1-gnd', isLive: false },
-      { id: 'w4', from: 'ldr-1-pin2', to: 'ard-1-a0', isLive: false },
-      { id: 'w5', from: 'ard-1-d13', to: 'res-2-in', isLive: false },
-      { id: 'w6', from: 'res-2-out', to: 'led-1-anode', isLive: false },
-      { id: 'w7', from: 'led-1-cathode', to: 'ard-1-gnd', isLive: false },
+      { id: 'w1', from: 'ard-1-5v',      to: 'ldr-1-pin1',    isLive: false },
+      { id: 'w2', from: 'ldr-1-pin2',    to: 'res-1-pin1',    isLive: false },
+      { id: 'w3', from: 'res-1-pin2',    to: 'ard-1-gnd',     isLive: false },
+      { id: 'w4', from: 'ldr-1-pin2',    to: 'ard-1-a0',      isLive: false },
+      { id: 'w5', from: 'ard-1-d13',     to: 'res-2-pin1',    isLive: false },
+      { id: 'w6', from: 'res-2-pin2',    to: 'led-1-anode',   isLive: false },
+      { id: 'w7', from: 'led-1-cathode', to: 'ard-1-gnd',     isLive: false },
     ],
     code: `// STEM Workshop - Night Light with LDR
 const int ldrPin = A0;
@@ -378,29 +251,14 @@ void loop() {
   {
     id: 'buzzer-alarm',
     title: 'Buzzer Alarm',
-    description:
-      'Generate tones and alarms with a passive buzzer using the tone() function.',
+    description: 'Generate tones and alarms with a passive buzzer using the tone() function.',
     difficulty: 'Beginner',
     components: [
-      {
-        id: 'ard-1',
-        type: 'arduino',
-        label: 'Arduino Uno',
-        position: [0, 0, 0],
-        rotation: [0, 0, 0],
-      },
-      {
-        id: 'buz-1',
-        type: 'buzzer',
-        label: 'Passive Buzzer',
-        position: [2, 0, 0],
-        rotation: [0, 0, 0],
-        isOn: false,
-        buzzFreq: 440,
-      },
+      { id: 'ard-1', type: 'arduino', label: 'Arduino Uno',    position: { x: 80,  y: 80 }, rotation: 0 },
+      { id: 'buz-1', type: 'buzzer',  label: 'Passive Buzzer', position: { x: 400, y: 160 }, rotation: 0, isOn: false, buzzFreq: 440 },
     ],
     connections: [
-      { id: 'w1', from: 'ard-1-d8', to: 'buz-1-pos', isLive: false },
+      { id: 'w1', from: 'ard-1-d8',  to: 'buz-1-pos', isLive: false },
       { id: 'w2', from: 'buz-1-neg', to: 'ard-1-gnd', isLive: false },
     ],
     code: `// STEM Workshop - Buzzer Alarm
@@ -438,30 +296,16 @@ void loop() {
   {
     id: 'servo-sweep',
     title: 'Servo Sweep',
-    description:
-      'Control a servo motor to sweep back and forth 180°. Introduction to PWM motor control.',
+    description: 'Control a servo motor to sweep back and forth 180°. Introduction to PWM motor control.',
     difficulty: 'Intermediate',
     components: [
-      {
-        id: 'ard-1',
-        type: 'arduino',
-        label: 'Arduino Uno',
-        position: [0, 0, 0],
-        rotation: [0, 0, 0],
-      },
-      {
-        id: 'srv-1',
-        type: 'servo',
-        label: 'Servo Motor',
-        position: [2.5, 0, 0],
-        rotation: [0, 0, 0],
-        servoAngle: 90,
-      },
+      { id: 'ard-1', type: 'arduino', label: 'Arduino Uno', position: { x: 80,  y: 80 }, rotation: 0 },
+      { id: 'srv-1', type: 'servo',   label: 'Servo Motor', position: { x: 400, y: 120 }, rotation: 0, servoAngle: 90 },
     ],
     connections: [
-      { id: 'w1', from: 'ard-1-5v', to: 'srv-1-vcc', isLive: false },
-      { id: 'w2', from: 'ard-1-gnd', to: 'srv-1-gnd', isLive: false },
-      { id: 'w3', from: 'ard-1-d9', to: 'srv-1-signal', isLive: false },
+      { id: 'w1', from: 'ard-1-5v',  to: 'srv-1-vcc',    isLive: false },
+      { id: 'w2', from: 'ard-1-gnd', to: 'srv-1-gnd',    isLive: false },
+      { id: 'w3', from: 'ard-1-d9',  to: 'srv-1-signal', isLive: false },
     ],
     code: `// STEM Workshop - Servo Sweep
 #include <Servo.h>

@@ -14,21 +14,21 @@ export type ComponentType =
   | 'ldr';
 
 export interface PinState {
-  id: string;       // e.g. "arduino-13", "breadboard-A1", "led-0-anode"
+  id: string;       // e.g. "arduino-13", "led-0-anode"
   componentId: string;
   label: string;
   isInput: boolean;
-  worldPosition: [number, number, number];
+  // worldPosition removed — React Flow handles compute handle coords
 }
 
 export interface PlacedComponent {
   id: string;
   type: ComponentType;
-  position: [number, number, number];
-  rotation: [number, number, number];
+  position: { x: number; y: number };
+  rotation: number;  // degrees, snapped to 0 | 90 | 180 | 270
   label: string;
   // Simulation specific state
-  isOn?: boolean;          // LED on/off
+  isOn?: boolean;          // LED / buzzer on/off
   brightness?: number;     // LED brightness 0-1
   color?: string;          // LED color
   buttonState?: boolean;   // Button pressed
@@ -55,14 +55,6 @@ export interface ExperimentDef {
   code: string;
   instructions: string[];
   diagramSvg?: string;
-}
-
-export interface UserPin {
-  id: string;
-  componentId: string;
-  label: string;
-  // Position is relative to the *component's center*, making it reusable for instances
-  relativePosition: [number, number, number];
 }
 
 interface CircuitStore {
@@ -103,21 +95,15 @@ interface CircuitStore {
   selectedComponentId: string | null;
   setSelectedComponentId: (id: string | null) => void;
 
-  // ── Wire in progress ───
+  // ── Wire in progress (React Flow manages natively via onConnect,
+  //    kept for non-RF code paths) ───
   wireStartPinId: string | null;
   setWireStartPin: (pinId: string | null) => void;
   connectPins: (from: string, to: string) => void;
 
-  // ── Pin Calibration Mode ───
-  calibrationMode: boolean;
-  setCalibrationMode: (active: boolean) => void;
-  userPins: Record<string, UserPin[]>; // Map of component type -> user pinned offsets
-  addUserPin: (componentType: string, pin: UserPin) => void;
-  removeUserPin: (componentType: string, pinId: string) => void;
-
-  // ── Transform Mode (AutoCAD Style) ───
-  transformMode: 'translate' | 'rotate' | 'scale' | null;
-  setTransformMode: (mode: 'translate' | 'rotate' | 'scale' | null) => void;
+  // ── Transform Mode — rotate only in 2D (translate = native RF drag) ───
+  transformMode: 'rotate' | null;
+  setTransformMode: (mode: 'rotate' | null) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -303,26 +289,7 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
   wireStartPinId: null,
   setWireStartPin: (id) => set({ wireStartPinId: id }),
 
-  // ── Pin Calibration Mode ───
-  calibrationMode: false,
-  setCalibrationMode: (active) => set({ calibrationMode: active, wireStartPinId: null, activePinId: null }),
-  userPins: {},
-  addUserPin: (componentType, pin) =>
-    set((s) => ({
-      userPins: {
-        ...s.userPins,
-        [componentType]: [...(s.userPins[componentType] || []), pin]
-      }
-    })),
-  removeUserPin: (componentType, pinId) =>
-    set((s) => ({
-      userPins: {
-        ...s.userPins,
-        [componentType]: (s.userPins[componentType] || []).filter(p => p.id !== pinId)
-      }
-    })),
-
-  // ── Transform Mode ───
+  // ── Transform Mode (rotate only in 2D) ───
   transformMode: null,
   setTransformMode: (mode) => set({ transformMode: mode }),
 }));
