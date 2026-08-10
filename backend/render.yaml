@@ -12,12 +12,12 @@ services:
       - key: ENABLE_OPENROUTER
         value: true
       - key: OPENROUTER_API_KEY
-        value: REDACTED_SECRET
+        sync: false
       - key: SUPABASE_URL
-        value: https://cikcicjfecctzsueaaki.supabase.co
+        sync: false
       - key: SUPABASE_KEY
-        value: REDACTED_SECRET
+        sync: false
       # CORS: Set this to your Vercel frontend URL (e.g. https://your-app.vercel.app)
       # Multiple origins can be comma-separated: https://a.vercel.app,https://b.vercel.app
       - key: FRONTEND_URL
-        value: https://YOUR_APP.vercel.app
+        value: https://YOUR_APP.vercel.app
